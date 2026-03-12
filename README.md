@@ -1,7 +1,7 @@
-# Sistema SPED - Sistema Estatal de Planeación y Evaluación del Desempeño
+# Sistema SPED - Sistema de Información para el Seguimiento  a la Planeación y Evaluación del Desarrollo
 
 <div align="center">
-  <img src="https://sei.puebla.gob.mx/images/logos/SEI-logo.png" alt="SEI Logo" width="200"/>
+  <img src="https://sped.puebla.gob.mx/img/logos_sped.png" alt="SEI Logo" width="200"/>
 </div>
 
 Sistema web para el seguimiento, control y evaluación de los indicadores del Plan Estatal de Desarrollo y sus Programas Derivados de la Subsecretaría de Planeación, desarrollado con Laravel 12.
