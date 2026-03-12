@@ -1,16 +1,16 @@
 @extends('layouts.plantilla')
-@section('title', 'Programa Derivado Regional ' . $programa)
+@section('title', 'Programa Derivado Regional ' . $programa->nombre)
 @section('meta-description', $programaData->descripcion)
 @section('canonical-url', url()->current())
 @section('og-title',
 'Programa Derivado Regional ' .
-$programa .
+$programa->nombre .
 ' - Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
 del Estado de Puebla')
 @section('og-description', $programaData->descripcion)
 @section('og:url', url()->current())
 @section('twitter-title',
-$programa .
+$programa->nombre .
 ' - Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
 del Estado de Puebla')
 @section('twitter-description', $programaData->descripcion)
