@@ -1,0 +1,144 @@
+@media print {
+
+    /* Ocultar elementos específicos del layout de SPED */
+    #navbar,
+    .footer,
+    .textura-footer,
+    .navbar,
+    .ocultar_impresion,
+    .btn,
+    #btn-subir,
+    .breadcrumb,
+    .menu-overlay,
+    .mobile-menu,
+    .nav-moderna,
+    .banner-container {
+        display: none !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Mostrar encabezado de impresión compacto y centrado */
+    #encabezado {
+        display: block !important;
+        visibility: visible !important;
+        width: 90% !important;
+        margin: 0 auto 5px auto !important;
+        text-align: center !important;
+    }
+
+    #encabezado img {
+        max-height: 75px;
+        object-fit: contain;
+        margin: 0 auto !important;
+    }
+
+    /* Forzar que el contenedor ocupe todo el ancho sin márgenes excesivos */
+    #imprimir,
+    .container {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Configuración de página */
+    @page {
+        margin: 0.6cm;
+        size: auto;
+    }
+
+    body {
+        background-color: white !important;
+        font-size: 9.5pt !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    #imprimir .row {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    #imprimir .col-lg-6 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+        display: block !important;
+    }
+
+    #imprimir .col-12 {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    #imprimir .col-md-6 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+    }
+
+    #imprimir .col-md-3 {
+        flex: 0 0 25% !important;
+        max-width: 25% !important;
+    }
+
+    #imprimir .card-ficha-moderna:has(#gauge-ficha) .row,
+    #imprimir .card-ficha-moderna:has(#grafica-historica) .row {
+        display: block !important;
+    }
+
+    #imprimir .card-ficha-moderna:has(#gauge-ficha) .col-md-8,
+    #imprimir .card-ficha-moderna:has(#gauge-ficha) .col-md-4,
+    #imprimir .card-ficha-moderna:has(#grafica-historica) .col-md-4,
+    #imprimir .card-ficha-moderna:has(#grafica-historica) .col-md-8 {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+        border: none !important;
+        padding: 0 !important;
+    }
+
+    #gauge-ficha {
+        height: 180px !important;
+        margin-top: 5px !important;
+    }
+
+    .card-ficha-moderna {
+        padding: 0.8rem !important;
+        margin-top: 0.3rem !important;
+        margin-bottom: 0.3rem !important;
+        border: 1px solid #eee !important;
+        box-shadow: none !important;
+        break-inside: avoid !important;
+    }
+
+    .ficha-section-title {
+        font-size: 1.1rem !important;
+        margin-bottom: 0.6rem !important;
+    }
+
+    .ficha-label {
+        font-size: 0.8rem !important;
+    }
+
+    .ficha-value {
+        font-size: 0.95rem !important;
+    }
+
+    .table-responsive {
+        overflow: visible !important;
+        max-height: none !important;
+    }
+
+    .table-historicos td,
+    .table-historicos th {
+        padding: 0.4rem !important;
+    }
+
+    .apexcharts-canvas {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}

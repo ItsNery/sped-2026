@@ -1,0 +1,302 @@
+@media screen and (max-width: 768px) {
+
+  .logos_responsive img {
+    width: 100%;
+    align-items: center;
+    margin-left: 20%;
+    margin-bottom: 5%;
+  }
+
+  .dropdown .dropbtn {
+    font-size: 14px;
+    font-style: bold;
+    border: none;
+    outline: none;
+    color: #fff;
+    background-color: transparent;
+    margin: 0;
+    text-align: center;
+    align-items: center;
+  }
+
+  .nav_ejes .dropbtn {
+    font-size: 14px;
+    font-style: bold;
+    border: none;
+    outline: none;
+    color: #fff;
+    background-color: transparent;
+    margin: 0;
+    text-align: center;
+    align-items: center;
+  }
+
+  .table_resultados th {
+    font-size: 12px;
+  }
+
+  .table_resultados td {
+    font-size: 10px;
+  }
+
+  .gobierno_logos img {
+    width: 90%;
+    margin: auto;
+    display: block;
+  }
+
+  .logo_sped img {
+    width: 50%;
+    margin: auto;
+    display: block;
+  }
+
+  .metropolitana {
+    font-size: 12px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .gobierno_logos img {
+    width: 90%;
+    margin: auto;
+    display: block;
+  }
+
+  .logo_sped img {
+    width: 50%;
+    margin: auto;
+    display: block;
+  }
+
+  .sped_admin {
+    display: none;
+  }
+
+
+  /*Empieza css del slider de indicadores*/
+  @-webkit-keyframes slider {
+    to {
+      -moz-transform: translateX(-100%);
+      -webkit-transform: translateX(-100%);
+      transform: translateX(-100%);
+    }
+  }
+
+  @keyframes scroll {
+    to {
+      -moz-transform: translateX(-100%);
+      -webkit-transform: translateX(-100%);
+      transform: translateX(-100%);
+    }
+  }
+
+  .slider {
+    background: white;
+    box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.125);
+    height: 130px;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+  }
+
+  .slider::before,
+  .slider::after {
+    background: linear-gradient(to right, white 0%, rgba(255, 255, 255, 0) 100%);
+    height: 130px;
+    position: relative;
+    width: 250px;
+    z-index: 1;
+  }
+
+  .slider::after {
+    right: 0;
+    top: 0;
+    transform: rotateZ(180deg);
+  }
+
+  .slider::before {
+    left: 0;
+    top: 0;
+  }
+
+  .slider .slide-track {
+    -webkit-animation: slider 180s infinite linear;
+    animation: slider 180s infinite linear;
+    display: inline-flex;
+    width: calc(250px * 29);
+  }
+
+  .slider .slide {
+    height: 130px;
+    width: 250px;
+    border-left: 1px solid #9e8f80;
+  }
+
+  .slider .slide h2 {
+    text-align: center;
+    padding-top: 1px;
+    margin-left: auto;
+    margin-right: auto;
+    color: #a94a42;
+    font-weight: bold;
+    font-size: 14px;
+  }
+
+  .slider .slide h3 {
+    text-align: center;
+    padding-top: 2px;
+    margin-left: auto;
+    margin-right: auto;
+    color: #3c3c3c;
+    font-weight: bold;
+    font-size: 10px;
+  }
+
+  .slider .slide h4 {
+    text-align: center;
+    margin-left: -10%;
+    margin-right: auto;
+    color: #9e8f80;
+    font-weight: bold;
+    font-size: 8px;
+  }
+
+  .slider .slide img {
+    padding-top: 10px;
+    padding-left: 40%;
+    width: 60%;
+  }
+
+  .datos_abiertos {
+    display: none;
+  }
+
+  .ocultar_img {
+    display: none;
+  }
+
+  .ocultar_submenu {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ocultar_grafica {
+    display: none;
+  }
+
+  .ocultar_tabla {
+    display: none;
+  }
+
+  .ocultar_datos {
+    display: none;
+  }
+
+  .logos_responsive img {
+    width: 60%;
+    align-items: center;
+    margin-left: 20%;
+    margin-bottom: 5%;
+  }
+
+  .dropdown .dropbtn {
+    font-size: 12px;
+    font-style: bold;
+    border: none;
+    outline: none;
+    color: #fff;
+    background-color: transparent;
+    margin: 0;
+    text-align: center;
+    align-items: center;
+  }
+
+  .nav_ejes .dropbtn {
+    font-size: 12px;
+    font-style: bold;
+    border: none;
+    outline: none;
+    color: #fff;
+    background-color: transparent;
+    margin: 0;
+    text-align: center;
+    align-items: center;
+  }
+
+  .table_resultados th {
+    font-size: 12px;
+  }
+
+  .table_resultados td {
+    font-size: 10px;
+  }
+
+  .metropolitana {
+    font-size: 10px;
+  }
+
+  .menu {
+    text-align: center;
+    z-index: 2;
+  }
+
+  .fixed {
+    width: 100%;
+    position: absolute;
+    top: 0;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .hamburger {
+    display: inline;
+  }
+
+  .nav.menu {
+    display: none;
+
+    flex-direction: column;
+  }
+
+  .nav.menu.active {
+    display: flex;
+  }
+
+  .nav1,
+  .nav2,
+  .nav3,
+  .nav4,
+  .nav5 {
+    width: 100%;
+  }
+
+  .dropdown {
+    width: 100%;
+  }
+
+  .submenu-content {
+    left: 0 !important;
+    top: 100% !important;
+    min-width: 100%;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .container-ejes-atlas {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    width: 100%;
+    margin: 0;
+  }
+
+  a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    img-atlas {
+
+    }
+  }
+}

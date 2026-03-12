@@ -1,0 +1,526 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+@font-face {
+    font-family: "Corra-Montserra-Regular";
+    src: url("./fuentes/Corra-Montserra/OTF/Corra-Montserra-Medium.otf");
+}
+
+@font-face {
+    font-family: "Corra-Montserra-Black";
+    src: url("./fuentes/Corra-Montserra/OTF/Corra-Montserra-Black.otf");
+}
+
+@font-face {
+    font-family: "Corra-Montserra-Bold";
+    src: url("./fuentes/Corra-Montserra/OTF/Corra-Montserra-Bold.otf");
+}
+
+@font-face {
+    font-family: "Corra-Montserra-Medium";
+    src: url("./fuentes/Corra-Montserra/OTF/Corra-Montserra-Medium.otf");
+}
+
+@font-face {
+    font-family: "Corra-Montserra-Extrabold";
+    src: url("./fuentes/Corra-Montserra/OTF/Corra-Montserra-Extrabold.otf");
+}
+
+@font-face {
+    font-family: "Corra-Montserra-Extralight";
+    src: url("./fuentes/Corra-Montserra/OTF/Corra-Montserra-Extralight.otf");
+}
+
+@font-face {
+    font-family: "Corra-Montserra-Light";
+    src: url("./fuentes/Corra-Montserra/OTF/Corra-Montserra-Light.otf");
+}
+
+@font-face {
+    font-family: "Corra-Montserra-Semibold";
+    src: url("./fuentes/Corra-Montserra/OTF/Corra-Montserra-Semibold.otf");
+}
+
+:root {
+    --color-primary: #5A1B31;
+    --color-bg-light: #f8f9fa;
+    --color-border: #e0e0e0;
+    --font-size-base: 9pt;
+}
+
+* {
+    --colorGobierno: #5A1B31;
+    font-size: 1rem;
+}
+
+body {
+    background-color: #333333;
+    font-family: "Corra-Montserra-Medium", sans-serif;
+    font-weight: 600;
+    height: 100%;
+
+
+    .navbar {
+        height: 50px;
+        background-color: #3b3b3b;
+        box-shadow: 0px 2px 2px 0 rgba(0, 0, 0, 0.14);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 10px;
+        position: sticky;
+        top: 0;
+        z-index: 10000;
+
+        .titulo-hoja {
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: bold;
+            padding-left: 1rem;
+        }
+
+        .btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+    }
+
+    .hoja {
+        background-color: #fff;
+        box-shadow: 4px 4px 15px 1px #000000;
+        font-size: 7pt;
+        margin-top: 4rem;
+        margin-bottom: 4rem;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 2rem;
+        max-width: 215.9mm;
+        page-break-before: always;
+        width: 100%;
+
+        .custom-card {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .custom-header {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            border-radius: 8px 8px 0 0;
+
+            h1 {
+                font-size: 25pt;
+            }
+        }
+
+        .custom-title {
+            margin-bottom: 20px;
+        }
+
+        .custom-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .custom-list li {
+            padding: 5px 0;
+        }
+
+        .custom-section-title {
+            background-color: #f1f1f1;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        .custom-section-title i {
+            margin-right: 10px;
+        }
+
+        .ods-indicadores {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5px;
+            margin-bottom: 7px;
+            margin-top: 7px;
+            border-radius: 10px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            background-color: #fff;
+        }
+
+        .ods-indicadores img {
+            height: auto;
+            width: 20%;
+            max-width: 200px;
+        }
+
+        .table_resultados {
+            table-layout: fixed;
+            width: 100%;
+
+            thead {
+                color: #FFFFFF;
+
+                tr {
+                    th {
+                        font-size: 1rem;
+                    }
+                }
+            }
+
+            tbody {
+                tr {
+                    td {
+                        font-size: 0.72rem;
+                    }
+                }
+            }
+
+        }
+    }
+}
+
+@media print {
+    @page {
+        margin: 1cm;
+        size: letter portrait;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact !important;
+    }
+
+    html,
+    body {
+        width: 100%;
+        height: auto;
+        overflow: visible !important;
+        /* Clave para evitar cortes */
+        background-color: #fff !important;
+        /* Forzar fondo blanco si es necesario */
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    body .hoja {
+        font-size: 12pt;
+        margin-top: -2rem;
+        margin-bottom: 0;
+        margin-left: -1rem;
+        margin-right: -5rem;
+        box-shadow: none;
+        max-width: 100%;
+        width: 100%;
+        size: letter;
+    }
+
+    .hoja * {
+        -webkit-print-color-adjust: exact;
+    }
+
+    body .navbar {
+        display: none;
+    }
+
+    .line-break {
+        display: block;
+        page-break-before: always;
+    }
+
+    .col-12 {
+        page-break-inside: avoid;
+    }
+}
+
+.apexcharts-title-text {
+    white-space: normal;
+    word-wrap: break-word;
+    max-width: 400px;
+    line-height: 1.2;
+}
+
+/* Header */
+.logo-header {
+    width: 500px;
+    /* Tamaño controlado del logo */
+    max-width: 100%;
+}
+
+.header-line {
+    width: 100%;
+    height: 2px;
+    background-color: var(--color-primary);
+    margin: 0 auto;
+}
+
+/* Bloque de Indicador */
+.indicador-bloque {
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    page-break-inside: avoid;
+    /* EVITA QUE SE CORTE A MITAD DE PÁGINA */
+    background-color: #fff;
+}
+
+/* Título del Indicador */
+.indicador-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 8px;
+}
+
+.indicador-titulo {
+    display: flex;
+    align-items: flex-start;
+    width: 85%;
+}
+
+.badge-numero {
+    background-color: var(--color-primary);
+    color: #fff;
+    font-size: 8pt;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 8px;
+    margin-top: 2px;
+}
+
+.nombre-indicador {
+    font-family: 'Corra-Montserra-Bold';
+    font-size: 10pt;
+    color: #222;
+    line-height: 1.3;
+}
+
+.badge-estatus {
+    font-size: 7pt;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.badge-estatus.validado {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.badge-estatus.pendiente {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Grid de Información (4 columnas visuales en 2 filas) */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* Dos columnas */
+    gap: 8px 15px;
+    margin-bottom: 12px;
+}
+
+.info-item {
+    font-size: 8.5pt;
+    display: flex;
+}
+
+.info-item .label {
+    color: #666;
+    margin-right: 5px;
+    font-weight: bold;
+}
+
+/* Grid de Histórico (Lo que reemplaza la tabla larga) */
+.historico-section {
+    background-color: var(--color-bg-light);
+    border-radius: 4px;
+    padding: 8px;
+}
+
+.historico-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    /* 10 años en una fila */
+    gap: 2px;
+    text-align: center;
+}
+
+.dato-anio {
+    display: flex;
+    flex-direction: column;
+}
+
+.anio-label {
+    font-size: 6.5pt;
+    color: #888;
+    margin-bottom: 2px;
+    font-weight: bold;
+}
+
+.anio-valor {
+    font-size: 7.5pt;
+    font-weight: bold;
+    color: #333;
+    border-left: 1px solid #e0e0e0;
+    /* Separador sutil */
+}
+
+.dato-anio:first-child .anio-valor {
+    border-left: none;
+}
+
+/* Firma */
+.firma-box {
+    text-align: center;
+    margin-top: 40px;
+    page-break-inside: avoid;
+}
+
+.linea-firma {
+    border-bottom: 1px solid #333;
+    width: 250px;
+    margin: 0 auto 10px auto;
+}
+
+.nombre-firma {
+    font-weight: bold;
+    font-size: 10pt;
+    margin: 0;
+}
+
+.cargo-firma {
+    font-size: 9pt;
+    color: #666;
+    margin: 0;
+}
+
+/* Ajustes Específicos para Impresión */
+@media print {
+    .hoja {
+        margin: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .indicador-bloque {
+        border: 1px solid #ccc !important;
+        /* Asegurar borde en impresión */
+    }
+
+    .historico-section {
+        background-color: #f4f4f4 !important;
+        /* Forzar gris suave */
+        -webkit-print-color-adjust: exact;
+    }
+
+    .indicadores-container {
+        display: block;
+        width: 100%;
+    }
+
+    .indicador-bloque {
+        /* Propiedad estándar moderna */
+        break-inside: avoid;
+        /* Propiedad para navegadores basados en WebKit (Chrome, Safari, Edge) */
+        -webkit-column-break-inside: avoid;
+        page-break-inside: avoid;
+
+        /* Asegura que haya espacio y bordes */
+        display: block;
+        position: relative;
+        margin-bottom: 15px;
+        /* Espacio entre bloques */
+    }
+
+    /* 3. EVITAR VIUDAS EN LAS FIRMAS */
+    .firma-section {
+        /* Si las firmas no caben, que se vayan completas a la siguiente hoja */
+        break-inside: avoid;
+        page-break-inside: avoid;
+
+        /* Opcional: Si quieres que SIEMPRE las firmas estén en una hoja aparte al final: */
+        /* page-break-before: always; */
+
+        margin-top: 50px;
+    }
+}
+
+/* ESTILOS GENERALES DEL FOOTER */
+.footer-legal {
+    display: none;
+    /* Oculto en pantalla normal */
+}
+
+/* ESTILOS SOLO PARA IMPRESIÓN */
+@media print {
+
+    /* 1. CONFIGURACIÓN DE LA PÁGINA Y NUMERACIÓN NATIVA */
+    @page {
+        margin-top: 1cm;
+        margin-bottom: 2cm;
+        /* Espacio reservado para el footer */
+        margin-left: 1cm;
+        margin-right: 1cm;
+
+        /* ESTO AGREGA LA NUMERACIÓN AUTOMÁTICA (Estándar CSS) */
+        /* Nota: Chrome a veces ignora esto y requiere activar "Encabezados y pies" en el diálogo de imprimir */
+        @bottom-right {
+            content: "Página " counter(page) " de " counter(pages);
+            font-size: 8pt;
+            font-family: 'Corra-Montserra-Light';
+        }
+    }
+
+    /* 2. EL CONTENEDOR PRINCIPAL DEBE TENER MARGEN INFERIOR */
+    .hoja {
+        padding-bottom: 50px !important;
+        /* Espacio extra para que el texto no toque el footer */
+        position: relative;
+    }
+
+    /* 3. EL PIE DE PÁGINA FIJO (Se repite en todas las hojas) */
+    .footer-legal {
+        display: block;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        /* Altura del footer */
+        border-top: 2px solid var(--color-primary);
+        /* Línea elegante arriba */
+        padding-top: 5px;
+        background-color: #fff;
+        z-index: 9999;
+    }
+
+    .footer-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 7pt;
+        color: #666;
+        font-family: 'Corra-Montserra-Light', sans-serif;
+        padding: 0 10px;
+    }
+
+    .sistema-nombre {
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+}
