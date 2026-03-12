@@ -72,7 +72,7 @@ del Estado de Puebla.')
         </div>
     </div>
 </section>
-<img src="{{asset('img/pleca-nueva.png')}}" alt="" class="w-100 py-2" title="Pleca de separación de secciones">
+<img src="{{asset('img/pleca-nueva.png')}}" alt="" class="w-100 py-2" title="Pleca de separación de secciones hola">
 @endif
 <section class="seccion-inicial">
     <div class="custom-container">
