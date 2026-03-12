@@ -1,0 +1,12 @@
+node_modules
+public/assets-administrador
+public/apexcharts-bundle
+public/docs
+public/fontAwesome
+public/image
+public/img
+public/videos
+public/webfonts
+storage/
+vendor
+.env

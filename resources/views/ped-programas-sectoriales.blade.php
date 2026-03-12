@@ -1,0 +1,61 @@
+@extends('layouts.plantilla')
+@section('title', 'Programas Derivados Sectoriales del Plan Estatal de Desarrollo 2024-2030')
+@section('meta-description',
+'Sección de los Programas Derivados Sectoriales del Plan Estatal de Desarrollo 2024-2030 dentro del Sistema de
+Información para el Seguimiento a la Planeación y Evaluación del Desarrollo del Estado de Puebla')
+@section('canonical-url', url()->current())
+@section('og-title',
+'Programas Derivados Sectoriales del Plan Estatal de Desarrollo 2024-2030 - Sistema de Información para el Seguimiento a
+la Planeación y Evaluación del Desarrollo
+del Estado de Puebla')
+@section('og-description',
+'Sección de los Programas Derivados Sectoriales del Plan Estatal de Desarrollo 2024-2030 dentro del Sistema de
+Información para el Seguimiento a la Planeación y Evaluación del Desarrollo del Estado de Puebla')
+@section('og:url', url()->current())
+@section('twitter-title',
+'Programas Derivados Sectoriales del Plan Estatal de Desarrollo 2024-2030 - Sistema de Información para el Seguimiento a
+la Planeación y Evaluación del Desarrollo
+del Estado de Puebla')
+@section('twitter-description',
+'Sección de los Programas Derivados Sectoriales del Plan Estatal de Desarrollo 2024-2030 dentro del Sistema de
+Información para el Seguimiento a la Planeación y Evaluación del Desarrollo del Estado de Puebla')
+@section('content')
+<img src="" width="100%" class="px-0">
+<div class="row nav_derivados ms-0">
+    <div class="col-md-3 nav_derivados1_active ocultar_submenu">
+        <a href="{{ url('/ped-programas/sectoriales') }}" class="dropbtn nav_eje_link">Sectoriales</a>
+    </div>
+    <div class="col-md-3 nav_derivados2 ocultar_submenu">
+        <a href="{{ url('/ped-programas/especiales') }}" class="dropbtn nav_eje_link">Especiales</a>
+    </div>
+    <div class="col-md-3 nav_derivados3 ocultar_submenu">
+        <a href="{{ url('/ped-programas/institucionales') }}" class="dropbtn nav_eje_link">Institucionales</a>
+    </div>
+    <div class="col-md-3 nav_derivados4 ocultar_submenu">
+        <a href="{{ url('/ped-programas/regionales') }}" class="dropbtn nav_eje_link">Regionales</a>
+    </div>
+</div>
+<div class="row contenido">
+    <div class="col-sm-12 col-md-3 offset-md-1 objetivo_sectorial">
+        <img class="img-fluid" src="{{ asset('img/what1.png') }}" width="100%" />
+    </div>
+    <div class="col-sm-12 col-md-7 objetivo">
+        <p>
+            Constituir una expresión especializada de fines comunes para la atención de los sectores de la Administración Pública Estatal.
+        </p>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        @foreach ($sectoriales as $sectorial)
+        <div class="col-6 col-sm-3 hvr-grow my-3">
+            <a href="{{ url('/ped-programas/sectoriales/' . Illuminate\Support\Str::slug($sectorial->nombre)) }}"
+                style="text-decoration:none;">
+                <img class="img-fluid" src="{{ asset($sectorial->imagen) }}" title="{{ $sectorial->nombre }}" alt="{{ $sectorial->nombre }}" />
+            </a>
+        </div>
+        @endforeach
+    </div>
+    &nbsp;
+</div>
+@endsection
