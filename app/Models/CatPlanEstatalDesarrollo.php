@@ -23,4 +23,12 @@ class CatPlanEstatalDesarrollo extends Model
     {
         return $this->morphMany(Indicador::class, 'indicadorable');
     }
+
+    /**
+     * Relación con los ejes del plan.
+     */
+    public function catEjes()
+    {
+        return $this->hasMany(CatEje::class, 'plan_id');
+    }
 }

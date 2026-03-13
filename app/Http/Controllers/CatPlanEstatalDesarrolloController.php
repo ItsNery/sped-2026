@@ -25,7 +25,7 @@ class CatPlanEstatalDesarrolloController extends Controller
      */
     public function create()
     {
-        return view('panel-planes-estatales.create');
+        return view('panel-planes-estatales.form');
     }
 
     /**
@@ -41,10 +41,10 @@ class CatPlanEstatalDesarrolloController extends Controller
             'gobernador' => 'required|string|max:255',
         ]);
 
-        CatPlanEstatalDesarrollo::create($request->all());
+        $plan = CatPlanEstatalDesarrollo::create($request->all());
 
-        return redirect()->route('panel-cat-planes.index')
-            ->with('success', 'Plan estatal creado exitosamente.');
+        return redirect()->route('panel-cat-planes.edit', $plan->id)
+            ->with('success', 'Plan estatal creado exitosamente. Ahora puedes agregar los ejes.');
     }
 
     /**
@@ -55,8 +55,8 @@ class CatPlanEstatalDesarrolloController extends Controller
      */
     public function edit($id)
     {
-        $plan = CatPlanEstatalDesarrollo::findOrFail($id);
-        return view('panel-planes-estatales.edit', compact('plan'));
+        $plan = CatPlanEstatalDesarrollo::with('catEjes')->findOrFail($id);
+        return view('panel-planes-estatales.form', compact('plan'));
     }
 
     /**

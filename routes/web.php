@@ -15,6 +15,7 @@ use App\Http\Controllers\SliderInicioController;
 use App\Http\Controllers\LogCambioController;
 use App\Http\Controllers\DatosAbiertosController;
 use App\Http\Controllers\CatPlanEstatalDesarrolloController;
+use App\Http\Controllers\CatEjeController;
 use App\Http\Controllers\CatProgramaDerivadoEspecialController;
 use App\Http\Controllers\CatProgramaDerivadoSectorialController;
 use App\Http\Controllers\CatProgramaDerivadoRegionalController;
@@ -159,6 +160,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
     // --- Catálogos y Entidades Base ---
     Route::resource('panel-cat-planes', CatPlanEstatalDesarrolloController::class);
+    Route::resource('panel-cat-ejes', CatEjeController::class);
     Route::resource('panel-cat-prog-der-esp', CatProgramaDerivadoEspecialController::class);
     Route::resource('panel-cat-prog-der-sect', CatProgramaDerivadoSectorialController::class);
     Route::resource('panel-cat-prog-der-reg', CatProgramaDerivadoRegionalController::class);
