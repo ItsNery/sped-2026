@@ -37,7 +37,6 @@ del Estado de Puebla')
                 documentos programáticos vigentes.</p>
         </div>
     </div>
-
 </section>
 <section class="cont-esquema">
     <div class="container banner-container">
@@ -77,7 +76,41 @@ del Estado de Puebla')
         </div>
     </div>
 </section>
-
+<section>
+    <div class="row contenido container m-auto background-vector-2 mt-4">
+        <div class="col-md-6 d-flex align-items-center justify-content-center">
+            <img src="{{ asset('img/esquemas/PED2024-2030.png') }}" alt="Esquema PED" class="w-100 shadow-sm rounded-4">
+        </div>
+        <div class="col-md-6 mt-4 mt-md-0">
+            <div id="texto_plan2" class="p-3">
+                <h2 class="fw-bold mb-4" style="color: #9d2449;">Visión Estratégica</h2>
+                <p class="text-muted lh-lg text-justify">
+                    El PED 2024-2030 se distingue por su carácter innovador y por mantener
+                    plena observancia de las disposiciones jurídicas. Su rasgo más sobresaliente
+                    es la colaboración inédita de los poderes jurisdiccionales en su elaboración.
+                    Este hecho marca un punto de inflexión en el estado porque se adopta una
+                    gobernanza inclusiva como elemento eficaz de planeación, con lo cual se
+                    fortalece la visión integral del desarrollo y se consolida el modelo de gobierno que
+                    se habrá de seguir. Este modelo es el del Humanismo Mexicano, planteado en el
+                    Plan Nacional de Desarrollo 2025-2030, el cual se verá reflejado en la entidad bajo
+                    un enfoque de Bioética Social que se cimienta en tres dimensiones:
+                </p>
+                <ul class="text-muted lh-lg">
+                    <li><strong class="text-dark">a) Seguridad.</strong> Mediante un trabajo coordinado, se garantizarán entornos seguros que permitan tener condiciones de vida dignas y la protección ante adversidades.</li>
+                    <li><strong class="text-dark">b) Justicia.</strong> Este término representará equidad en el acceso a la salud, educación, oportunidades laborales y mecanismos eficaces para corregir discrepancias estructurales.</li>
+                    <li><strong class="text-dark">c) Riqueza Comunitaria.</strong> Se instrumentará una nueva forma de gobernar, que implicará la priorización de los derechos sociales, reconociendo al ser humano desde su integridad como un agente capaz de fortalecer la solidaridad, la cultura, la participación, el sentido de pertenencia y los saberes ancestrales.</li>
+                </ul>
+                <p class="text-muted lh-lg text-justify mt-3">
+                    Como se puede observar, este documento trasciende la mera gestión
+                    administrativa. Se erige como una guía que nos orientará en la superación de
+                    los desafíos que enfrentamos, con el objetivo de reducir las desigualdades
+                    sociales, fortalecer la seguridad, impulsar el desarrollo económico, asegurar la
+                    sostenibilidad ambiental y consolidar un gobierno eficiente y transparente.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
 <section class="cont-esquema-2">
     <div class="container">
         <div class="row">
@@ -91,21 +124,21 @@ del Estado de Puebla')
         </div>
     </div>
 </section>
-{{-- <section class="esquema-final">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <img class="w-100 block-auto" title="Monitoreo y Seguimiento" alt="Texto Monitoreo y Seguimiento"
-                        src="{{ asset('img/esquemas/info_6.png') }}">
-</div>
-<div class="col-md-8"></div>
-<div class="col-md-12">
-    <img class="w-100 block-auto" alt="Diagrama con el desgloce de los indicadores" title="Indicadores"
-        src="{{ asset('img/esquemas/esquema_indicadores_actualizado.png') }}">
-</div>
-</div>
-</div>
-</section> --}}
+<!-- <section class="esquema-final">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <img class="w-100 block-auto" title="Monitoreo y Seguimiento" alt="Texto Monitoreo y Seguimiento"
+                    src="{{ asset('img/esquemas/info_6.png') }}">
+            </div>
+            <div class="col-md-8"></div>
+            <div class="col-md-12">
+                <img class="w-100 block-auto" alt="Diagrama con el desgloce de los indicadores" title="Indicadores"
+                    src="{{ asset('img/esquemas/esquema_indicadores_actualizado.png') }}">
+            </div>
+        </div>
+    </div>
+</section> -->
 @endsection
 
 @section('jss-final')

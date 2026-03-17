@@ -48,8 +48,8 @@ $bannerImg = $bannerImg ?? null; // Ruta de la imagen si lleva banner
             $derivados = [
             'App\Models\CatProgramaDerivadoSectorial' => ['nombre' => 'Sectoriales', 'url' => '/ped-programas/sectoriales'],
             'App\Models\CatProgramaDerivadoEspecial' => ['nombre' => 'Especiales', 'url' => '/ped-programas/especiales'],
-            'App\Models\CatProgramaDerivadoInstitucional' => ['nombre' => 'Institucionales', 'url' => '/ped-programas/institucionales'],
             'App\Models\CatProgramaDerivadoRegional' => ['nombre' => 'Regionales', 'url' => '/ped-programas/regionales'],
+            'App\Models\CatProgramaDerivadoInstitucional' => ['nombre' => 'Institucionales', 'url' => '/ped-programas/institucionales'],
             ];
             @endphp
             @foreach($derivados as $modelo => $derivado)

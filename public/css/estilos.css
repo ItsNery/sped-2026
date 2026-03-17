@@ -5508,8 +5508,13 @@ nav {
 }
 
 .card-indicador {
-    transition: transform 0.2s;
     cursor: default;
+    transition: transform 0.3s ease;
+    transform: translateY(0);
+
+    &:hover {
+        transform: translateY(-3px);
+    }
 }
 
 .card-indicador_info {

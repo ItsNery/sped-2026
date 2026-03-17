@@ -30,41 +30,6 @@ Información para el Seguimiento a la Planeación y Evaluación del Desarrollo d
 'bannerImg' => 'img/Banners/Banner_PED/PED.jpg',
 'colorTema' => '#9d2449'
 ])
-<section>
-    <div class="row contenido container m-auto background-vector-2 mt-4">
-        <div class="col-md-6 d-flex align-items-center justify-content-center">
-            <img src="{{ asset('img/esquemas/PED2024-2030.png') }}" alt="Esquema PED" class="w-100 shadow-sm rounded-4">
-        </div>
-        <div class="col-md-6 mt-4 mt-md-0">
-            <div id="texto_plan2" class="p-3">
-                <h2 class="fw-bold mb-4" style="color: #9d2449;">Visión Estratégica</h2>
-                <p class="text-muted lh-lg text-justify">
-                    El PED 2024-2030 se distingue por su carácter innovador y por mantener
-                    plena observancia de las disposiciones jurídicas. Su rasgo más sobresaliente
-                    es la colaboración inédita de los poderes jurisdiccionales en su elaboración.
-                    Este hecho marca un punto de inflexión en el estado porque se adopta una
-                    gobernanza inclusiva como elemento eficaz de planeación, con lo cual se
-                    fortalece la visión integral del desarrollo y se consolida el modelo de gobierno que
-                    se habrá de seguir. Este modelo es el del Humanismo Mexicano, planteado en el
-                    Plan Nacional de Desarrollo 2025-2030, el cual se verá reflejado en la entidad bajo
-                    un enfoque de Bioética Social que se cimienta en tres dimensiones:
-                </p>
-                <ul class="text-muted lh-lg">
-                    <li><strong class="text-dark">a) Seguridad.</strong> Mediante un trabajo coordinado, se garantizarán entornos seguros que permitan tener condiciones de vida dignas y la protección ante adversidades.</li>
-                    <li><strong class="text-dark">b) Justicia.</strong> Este término representará equidad en el acceso a la salud, educación, oportunidades laborales y mecanismos eficaces para corregir discrepancias estructurales.</li>
-                    <li><strong class="text-dark">c) Riqueza Comunitaria.</strong> Se instrumentará una nueva forma de gobernar, que implicará la priorización de los derechos sociales, reconociendo al ser humano desde su integridad como un agente capaz de fortalecer la solidaridad, la cultura, la participación, el sentido de pertenencia y los saberes ancestrales.</li>
-                </ul>
-                <p class="text-muted lh-lg text-justify mt-3">
-                    Como se puede observar, este documento trasciende la mera gestión
-                    administrativa. Se erige como una guía que nos orientará en la superación de
-                    los desafíos que enfrentamos, con el objetivo de reducir las desigualdades
-                    sociales, fortalecer la seguridad, impulsar el desarrollo económico, asegurar la
-                    sostenibilidad ambiental y consolidar un gobierno eficiente y transparente.
-                </p>
-            </div>
-        </div>
-    </div>
-</section>
 <!-- INICIO SECCIÓN AVANCE -->
 <section class="avance-ped py-5 bg-light mb-0">
     <div class="container">
@@ -73,7 +38,6 @@ Información para el Seguimiento a la Planeación y Evaluación del Desarrollo d
         <div class="row mb-5 justify-content-center">
             <div class="col-md-6 text-center">
                 <div class="bg-white p-4 rounded shadow-sm">
-                    <h4 class="fw-bold mb-3">Promedio global</h4>
                     <div id="mainGauge" style="height: 300px;"></div>
                     <div style="font-size: 2.5rem; font-weight: 700; margin-top: -60px;">{{ number_format($avancePlan, 1) }}%</div>
                 </div>
@@ -108,11 +72,33 @@ Información para el Seguimiento a la Planeación y Evaluación del Desarrollo d
             <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab">
                 <h3 class="fw-bold mb-4 text-center">Avance por Programas Derivados</h3>
 
-                @php $currentType = null; @endphp
-                @foreach($programasData->groupBy('tipo') as $tipo => $programas)
+                @php
+                // 1. Agrupamos los datos
+                $programasAgrupados = $programasData->groupBy('tipo');
+
+                // 2. Definimos el orden de prioridad EXACTO.
+                // OJO: Asegúrate de que los textos coincidan exactamente con lo que trae tu variable $tipo
+                $ordenDeseado = [
+                'Programas Sectoriales',
+                'Programas Especiales',
+                'Programas Regionales',
+                'Programas Institucionales'
+                ];
+
+                // 3. Ordenamos la colección agrupada
+                $programasOrdenados = $programasAgrupados->sortBy(function ($programas, $tipo) use ($ordenDeseado) {
+                $posicion = array_search($tipo, $ordenDeseado);
+                // Si encuentra el tipo en el arreglo, le asigna su posición.
+                // Si por alguna razón hay un tipo nuevo que no está en la lista, lo manda al final (999).
+                return $posicion !== false ? $posicion : 999;
+                });
+                @endphp
+
+                @foreach($programasOrdenados as $tipo => $programas)
                 <h4 class="fw-bold mb-4 mt-5 text-center" style="color: #9d2449; border-bottom: 2px solid #9d2449; padding-bottom: 10px;">
                     {{ $tipo }}
                 </h4>
+
                 <div class="row g-4 mb-5">
                     @foreach($programas as $programa)
                     <div class="col-md-4">

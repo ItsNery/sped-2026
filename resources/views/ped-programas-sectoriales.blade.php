@@ -31,7 +31,7 @@ Información para el Seguimiento a la Planeación y Evaluación del Desarrollo d
     </div>
     <div class="col-sm-12 col-md-7 d-flex align-items-center">
         <p class="fs-4 text-muted border-start ps-4" style="border-width: 4px !important; border-color: #BF9A24 !important;">
-            Constituir una expresión especializada de fines comunes para la atención de los sectores de la Administración Pública Estatal.
+            Son instrumentos que constituyen una expresión especializada de fines comunes para la atención de los sectores de la Administración Pública Estatal.
         </p>
     </div>
 </div>

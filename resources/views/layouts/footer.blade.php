@@ -167,14 +167,14 @@
                             Programas Especiales
                         </a>
                         <br>
+                        <a class="text-white ml-4 mb-2" href="{{ url('/ped-programas/regionales') }}" rel="noopener">
+                            <i class="fa fa-angle-right mx-2"></i>
+                            Programas Regionales
+                        </a>
+                        <br>
                         <a class="text-white ml-4 mb-2" href="{{ url('/ped-programas/institucionales') }}" rel="noopener">
                             <i class="fa fa-angle-right mx-2"></i>
                             Programas Institucionales
-                        </a>
-                        <br>
-                        <a class="text-white ml-4 mb-2" href="{{ url('/ped-programas/regionales') }}" rel="noopener">
-                            <i class="fa fa-angle-right mx-2"></i>
-                            Programa Regional
                         </a>
                     </div>
 

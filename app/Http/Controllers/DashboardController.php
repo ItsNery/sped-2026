@@ -9,9 +9,15 @@ use App\Models\Indicador;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 // use App\Models\DatoAnualIndicador;
-use App\Models\DatoAnual;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use App\Models\CatPlanEstatalDesarrollo;
+use App\Models\CatEje;
+use App\Models\CatProgramaDerivadoEspecial;
+use App\Models\CatProgramaDerivadoInstitucional;
+use App\Models\CatProgramaDerivadoRegional;
+use App\Models\CatProgramaDerivadoSectorial;
+use App\Models\DatoAnual;
 
 class DashboardController extends Controller
 {
@@ -60,6 +66,52 @@ class DashboardController extends Controller
                 ->get();
 
             $instituciones = $institucionesTop; // Asignar a la variable que usas en la vista
+
+            /**------------------------------------------------------------------------------------------- */
+            // Avance Global Promedio
+            $planId = 3; // Plan 2024-2030
+            $plan = CatPlanEstatalDesarrollo::find($planId);
+
+            if (!$plan) {
+                $plan = CatPlanEstatalDesarrollo::where('nombre', 'like', '%2024-2030%')->first();
+                if ($plan) $planId = $plan->id;
+            }
+
+            $indicadoresPlan = Indicador::where(function ($query) use ($planId) {
+                $query->whereHasMorph('indicadorable', [CatEje::class], function ($q) use ($planId) {
+                    $q->where('plan_id', $planId);
+                })->orWhereHasMorph('indicadorable', [
+                    CatProgramaDerivadoSectorial::class,
+                    CatProgramaDerivadoEspecial::class,
+                    CatProgramaDerivadoRegional::class,
+                    CatProgramaDerivadoInstitucional::class
+                ], function ($q) use ($planId) {
+                    $q->where('plan_estatal', $planId);
+                });
+            })->get();
+
+            $avanceGlobalPromedio = $this->calcularPromedioAvance($indicadoresPlan, false); // Calculamos sobre el total de datos validados y no validados (vía feedback usuario)
+            $colorAvanceGlobal = $this->getSemaforoColor($avanceGlobalPromedio);
+
+            // Programas Derivados
+            $programasData = collect($this->getProgramasAvance($planId, false))
+                ->groupBy('tipo_slug')
+                ->map(function ($programas, $tipo) {
+                    return [
+                        'tipo' => $programas->first()['tipo'],
+                        'programas' => $programas
+                    ];
+                });
+            
+            // Reordenar agrupaciones según solicitud (Sectoriales, Especiales, Regionales e Institucionales)
+            $ordenDeseado = ['sectoriales', 'especiales', 'regionales', 'institucionales'];
+            $programasAgrupadosOrdenados = [];
+            foreach ($ordenDeseado as $tipoSlug) {
+                if ($programasData->has($tipoSlug)) {
+                    $programasAgrupadosOrdenados[$tipoSlug] = $programasData->get($tipoSlug);
+                }
+            }
+            $programasData = $programasAgrupadosOrdenados;
 
             // dd($institucionesTop);
             // Log::info("DashboardController@index: Instituciones Top (con más indicadores validados) obtenidas: " . $institucionesTop->count());
@@ -292,24 +344,101 @@ class DashboardController extends Controller
                 $indicador->anio_ultimo_dato = $resultado['anio_ultimo_dato']; //
                 $indicador->ultimo_dato = $resultado['ultimo_dato']; //
                 $indicador->avance = $resultado['avance']; //
-                $indicador->semaforizacion = $resultado['semaforizacion']; //
+                $indicador->semaforizacion = $resultado['semaforizacion'];
 
-                if (isset($semaforizacionCounts[$resultado['semaforizacion']])) { //
-                    $semaforizacionCounts[$resultado['semaforizacion']]++; //
-                    $indicadoresPorSemaforo[$resultado['semaforizacion']][] = $indicador; //
+                if (isset($semaforizacionCounts[$resultado['semaforizacion']])) {
+                    $semaforizacionCounts[$resultado['semaforizacion']]++;
+                    $indicadoresPorSemaforo[$resultado['semaforizacion']][] = $indicador;
                 } else {
-                    // Manejar caso donde la semaforización devuelta no es una clave esperada
-                    // Log::warning("Semaforización inesperada '{$resultado['semaforizacion']}' para indicador ID {$indicador->id}"); //
-                    // Podrías asignarlo a "No clasificado" por defecto
-                    if (isset($semaforizacionCounts["No clasificado"])) { //
-                        $semaforizacionCounts["No clasificado"]++; //
-                        $indicadoresPorSemaforo["No clasificado"][] = $indicador; //
+                    if (isset($semaforizacionCounts["No clasificado"])) {
+                        $semaforizacionCounts["No clasificado"]++;
+                        $indicadoresPorSemaforo["No clasificado"][] = $indicador;
                     }
                 }
             }
 
+            // --- NUEVOS KPIs INTELIGENTES ---
+
+            // 1. Distribución por Tendencia
+            $tendenciaCounts = [
+                "Mayor es mejor" => 0,
+                "Menor es mejor" => 0,
+                "Constante" => 0,
+                "No definida" => 0
+            ];
+
+            foreach ($indicadoresSemaforizacion as $indicador) {
+                $tend = trim((string)$indicador->tendencia);
+                if (empty($tend)) {
+                    $tendenciaCounts["No definida"]++;
+                } elseif (isset($tendenciaCounts[$tend])) {
+                    $tendenciaCounts[$tend]++;
+                } else {
+                    $tendenciaCounts["No definida"]++;
+                }
+            }
+
+            // 2. Top 5: Indicadores con Avance más Bajo (Focos Rojos)
+            $focosRojos = collect($indicadoresSemaforizacion)
+                ->filter(function ($ind) {
+                    return $ind->semaforizacion === "Insuficiente" && $ind->avance !== null;
+                })
+                ->sortBy('avance')
+                ->take(5);
+
+            // 3. Instituciones Críticas (Más indicadores Insuficientes + Caducados)
+            // Ya tenemos $indicadoresCaducados y el desglose por semáforo en $indicadoresPorSemaforo
+            $institucionesCriticas = Institucion::where('id', '!=', 1)
+                ->get()
+                ->map(function ($inst) use ($indicadoresPorSemaforo, $indicadoresCaducados) {
+                    // Contar insuficientes de esta institución
+                    $insuficientes = collect($indicadoresPorSemaforo['Insuficiente'] ?? [])
+                        ->where('id_institucion', $inst->id)
+                        ->count();
+
+                    // Contar caducados de esta institución
+                    $caducados = $indicadoresCaducados->where('id_institucion', $inst->id)->count();
+
+                    $inst->total_criticos = $insuficientes + $caducados;
+                    $inst->conteo_insuficientes = $insuficientes;
+                    $inst->conteo_caducados = $caducados;
+
+                    return $inst;
+                })
+                ->filter(function ($inst) {
+                    return $inst->total_criticos > 0;
+                })
+                ->sortByDesc('total_criticos')
+                ->take(5);
+
             /**------------------------------------------------------------------------------------------- */
-            return view('dashboard', compact('instituciones', 'porcentajeValidado', 'totalIndicadoresValidados', 'totalIndicadores', 'porcentajeIncompletos', 'totalIndicadoresIncompletos', 'indicadoresRecientes', 'indicadoresRecientes', 'institucionesSinIndicadores', 'indicadoresProximos', 'indicadoresATiempo', 'indicadoresCaducados', 'datosGraficas', 'years', 'datosPorAnio', 'etiquetas_periodicidades', 'values_periodicidades', 'semaforizacionCounts', 'indicadoresSemaforizacion', 'indicadoresPorSemaforo'));
+            return view('dashboard', compact(
+                'instituciones', 
+                'porcentajeValidado', 
+                'totalIndicadoresValidados', 
+                'totalIndicadores', 
+                'porcentajeIncompletos', 
+                'totalIndicadoresIncompletos', 
+                'indicadoresRecientes', 
+                'institucionesSinIndicadores', 
+                'indicadoresProximos', 
+                'indicadoresATiempo', 
+                'indicadoresCaducados', 
+                'datosGraficas', 
+                'years', 
+                'datosPorAnio', 
+                'etiquetas_periodicidades', 
+                'values_periodicidades', 
+                'semaforizacionCounts', 
+                'indicadoresSemaforizacion', 
+                'indicadoresPorSemaforo', 
+                'avanceGlobalPromedio', 
+                'colorAvanceGlobal', 
+                'programasData',
+                'tendenciaCounts',
+                'focosRojos',
+                'institucionesCriticas'
+            ));
         }
     }
     /**
@@ -321,21 +450,26 @@ class DashboardController extends Controller
      */
     public function semaforizacion($categoria)
     {
-        $categoriasValidas = ["Excedido", "Aceptable", "Moderado", "Insuficiente", "No clasificado"]; //
+        $categoriasValidas = ["Excedido", "Aceptable", "Moderado", "Insuficiente", "No clasificado"];
 
-        if (!in_array($categoria, $categoriasValidas)) { //
-            abort(404, "Categoría no válida"); //
+        if (!in_array($categoria, $categoriasValidas)) {
+            abort(404, "Categoría no válida");
         }
 
-        // Asumimos que el accesor $indicador->semaforizacion en el modelo Indicador
-        // ya usa el método calcularSemaforizacion() adaptado.
-        $indicadores = Indicador::with('datosAnuales') //
-            ->get() //
-            ->filter(function ($indicador) use ($categoria) { //
-                return $indicador->semaforizacion === $categoria; //
+        $indicadores = Indicador::with('datosAnuales')
+            ->get()
+            ->filter(function ($indicador) use ($categoria, $categoriasValidas) {
+                $semaforo = $indicador->semaforizacion;
+                
+                // Si la semaforización no es válida (e.g. "Solo línea base"), se agrupa en "No clasificado"
+                if (!in_array($semaforo, $categoriasValidas)) {
+                    $semaforo = "No clasificado";
+                }
+
+                return $semaforo === $categoria;
             });
 
-        return view('panel-indicadores.indicadores_semaforizacion', compact('indicadores', 'categoria')); //
+        return view('panel-indicadores.indicadores_semaforizacion', compact('indicadores', 'categoria'));
     }
 
     /**
@@ -362,5 +496,74 @@ class DashboardController extends Controller
         }
 
         return view('users.indicadores', compact('usuario', 'indicadores', 'filtro')); //
+    }
+
+    /**
+     * Calcula el promedio de avance de una colección de indicadores.
+     */
+    private function calcularPromedioAvance($indicadores, $soloValidados)
+    {
+        if ($indicadores->isEmpty()) return 0;
+
+        $sumAvance = 0;
+        $count = 0;
+
+        foreach ($indicadores as $indicador) {
+            $res = $indicador->calcularSemaforizacion($soloValidados);
+            if ($res['avance'] !== null) {
+                $sumAvance += $res['avance'];
+                $count++;
+            }
+        }
+
+        return $count > 0 ? round($sumAvance / $count, 2) : 0;
+    }
+
+    /**
+     * Obtiene el avance de todos los programas derivados del plan.
+     */
+    private function getProgramasAvance($planId, $soloValidados)
+    {
+        $tipos = [
+            ['class' => CatProgramaDerivadoEspecial::class, 'nombre' => 'Programas Especiales', 'slug' => 'especiales'],
+            ['class' => CatProgramaDerivadoInstitucional::class, 'nombre' => 'Programas Institucionales', 'slug' => 'institucionales'],
+            ['class' => CatProgramaDerivadoRegional::class, 'nombre' => 'Programas Regionales', 'slug' => 'regionales'],
+            ['class' => CatProgramaDerivadoSectorial::class, 'nombre' => 'Programas Sectoriales', 'slug' => 'sectoriales'],
+        ];
+
+        $resultados = [];
+
+        foreach ($tipos as $tipo) {
+            $programas = $tipo['class']::where('plan_estatal', $planId)->get();
+            foreach ($programas as $prog) {
+                $indicadores = $prog->indicadores;
+                $avance = $this->calcularPromedioAvance($indicadores, $soloValidados);
+
+                $resultados[] = [
+                    'id' => $prog->id,
+                    'nombre' => $prog->nombre,
+                    'tipo' => $tipo['nombre'],
+                    'tipo_slug' => $tipo['slug'],
+                    'avance' => $avance,
+                    'color' => $prog->color,
+                    'semaforo_color' => $this->getSemaforoColor($avance),
+                    'total_indicadores' => $indicadores->count()
+                ];
+            }
+        }
+
+        return collect($resultados)->sortBy('id')->values()->toArray();
+    }
+
+    /**
+     * Determina el color del semáforo basado en el avance.
+     */
+    private function getSemaforoColor($avance)
+    {
+        if ($avance === null || $avance == 0) return '#adb5bd'; // Solo línea base / Sin datos
+        if ($avance >= 110) return '#0d6efd'; // Excedido (Azul)
+        if ($avance >= 91) return '#198754';  // Aceptable (Verde)
+        if ($avance >= 71) return '#ffc107';  // Moderado (Amarillo)
+        return '#dc3545'; // Insuficiente (Rojo)
     }
 }

@@ -79,9 +79,9 @@
                 <div class="dropdown-menu" aria-labelledby="mobileProgramasDropdownTrigger">
                     <a class="dropdown-item" href="{{ url('/ped-programas/sectoriales') }}">Programas Sectoriales</a>
                     <a class="dropdown-item" href="{{ url('/ped-programas/especiales') }}">Programas Especiales</a>
+                    <a class="dropdown-item" href="{{ url('/ped-programas/regionales') }}">Programas Regionales</a>
                     <a class="dropdown-item" href="{{ url('/ped-programas/institucionales') }}">Programas
                         Institucionales</a>
-                    <a class="dropdown-item" href="{{ url('/ped-programas/regionales') }}">Programa Regional</a>
                 </div>
             </li>
 

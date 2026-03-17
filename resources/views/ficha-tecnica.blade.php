@@ -111,7 +111,7 @@ $itemActivo = $indicador->indicadorable_type;
                     </div>
                     <div class="col-sm-12">
                         <div class="ficha-label">Fórmula</div>
-                        <div class="ficha-value font-monospace bg-light p-2 rounded small ws-pre">{{ $indicador->formula }}</div>
+                        <div class="ficha-value text-muted ws-pre fs-95-justify">{{ $indicador->formula }}</div>
                     </div>
                     <div class="col-sm-12">
                         <div class="ficha-label">Unidad de Medida</div>
@@ -204,17 +204,14 @@ $itemActivo = $indicador->indicadorable_type;
                 </div>
                 @endif
                 <div class="d-flex align-items-center justify-content-center mb-2">
-                    <span class="badge rounded-pill px-3 py-2 me-2 shadow-sm fs-90r" style="background-color: {{ $colorSemaforo }};">
-                        {{ $semText }}
-                    </span>
-                    <button type="button" class="btn btn-sm btn-light rounded-circle text-muted p-0 shadow-sm wh-28px"
+                    <span class="badge rounded-pill px-3 py-2 shadow-sm fs-90r" style="background-color: {{ $colorSemaforo }}; cursor: help;"
                         data-bs-toggle="popover"
                         data-bs-trigger="hover focus"
                         data-bs-placement="top"
                         title="Estado: {{ $semText }}"
                         data-bs-content="{{ $explicacionDetallada }}">
-                        <i class="fas fa-question-circle"></i>
-                    </button>
+                        {{ $semText }}
+                    </span>
                 </div>
 
                 @if($esDatoLineaBase)
@@ -225,7 +222,12 @@ $itemActivo = $indicador->indicadorable_type;
                     </div>
                 </div>
                 @else
-                <div id="gauge-ficha" class="grafico-gauge-ficha"></div>
+                <div id="gauge-ficha" class="grafico-gauge-ficha" style="cursor: help;"
+                    data-bs-toggle="popover"
+                    data-bs-trigger="hover focus"
+                    data-bs-placement="top"
+                    title="Estado: {{ $semText }}"
+                    data-bs-content="{{ $explicacionDetallada }}"></div>
                 <div class="fw-bold fs-4 text-dark mt-35px">{{ number_format($avanceVal, 1) }}%</div>
                 <div class="small text-muted mt-1 fw-semibold">Avance Meta</div>
                 @endif
@@ -268,7 +270,7 @@ $itemActivo = $indicador->indicadorable_type;
                     <table class="table table-hover table-historicos text-center mb-0">
                         <thead class="sticky-top">
                             <tr>
-                                <th style="background-color: {{ $indicador->color ?? '#6c757d' }};">Año</th>
+                                <th class="text-start" style="background-color: {{ $indicador->color ?? '#6c757d' }};">Año</th>
                                 <th style="background-color: {{ $indicador->color ?? '#6c757d' }};">Valor Alcanzado</th>
                             </tr>
                         </thead>
@@ -284,24 +286,39 @@ $itemActivo = $indicador->indicadorable_type;
                                 @php $valorDato=$indicador->getValorDatoAnual($year, 'N/D', true); @endphp
                                 @if($valorDato !== 'N/D' || $year == $indicador->linea_base)
                                 <tr @if($year==$indicador->linea_base) class="table-info-linea-base" @endif>
-                                    <td class="text-muted">
-                                        {{ $year }}
+
+                                    <td class="text-muted d-flex justify-content-between align-items-center">
                                         @if($year == $indicador->linea_base)
-                                        <span class="badge rounded-pill bg-success ms-1 badge-linea-base">L. BASE</span>
+                                        <span class="fw-bold">{{ $year }}</span>
+                                        @else
+                                        <span>{{ $year }}</span>
+                                        @endif
+
+                                        @if($year == $indicador->linea_base)
+                                        <span class="badge rounded-pill bg-success badge-linea-base">L. BASE</span>
                                         @endif
                                     </td>
-                                    <td class="fw-bold @if($year == $indicador->linea_base) text-success @else text-dark @endif">{{ $valorDato }}</td>
+                                    <!-- <td class="text-muted">
+                                        {{ $year }}
+                                        @if($year == $indicador->linea_base)
+                                        <br>
+                                        <span class="badge rounded-pill bg-success ms-1 badge-linea-base">L. BASE</span>
+                                        @endif
+                                    </td> -->
+                                    <td class="fw-bold @if($year == $indicador->linea_base) text-success @else text-dark @endif">
+                                        {{ $valorDato }}
+                                    </td>
                                 </tr>
                                 @endif
                                 @endfor
 
                                 @if(isset($indicador->meta_2024))
                                 <tr class="table-info-meta">
-                                    <td class="text-primary fw-bold">
-                                        2030
-                                        <span class="badge rounded-pill bg-primary ms-1 badge-meta-2030">META</span>
+                                    <td class="fw-bold d-flex justify-content-between align-items-center">
+                                        <span>2030</span>
+                                        <span class="badge rounded-pill bg-danger badge-meta-2030">META</span>
                                     </td>
-                                    <td class="fw-bold text-primary">
+                                    <td class="fw-bold text-danger">
                                         {{ isset($indicador->meta_2024) ? number_format((float)str_replace(',', '', $indicador->meta_2024), $indicador->id == 100 ? 6 : 2, '.', ',') : 'N/D' }}
                                     </td>
                                 </tr>

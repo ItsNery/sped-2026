@@ -34,7 +34,7 @@ Estado de Puebla')
     </div>
     <div class="col-sm-12 col-md-7 d-flex align-items-center">
         <p class="fs-4 text-muted border-start ps-4" style="border-width: 4px !important; border-color: #8BA59D !important;">
-            Atender objetivos prioritarios para el desarrollo del Estado.
+            Son instrumentos que atienden los objetivos prioritarios para el desarrollo del estado.
         </p>
     </div>
 </div>

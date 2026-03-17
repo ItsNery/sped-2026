@@ -54,10 +54,10 @@ class DashboardGeneralController extends Controller
             $query->whereHasMorph('indicadorable', [CatEje::class], function ($q) use ($planId) {
                 $q->where('plan_id', $planId);
             })->orWhereHasMorph('indicadorable', [
+                CatProgramaDerivadoSectorial::class,
                 CatProgramaDerivadoEspecial::class,
-                CatProgramaDerivadoInstitucional::class,
                 CatProgramaDerivadoRegional::class,
-                CatProgramaDerivadoSectorial::class
+                CatProgramaDerivadoInstitucional::class
             ], function ($q) use ($planId) {
                 $q->where('plan_estatal', $planId);
             });
@@ -83,6 +83,7 @@ class DashboardGeneralController extends Controller
 
         // 3. Avance por Programas Derivados
         $programasData = $this->getProgramasAvance($planId, $soloValidados);
+        $programasDerivadosAgrupados = $programasData->groupBy('tipo');
 
         $colorPlan = $this->getSemaforoColor($avancePlan);
 
@@ -92,6 +93,7 @@ class DashboardGeneralController extends Controller
             'colorPlan',
             'ejesData',
             'programasData',
+            'programasDerivadosAgrupados',
             'soloValidados'
         ));
     }
@@ -123,10 +125,10 @@ class DashboardGeneralController extends Controller
     private function getProgramasAvance($planId, $soloValidados)
     {
         $tipos = [
-            ['class' => CatProgramaDerivadoEspecial::class, 'nombre' => 'Programas Especiales', 'slug' => 'especiales'],
-            ['class' => CatProgramaDerivadoInstitucional::class, 'nombre' => 'Programas Institucionales', 'slug' => 'institucionales'],
-            ['class' => CatProgramaDerivadoRegional::class, 'nombre' => 'Programas Regionales', 'slug' => 'regionales'],
-            ['class' => CatProgramaDerivadoSectorial::class, 'nombre' => 'Programas Sectoriales', 'slug' => 'sectoriales'],
+            ['class' => CatProgramaDerivadoSectorial::class, 'nombre' => 'Sectoriales', 'slug' => 'sectoriales', 'order' => 1],
+            ['class' => CatProgramaDerivadoEspecial::class, 'nombre' => 'Especiales', 'slug' => 'especiales', 'order' => 2],
+            ['class' => CatProgramaDerivadoRegional::class, 'nombre' => 'Regionales', 'slug' => 'regionales', 'order' => 3],
+            ['class' => CatProgramaDerivadoInstitucional::class, 'nombre' => 'Institucionales', 'slug' => 'institucionales', 'order' => 4],
         ];
 
         $resultados = [];
@@ -142,6 +144,7 @@ class DashboardGeneralController extends Controller
                     'nombre' => $prog->nombre,
                     'tipo' => $tipo['nombre'],
                     'tipo_slug' => $tipo['slug'],
+                    'tipo_order' => $tipo['order'],
                     'avance' => $avance,
                     'color' => $prog->color,
                     'semaforo_color' => $this->getSemaforoColor($avance),
@@ -150,7 +153,7 @@ class DashboardGeneralController extends Controller
             }
         }
 
-        return collect($resultados)->sortBy('id')->values();
+        return collect($resultados)->sortBy('tipo_order')->values();
     }
 
     /**

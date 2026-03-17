@@ -26,7 +26,7 @@ $totalIndicadoresGeneral += $grupoDeIndicadores->count();
                     style="background-color: var(--color-eje{{ $numEje }});">
                     Eje {{ $numEje }}
                 </span>
-                <h2 class="mb-0 fw-bold text-dark">Enfoque Estratégico</h2>
+                <h2 class="mb-0 fw-bold text-dark">Enfoque</h2>
             </div>
             <p class="fs-5 text-muted lh-lg mb-0 text-justify">
                 {{ $textoEnfoque }}
@@ -50,8 +50,8 @@ $totalIndicadoresGeneral += $grupoDeIndicadores->count();
                 </div>
 
                 <div class="position-absolute text-center top-70px">
-                    <div class="fw-bold text-dark fs-18rem">
-                        {{ number_format($avanceEje ?? 0, 1) }}%
+                    <div class="fw-bold text-dark mt-3 fs-18rem">
+                        {{ number_format($avanceEje ?? 0, 2) }}%
                     </div>
                     <div class="small text-muted fw-semibold">Avance</div>
                 </div>
@@ -73,33 +73,39 @@ $totalIndicadoresGeneral += $grupoDeIndicadores->count();
             @if ($listaIndicadoresDeLaTematica->isNotEmpty())
             @foreach ($listaIndicadoresDeLaTematica as $indicador)
             @php
-            // 1. Calculamos el estado, colores y valores una sola vez al inicio
+
             $semText = $indicador->semaforizacion_validada ?: 'No Clasificado';
             $colorSemaforo = '#6c757d'; // Gris por defecto
             $bgBadge = 'bg-secondary';
             $esDatoLineaBase = false;
+            $explicacionDetallada = 'Sin datos suficientes para clasificar.';
 
             switch (strtolower($semText)) {
             case 'excedido':
             $colorSemaforo = '#0d6efd'; // Azul
             $bgBadge = 'bg-primary';
+            $explicacionDetallada = 'El valor logrado del indicador supera en 10% a la meta programada, es decir, el resultado del indicador se desvió significativamente de la meta establecida.';
             break;
             case 'aceptable':
             $colorSemaforo = '#198754'; // Verde
             $bgBadge = 'bg-success';
+            $explicacionDetallada = 'El valor logrado del indicador se encuentra entre -9% y +10% por debajo y por encima de la meta programada, es decir, se mantiene dentro de los rangos establecidos como aceptables.';
             break;
             case 'moderado':
             $colorSemaforo = '#ffc107'; // Amarillo
             $bgBadge = 'bg-warning text-dark';
+            $explicacionDetallada = 'El valor logrado del indicador es menor que la meta programada, representa un avance significativo, pero deficiente o moderado para alcanzar la meta establecida.';
             break;
             case 'insuficiente':
             $colorSemaforo = '#dc3545'; // Rojo
             $bgBadge = 'bg-danger';
+            $explicacionDetallada = 'El valor alcanzado del indicador está muy por debajo de la meta programada, lo que representa un avance insuficiente para alcanzar la meta establecida.';
             break;
             case 'solo línea base':
-            $colorSemaforo = '#adb5bd'; // Un gris más claro para diferenciarlo del "No clasificado"
+            $colorSemaforo = '#adb5bd';
             $bgBadge = 'bg-light text-dark border';
-            $esDatoLineaBase = true; // Usaremos esto para ocultar el velocímetro si queremos
+            $esDatoLineaBase = true;
+            $explicacionDetallada = 'El indicador sólo cuenta con el dato de línea base, por lo que está a la espera de un nuevo periodo de medición.';
             break;
             }
 
@@ -109,8 +115,7 @@ $totalIndicadoresGeneral += $grupoDeIndicadores->count();
 
             {{-- 2. TARJETA COMPACTA DEL INDICADOR --}}
             <div class="card shadow-sm mb-4 border-0 rounded-4 card-indicador"
-                style="border-left: 6px solid {{ $colorSemaforo }};"
-                onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                style="border-left: 6px solid {{ $colorSemaforo }};">
                 <div class="card-body p-4">
                     <div class="row align-items-center">
 
@@ -130,26 +135,10 @@ $totalIndicadoresGeneral += $grupoDeIndicadores->count();
                             @endif
                         </div>
 
-                        <div class="col-6 col-md-4 col-lg-2 text-center mb-4 mb-md-0 border-end-md card-indicador_info">
-                            <div class="text-uppercase small fw-semibold text-muted mb-1">
-                                Resultado {{ $indicador->anio_reciente_validado ?? '' }}
-                            </div>
-                            <div class="fs-2 fw-bold" style="color: {{ $colorSemaforo }};">
-                                @isset($indicador->dato_reciente_validado)
-                                {{ number_format($indicador->dato_reciente_validado, 2, '.', ',') }}
-                                @else
-                                N/D
-                                @endisset
-                            </div>
-                            <span class="badge rounded-pill {{ $bgBadge }} px-3 py-1 mt-1 fw-normal shadow-sm">
-                                {{ $semText }}
-                            </span>
-                        </div>
-
                         <div class="col-6 col-md-4 col-lg-4 text-center px-lg-4 mb-4 mb-md-0 border-end-lg card-indicador_info">
                             <div class="row g-3">
                                 <div class="col-6">
-                                    <div class="small text-muted mb-1">Unidad</div>
+                                    <div class="small text-muted mb-1">Unidad de medida</div>
                                     <div class="fw-semibold text-dark text-truncate"
                                         title="{{ $indicador->unidad_medida }}">
                                         {{ $indicador->unidad_medida }}
@@ -173,7 +162,26 @@ $totalIndicadoresGeneral += $grupoDeIndicadores->count();
                                 </div>
                             </div>
                         </div>
-
+                        <div class="col-6 col-md-4 col-lg-2 text-center mb-4 mb-md-0 border-end-md card-indicador_info">
+                            <div class="text-uppercase small fw-semibold text-muted mb-1">
+                                Resultado {{ $indicador->anio_reciente_validado ?? '' }}
+                            </div>
+                            <div class="fs-2 fw-bold" style="color: {{ $colorSemaforo }};">
+                                @isset($indicador->dato_reciente_validado)
+                                {{ number_format($indicador->dato_reciente_validado, 2, '.', ',') }}
+                                @else
+                                N/D
+                                @endisset
+                            </div>
+                            <span class="badge rounded-pill {{ $bgBadge }} px-3 py-1 mt-1 fw-normal shadow-sm" style="cursor: help;"
+                                data-bs-toggle="popover"
+                                data-bs-trigger="hover focus"
+                                data-bs-placement="top"
+                                title="Estado: {{ $semText }}"
+                                data-bs-content="{{ $explicacionDetallada }}">
+                                {{ $semText }}
+                            </span>
+                        </div>
                         <div
                             class="col-12 col-md-4 col-lg-2 text-center d-flex flex-column align-items-center justify-content-center">
                             @if($esDatoLineaBase)
@@ -182,14 +190,18 @@ $totalIndicadoresGeneral += $grupoDeIndicadores->count();
                                 Medición Pendiente
                             </div>
                             @else
-                            <div id="gauge-{{ $indicador->id }}" class="grafico-gauge-pendiente"></div>
+                            <div id="gauge-{{ $indicador->id }}" class="grafico-gauge-pendiente" style="cursor: help;"
+                                data-bs-toggle="popover"
+                                data-bs-trigger="hover focus"
+                                data-bs-placement="top"
+                                title="Estado: {{ $semText }}"
+                                data-bs-content="{{ $explicacionDetallada }}"></div>
                             <div class="fw-bold fs-5 text-dark mt-35px">
-                                {{ number_format($indicador->avance_validado, 1) }}%
+                                {{ number_format($indicador->avance_validado, 2) }}%
                             </div>
                             <div class="small text-muted mt-1 fw-semibold">Avance Meta</div>
                             @endif
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -295,20 +307,8 @@ $totalIndicadoresGeneral += $grupoDeIndicadores->count();
     });
 </script>
 <style>
-    @media (min-width: 768px) {
-        .border-end-md {
-            border-right: 1px solid #eee !important;
-        }
-    }
-
-    @media (min-width: 992px) {
-        .border-end-lg {
-            border-right: 1px solid #eee !important;
-        }
-    }
-
     .hover-primary:hover {
-        color: var(--color-eje {{$numEje}}) !important;
+        color: var(--color-eje{{ $numEje }}) !important;
         text-decoration: underline !important;
     }
 </style>

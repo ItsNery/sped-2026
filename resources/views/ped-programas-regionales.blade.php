@@ -37,8 +37,8 @@ Información para el Seguimiento a la Planeación y Evaluación del Desarrollo d
     </div>
     <div class="col-sm-12 col-md-7 d-flex align-items-center">
         <p class="fs-4 text-muted border-start ps-4" style="border-width: 4px !important; border-color: #512E6A !important;">
-            Establecer las políticas para potencializar las actividades de las regiones del Estado y tienen por objeto
-            impulsar el desarrollo equilibrado de los Municipios de acuerdo a las características geográficas y
+            Son instrumentos que establecen las políticas para potencializar las actividades de las regiones del estado y tienen por objeto
+            impulsar el desarrollo equilibrado de los municipios de acuerdo a las características geográficas y
             económicas del territorio.
         </p>
     </div>
