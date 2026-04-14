@@ -46,7 +46,7 @@ class IndicadorMunicipalController extends Controller
             ->map(function ($indicador) {
                 // Crear un arreglo con los valores más recientes por año
                 $valoresPorAño = [];
-                for ($anio = 2016; $anio <= 2024; $anio++) {
+                for ($anio = 2016; $anio <= now()->year; $anio++) {
                     // Buscar el período más alto con dato no nulo
                     $resultado = ResultadoIndicadorMunicipal::where('id_indicador', $indicador->id)
                         ->where('año', $anio)
@@ -437,7 +437,7 @@ class IndicadorMunicipalController extends Controller
         return redirect()->back()->with('status', 'El estado de validación del indicador ha sido actualizado.');
     }
 
-     /**
+    /**
      * Genera la vista de reporte imprimible para los indicadores de un municipio.
      * @return \Illuminate\View\View
      */
@@ -451,7 +451,7 @@ class IndicadorMunicipalController extends Controller
             ->map(function ($indicador) {
                 // Crear un arreglo con los valores más recientes por año
                 $valoresPorAño = [];
-                for ($anio = 2016; $anio <= 2024; $anio++) {
+                for ($anio = 2016; $anio <= now()->year; $anio++) {
                     // Buscar el período más alto con dato no nulo
                     $resultado = ResultadoIndicadorMunicipal::where('id_indicador', $indicador->id)
                         ->where('año', $anio)
@@ -472,7 +472,7 @@ class IndicadorMunicipalController extends Controller
         return view('panel-indicadores-municipales.reporte', compact('indicadores', 'municipio_nombre'));
     }
 
-     /**
+    /**
      * Genera una ficha técnica pública para un indicador municipal.
      * @param  int $id
      * @return \Illuminate\View\View
