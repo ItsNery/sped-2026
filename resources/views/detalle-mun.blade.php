@@ -158,7 +158,7 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-xl-12 col-xs-12 col-sm-12 col-12 col-md-12 datos" style="">
-                                            Meta 2024
+                                            Meta 2027
                                         </div>
                                     </div>
                                     <div class="row">

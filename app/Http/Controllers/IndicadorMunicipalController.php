@@ -486,7 +486,8 @@ class IndicadorMunicipalController extends Controller
         $resultados = $indicador->resultados;
 
         // Rango de años que queremos verificar (por ejemplo, de 2015 a 2024)
-        $años = range(2015, 2024);
+        $anioActual= now()->year;
+        $años = range(2015, $anioActual);
 
         // Iterar sobre los años y agregar atributos dinámicos
         foreach ($años as $año) {

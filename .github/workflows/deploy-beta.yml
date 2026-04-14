@@ -20,6 +20,9 @@ jobs:
           git fetch origin
           git reset --hard origin/beta
 
+          sudo chown -R user_planeacion:www-data storage bootstrap/cache
+          sudo chmod -R 775 storage bootstrap/cache
+
           composer install --no-dev --optimize-autoloader
 
           php artisan migrate --force || true
@@ -40,9 +43,6 @@ jobs:
           mkdir -p storage/framework/cache
           mkdir -p storage/framework/sessions
 
-          sudo chown -R user_planeacion:www-data storage bootstrap/cache
-          sudo chmod -R 775 storage bootstrap/cache
-
   deploy-prod:
     if: github.ref == 'refs/heads/main'
     runs-on: [self-hosted, actions-runner-sped]
@@ -55,6 +55,9 @@ jobs:
 
           git fetch origin
           git reset --hard origin/main
+          sudo chown -R user_planeacion:www-data storage bootstrap/cache
+          sudo chmod -R 775 storage bootstrap/cache
+          sudo chmod -R g+s storage bootstrap/cache
 
           composer install --no-dev --optimize-autoloader
 
@@ -71,6 +74,3 @@ jobs:
 
           php artisan storage:link
           php artisan route:clear
-
-          sudo chown -R user_planeacion:www-data storage bootstrap/cache
-          sudo chmod -R 775 storage bootstrap/cache
