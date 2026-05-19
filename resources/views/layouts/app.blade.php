@@ -72,7 +72,6 @@
         src="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.2.2/af-2.7.0/b-3.2.2/b-colvis-3.2.2/b-html5-3.2.2/b-print-3.2.2/fh-4.0.1/kt-2.12.1/r-3.0.4/sp-2.3.3/sr-1.4.1/datatables.min.js"
         integrity="sha384-2KVVYSM6hFzM8i2jOn9yON6kgel4/a/gwaHwNzjT1Z4RmkPWRmqqQk7VU1s+wcqS" crossorigin="anonymous">
     </script>
-
     <script src="{{ asset('js/scripts-admin.js') }}"></script>
 </body>
 
