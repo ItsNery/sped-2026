@@ -2,7 +2,7 @@
     <div class="encabezado-movil" id="movil-navbar">
         <div class="logo">
             <a href="{{ url('/') }}">
-                <img src="{{ asset('img/logos_sped.png') }}" alt="Logo SPED" class="w-100">
+                <img src="{{ asset('img/Cadena_SPED_.png') }}" alt="Logo SPED" class="w-100">
             </a>
         </div>
         <div class="menu">

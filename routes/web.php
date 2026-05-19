@@ -137,6 +137,7 @@ Route::get('/ficha-tecnica/{indicador}', [HomeController::class, 'show'])
     ->name('ficha-tecnica.show');
 Route::get('/ficha-tecnica-municipal/{id}', [IndicadorMunicipalController::class, 'mostrarFicha'])->name('mostrarFicha');
 Route::get('/ficha-tecnica/generar/{id}', [HomeController::class, 'generarFicha'])->name('generarFicha');
+Route::get('/docs/api-indicadores', [HomeController::class, 'apiDocs'])->name('public.api_docs');
 
 /*
 |--------------------------------------------------------------------------

@@ -3,7 +3,7 @@
         <div class="row ligas">
             <div class="col-md-3 escudo">
                 <div class="container">
-                    <img class="w-100 px-3" src="{{ asset('img/logo-footer.png') }}"
+                    <img class="w-100 px-3" src="{{ asset('img/Logos_GobPue.png') }}"
                         alt="Logo en color guinda y gris de la Secretaría de Planeación y Finanzas"
                         title="Secretaría de Planeación y Finanzas">
                 </div>
@@ -49,8 +49,8 @@
                     <b>Ubicación</b>
                 </h6>
                 <ul class="list-unstyled">
-                    <li><i class="fa fa-angle-right me-2"></i>11 Oriente #2224</li>
-                    <li><i class="fa fa-angle-right me-2"></i>Col. Azcarate C.P. 72501, Puebla,Pue.</li>
+                    <li><i class="fa fa-angle-right me-2"></i>Av. Cúmulo de Virgo 1358</li>
+                    <li><i class="fa fa-angle-right me-2"></i> Reserva Territorial Atlixcáyotl, Puebla, Pue.</li>
                     <li><i class="fa fa-angle-right me-2"></i>Tel: (222) 2-29-70-00, Ext. 5051</li>
                 </ul>
                 {{-- <iframe
