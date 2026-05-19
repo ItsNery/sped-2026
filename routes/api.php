@@ -17,3 +17,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// Rutas públicas de consulta de indicadores en tiempo real
+Route::get('/indicadores', [\App\Http\Controllers\Api\IndicadorApiController::class, 'index']);
+Route::get('/indicadores/{id_or_slug}', [\App\Http\Controllers\Api\IndicadorApiController::class, 'show']);
+

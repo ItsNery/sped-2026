@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\CarruselIndicador;
 use App\Models\CatRegion;
+use App\Models\Institucion;
+use App\Models\Odses;
 use Illuminate\Support\Facades\Log;
 use App\Models\CatProgramaDerivadoSectorial;
 use App\Models\CatProgramaDerivadoInstitucional;
@@ -626,4 +628,21 @@ class HomeController extends Controller
     {
         return view('capacitacion-2025');
     }
+
+    /**
+     * Muestra la vista interactiva de documentación y consulta de la API de indicadores.
+     */
+    public function apiDocs()
+    {
+        $instituciones = Institucion::select('id', 'nombre')->where('nombre', '!=', 'Administración del SPED')->orderBy('nombre', 'asc')->get();
+        $ods = Odses::select('id', 'nombre')->orderBy('id', 'asc')->get();
+        $programasDerivados = Indicador::distinct()
+            ->whereNotNull('programa_derivado')
+            ->where('programa_derivado', '!=', '')
+            ->orderBy('programa_derivado', 'asc')
+            ->pluck('programa_derivado');
+
+        return view('publico.api_docs', compact('instituciones', 'ods', 'programasDerivados'));
+    }
 }
+

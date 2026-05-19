@@ -108,6 +108,7 @@ Route::post('/datos-abiertos-ped-json', [IndicadorController::class, 'datosAbier
 
 Route::get('/ficha-tecnica/generar/{id}', [HomeController::class, 'generarFicha'])->name('generarFicha');
 Route::get('/capacitacion-2025', [HomeController::class, 'capacitacion2025'])->name('capacitacion-2025');
+Route::get('/docs/api-indicadores', [HomeController::class, 'apiDocs'])->name('public.api_docs');
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('panel-roles', RolController::class);
