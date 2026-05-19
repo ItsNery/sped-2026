@@ -1,4 +1,4 @@
-# 📊 SPED - Sistema de Planeación Estatal de Desarrollo
+# 📊 SPED - Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
 
 Un sistema integral de gestión, seguimiento, validación y reporte de indicadores de rendimiento para la administración pública. SPED permite a las instituciones gubernamentales capturar, validar y visualizar indicadores alineados con los Objetivos de Desarrollo Sostenible (ODS) y los planes de desarrollo estatales.
 
