@@ -92,7 +92,7 @@
             {{-- <li class="nav-item {{ request()->is('agenda') ? 'active' : '' }}">
             <a class="nav-link" href="{{ url('/agenda') }}">Agenda 2030</a>
             </li> --}}
-            {{-- Fin de comentario --}}
+
             <li class="nav-item" id="buscador">
                 <a class="nav-link" href="#" onclick="openSearchModal();">
                     <i class="fas fa-search" aria-hidden="true"></i> Buscar
