@@ -634,7 +634,7 @@ class HomeController extends Controller
      */
     public function apiDocs()
     {
-        $instituciones = Institucion::select('id', 'nombre')->where('nombre', '!=', 'Administración del SPED')->orderBy('nombre', 'asc')->get();
+        $instituciones = Institucion::select('id', 'nombre')->whereNotIn('nombre', ['Administración del SPED', 'Dependencia'])->orderBy('nombre', 'asc')->get();
         $ods = Odses::select('id', 'nombre')->orderBy('id', 'asc')->get();
         $programasDerivados = Indicador::distinct()
             ->whereNotNull('programa_derivado')
@@ -643,6 +643,17 @@ class HomeController extends Controller
             ->pluck('programa_derivado');
 
         return view('publico.api_docs', compact('instituciones', 'ods', 'programasDerivados'));
+    }
+
+    /**
+     * Muestra la vista de detalle de un indicador para la consola de API.
+     *
+     * @param  string  $id_or_slug
+     * @return \Illuminate\Http\Response
+     */
+    public function apiIndicatorDetail($id_or_slug)
+    {
+        return view('publico.api_indicator_detail', compact('id_or_slug'));
     }
 }
 

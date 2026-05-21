@@ -38,6 +38,8 @@ Route::get('/', [HomeController::class, 'mostrarCarrusel']);
 Route::get('/informacion-general', function () {
     return view('informacion-general');
 });
+Route::get('/informacion-general/api', [HomeController::class, 'apiDocs'])->name('public.api_docs');
+Route::get('/informacion-general/api/indicador/{id_or_slug}', [HomeController::class, 'apiIndicatorDetail'])->name('public.api_indicator_detail');
 
 Route::get('/normatividad', function () {
     return view('normatividad');
@@ -108,7 +110,7 @@ Route::post('/datos-abiertos-ped-json', [IndicadorController::class, 'datosAbier
 
 Route::get('/ficha-tecnica/generar/{id}', [HomeController::class, 'generarFicha'])->name('generarFicha');
 Route::get('/capacitacion-2025', [HomeController::class, 'capacitacion2025'])->name('capacitacion-2025');
-Route::get('/docs/api-indicadores', [HomeController::class, 'apiDocs'])->name('public.api_docs');
+
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('panel-roles', RolController::class);

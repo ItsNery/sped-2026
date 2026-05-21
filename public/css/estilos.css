@@ -98,6 +98,7 @@
     --color-eje4: #1c645c;
     --color-eje5: #ac243c;
     --color-eje6: #e4b48c;
+    --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
 }
 
 html,
@@ -3472,9 +3473,11 @@ nav {
 .w-3p {
     width: 3%;
 }
+
 .w-10p {
     width: 10%;
 }
+
 .w-20p {
     width: 20%;
 }
@@ -5202,4 +5205,259 @@ nav {
             #fff 10px,
             #fff 20px);
     /* Patrón de seguridad tipo documento oficial */
+}
+
+/* Estilos de api */
+.api-container {
+    padding: 0 20px;
+
+    .api-header {
+        background: linear-gradient(135deg, var(--color1-2024) 0%, #3a0d1b 100%);
+        color: white;
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px -5px rgba(105, 26, 50, 0.3);
+        margin-bottom: 30px;
+        margin-top: 30px;
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin-bottom: 0;
+        }
+    }
+
+    .api-tabs {
+        display: flex;
+        border-bottom: 2px solid var(--bg-body);
+        margin-bottom: 30px;
+        gap: 15px;
+    }
+
+    .api-tab-btn {
+        background: none;
+        border: none;
+        padding: 12px 24px;
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #6B7280;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        bottom: -2px;
+        border-bottom: 3px solid transparent;
+    }
+
+    .api-tab-btn:hover {
+        color: var(--color1-2024);
+    }
+
+    .api-tab-btn.active {
+        color: var(--color1-2024);
+        border-bottom-color: var(--color1-2024);
+    }
+
+    .api-tab-content {
+        display: none;
+        animation: fadeIn 0.4s ease;
+    }
+
+    .api-tab-content.active {
+        display: block;
+    }
+
+    .api-card {
+        background: white;
+        border: 1px solid var(--bg-body);
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        padding: 25px;
+        margin-bottom: 25px;
+    }
+
+    .api-card.sticky-top {
+        top: 20px;
+        z-index: 1;
+    }
+
+    .api-card-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--color-dark);
+        margin-bottom: 20px;
+        border-left: 4px solid var(--color1-2024);
+        padding-left: 12px;
+    }
+
+    .method-badge {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        display: inline-block;
+    }
+
+    .method-get {
+        background-color: #E0F2FE;
+        color: #0369A1;
+        border: 1px solid #BAE6FD;
+    }
+
+    .url-string {
+        font-family: var(--font-mono);
+        background-color: #F3F4F6;
+        padding: 6px 12px;
+        border-radius: 6px;
+        color: #374151;
+        font-size: 0.9rem;
+        word-break: break-all;
+    }
+
+    /* Code Blocks */
+    .code-block-wrapper {
+        position: relative;
+        margin: 15px 0;
+    }
+
+    .code-block {
+        font-family: var(--font-mono);
+        background-color: #1E293B;
+        color: #E2E8F0;
+        padding: 20px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-size: 0.88rem;
+        line-height: 1.5;
+        max-height: 450px;
+    }
+
+    /* Forms */
+    .form-group label {
+        font-weight: 600;
+        color: #4B5563;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 8px;
+        border: 1px solid #D1D5DB;
+        padding: 10px 14px;
+        font-size: 0.95rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--color1-2024);
+        box-shadow: 0 0 0 3px rgba(105, 26, 50, 0.15);
+    }
+
+    .btn-primary-api {
+        background-color: var(--color1-2024);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary-api:hover {
+        background-color: var(--color1-2024-light);
+        color: white;
+        box-shadow: 0 4px 10px rgba(105, 26, 50, 0.2);
+    }
+
+    /* Tables */
+    .table-api {
+        width: 100%;
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .table-api th {
+        background-color: #F9FAFB;
+        color: #374151;
+        font-weight: 600;
+        border-bottom: 2px solid var(--bg-body);
+        padding: 12px 16px;
+        font-size: 0.9rem;
+    }
+
+    .table-api td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #F3F4F6;
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+
+    .table-api tbody tr:hover {
+        background-color: #F9FAFB;
+    }
+
+    /* Semaforos */
+    .semaforo-badge {
+        font-weight: 600;
+        font-size: 0.8rem;
+        padding: 4px 8px;
+        border-radius: 12px;
+        display: inline-block;
+        text-align: center;
+    }
+
+    /* Modal styles */
+    .modal-xl {
+        max-width: 1140px;
+    }
+
+    .modal-content-custom {
+        border-radius: 16px;
+        overflow: hidden;
+        border: none;
+    }
+
+    .modal-header-custom {
+        background: linear-gradient(135deg, var(--color1-2024) 0%, #3a0d1b 100%);
+        color: white;
+        padding: 20px 25px;
+    }
+
+    .modal-header-custom .btn-close {
+        filter: invert(1) grayscale(1) brightness(2);
+    }
+
+    .badge-ods {
+        background-color: #FEF3C7;
+        color: #92400E;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 8px;
+        display: inline-block;
+        margin-right: 6px;
+        margin-bottom: 6px;
+        font-size: 0.85rem;
+    }
+}
+
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

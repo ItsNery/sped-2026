@@ -45,6 +45,17 @@ class Indicador extends Model
         'indicadorable_type',
         'slug',
     ];
+
+    /**
+     * Atributos adicionales que se incluyen automáticamente en las respuestas JSON.
+     */
+    protected $appends = [
+        'dato_reciente',
+        'anio_reciente',
+        'semaforizacion',
+        'avance'
+    ];
+
     public function getRouteKeyName()
     {
         return 'slug';
