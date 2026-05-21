@@ -27,4 +27,5 @@ php_value max_input_time 5000
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+    Redirect 301 /captura /informe
 </IfModule>
