@@ -52,6 +52,10 @@
                             aria-selected="false">
                             Programas Derivados
                         </button> --}}
+                        <button class="nav-link" id="reporte-eje-tab" data-bs-toggle="pill" data-bs-target="#reporte-eje"
+                            type="button" role="tab" aria-controls="reporte-eje" aria-selected="false">
+                            Reporte Ejecutivo
+                        </button>
                     </div>
                 </div>
                 <div class="col-md-9">
@@ -466,6 +470,29 @@
 
                                                 </button>
                                             </form> --}}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="tab-pane fade" id="reporte-eje" role="tabpanel" aria-labelledby="reporte-eje-tab">
+                            <h4 class="h5 mb-3 fw-semibold" style="color: var(--color-primary);">Reporte Ejecutivo</h4>
+                            <p class="mb-4 text-muted">Reporte ejecutivo de cumplimiento de indicadores del SPED.</p>
+                            <table class="table table-bordered data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre del Conjunto</th>
+                                        <th>Formatos de Descarga</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Reporte Ejecutivo 2025 </td>
+                                        <td class="download-icons">
+                                            <a href="{{ asset('docs/datos-abiertos/2024-2030/reporte/Reporte_Ejecutivo_2025.pdf') }}"
+                                                download="" title="Descargar PDF"><img
+                                                    src="{{ asset('img/PDF.png') }}" alt="Icono de PDF"
+                                                    title=" Icono PDF"></a>
                                         </td>
                                     </tr>
                                 </tbody>
