@@ -160,6 +160,21 @@ class Indicador extends Model
     }
 
     /**
+     * Relación muchos a muchos con Programas Institucionales.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function programasInstitucionales()
+    {
+        return $this->belongsToMany(
+            CatProgramaDerivadoInstitucional::class,
+            'programa_institucional_indicador',
+            'indicador_id',
+            'programa_institucional_id'
+        )->withTimestamps();
+    }
+
+    /**
      * Relación con DatoAnual. Un indicador tiene MUCHOS registros de datos anuales.
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany

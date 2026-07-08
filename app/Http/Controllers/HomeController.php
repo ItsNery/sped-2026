@@ -35,7 +35,7 @@ class HomeController extends Controller
         // 1. Cargamos el indicador con sus relaciones.
         $indicador->load(['datosAnuales' => function ($q) {
             $q->where('validado', true);
-        }, 'ods', 'indicadorable']);
+        }, 'ods', 'indicadorable', 'programasInstitucionales']);
 
         // --- LÓGICA DE COLORES ---
         $colorFinal = null;
@@ -277,7 +277,7 @@ class HomeController extends Controller
 
         $color = $programa->color ?? '#691A32';
         $descripcion = $programa->descripcion ?? 'Sin descripción';
-        $imagen = $programa->imagen ?? 'img/secretarias/Sectorial1.jpg';
+        $imagen = $programa->imagen ?? 'img/pleca-pajaro-2.png';
         $programaData = $programa;
 
         $indicadores = $programa->indicadores()->with(['datosAnuales' => function ($q) {
@@ -306,7 +306,7 @@ class HomeController extends Controller
         // 2. Datos estéticos
         $color = $programa->color ?? '#691A32';
         $descripcion = $programa->descripcion ?? 'Sin descripción';
-        $imagen = $programa->imagen ?? 'img/secretarias/Sectorial1.jpg';
+        $imagen = $programa->imagen ?? 'img/pleca-pajaro-2.png';
         $programaData = $programa;
 
         $indicadores = $programa->indicadores()->with(['datosAnuales' => function ($q) {
@@ -336,8 +336,14 @@ class HomeController extends Controller
      */
     public function mostrarListadoInstitucionales()
     {
-        $programas = CatProgramaDerivadoInstitucional::has('indicadores')->get();
-        return view('ped-programas-institucionales', compact('programas'));
+        $programas = CatProgramaDerivadoInstitucional::all();
+        $grupos = CatProgramaDerivadoInstitucional::select('grupo')
+            ->whereNotNull('grupo')
+            ->where('grupo', '!=', '')
+            ->distinct()
+            ->pluck('grupo');
+
+        return view('ped-programas-institucionales', compact('programas', 'grupos'));
     }
 
     /**
@@ -356,7 +362,7 @@ class HomeController extends Controller
 
         $color = $programa->color ?? '#691A32';
         $descripcion = $programa->descripcion ?? 'Sin descripción';
-        $imagen = $programa->imagen ?? 'img/secretarias/Sectorial1.jpg';
+        $imagen = $programa->imagen ?? 'img/pleca-pajaro-2.png';
         $programaData = $programa;
 
         $indicadores = $programa->indicadores()->with(['datosAnuales' => function ($q) {
@@ -558,7 +564,7 @@ class HomeController extends Controller
 
         $color = $programa->color ?? '#691A32';
         $descripcion = $programa->descripcion ?? 'Sin descripción';
-        $imagen = $programa->imagen ?? 'img/secretarias/Sectorial1.jpg';
+        $imagen = $programa->imagen ?? 'img/pleca-pajaro-2.png';
         $programaData = $programa;
 
         $indicadores = $programa->indicadores()->with(['datosAnuales' => function ($q) {

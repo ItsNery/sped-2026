@@ -200,7 +200,7 @@ table td {
 /* Estilos navbar */
 #navbar {
     width: 100%;
-    z-index: 5;
+    z-index: 100;
     transition: top 0.5s ease-out, opacity 0.5s ease-out, padding 0.5s ease-out, box-shadow 0.5s ease-out;
     background-color: transparent;
 }
@@ -5573,4 +5573,294 @@ nav {
 .nav-moderna .nav-item-modern.active {
     color: #ffffff;
     font-weight: 600;
+}
+
+/* ========================================================================
+   TOGGLE LISTA / GRID PARA INDICADORES
+   ======================================================================== */
+
+/* --- Contenedor grid: Ejes del PED --- */
+[id^="contenedor-eje-"].modo-grid {
+    display: block !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+[id^="contenedor-eje-"].modo-grid > .container {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+@media (min-width: 992px) {
+    [id^="contenedor-eje-"].modo-grid > .container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 1200px) {
+    [id^="contenedor-eje-"].modo-grid > .container {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Ocultar títulos de temática en grid */
+.modo-grid .titulo-tematica {
+    display: none !important;
+}
+
+/* Tematica group dentro del grid */
+[id^="contenedor-eje-"].modo-grid .tematica-group {
+    display: contents;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* --- Contenedor grid: Programas Derivados --- */
+.modo-grid.row.ficha {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+@media (min-width: 992px) {
+    .modo-grid.row.ficha {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 1200px) {
+    .modo-grid.row.ficha {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.modo-grid.row.ficha > .container {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Quitar padding del container base en grid */
+.modo-grid .container {
+    max-width: none !important;
+}
+
+/* --- Ocultar elementos no esenciales en grid --- */
+
+/* Columna de metadatos (unidad, tendencia, línea base, meta) */
+.modo-grid .card-body > .row > .col-6.col-md-4.col-lg-4 {
+    display: none !important;
+}
+
+/* Resultado: ocultar label y valor grande, conservar badge */
+.modo-grid .card-body > .row > .col-6.col-md-4.col-lg-2.text-center.mb-4 {
+    display: block !important;
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+    padding: 0.15rem 0 !important;
+    border: none !important;
+    margin-bottom: 0 !important;
+}
+
+.modo-grid .card-body > .row > .col-6.col-md-4.col-lg-2.text-center.mb-4 .text-uppercase,
+.modo-grid .card-body > .row > .col-6.col-md-4.col-lg-2.text-center.mb-4 .fs-2 {
+    display: none !important;
+}
+
+.modo-grid .card-body > .row > .col-6.col-md-4.col-lg-2.text-center.mb-4 .badge {
+    font-size: 0.65rem !important;
+    padding: 0.15rem 0.5rem !important;
+}
+
+/* Columna de avance: ocultar gauge, mostrar solo % */
+.modo-grid [id^="gauge-"],
+.modo-grid .grafico-gauge-pendiente,
+.modo-grid .fa-clock {
+    display: none !important;
+}
+
+.modo-grid .card-body > .row > .col-12.col-md-4.col-lg-2 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    border: none !important;
+    flex-direction: row !important;
+    gap: 0.4rem;
+    margin-top: 0 !important;
+}
+
+.modo-grid .card-body > .row > .col-12.col-md-4.col-lg-2 .fw-bold.fs-5 {
+    font-size: 1.3rem !important;
+    margin-top: 0 !important;
+}
+
+.modo-grid .card-body > .row > .col-12.col-md-4.col-lg-2 .small {
+    display: none !important;
+}
+
+.modo-grid .card-body > .row > .col-12.col-md-4.col-lg-2 .mt-35px {
+    margin-top: 0 !important;
+}
+
+/* Primera columna: nombre + ODS centrado */
+.modo-grid .card-body > .row > .col-12.col-lg-4 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    border: none !important;
+    margin-bottom: 0.3rem !important;
+    text-align: center;
+}
+
+.modo-grid .card-body > .row > .col-12.col-lg-4 a {
+    font-size: 0.82rem !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 0.2rem !important;
+    line-height: 1.2 !important;
+}
+
+.modo-grid .card-body > .row > .col-12.col-lg-4 .d-flex.flex-wrap {
+    justify-content: center;
+    gap: 0.2rem !important;
+}
+
+.modo-grid .card-body > .row > .col-12.col-lg-4 .d-flex.flex-wrap img {
+    height: 18px !important;
+}
+
+/* Card más compacta en grid con altura uniforme */
+.modo-grid .card {
+    border-left-width: 4px !important;
+    border-radius: 0.5rem !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.modo-grid .card-body {
+    padding: 0.4rem 0.5rem !important;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.modo-grid .card,
+.modo-grid .card-body > .row > [class*="col-"] {
+    min-width: 0;
+}
+
+.modo-grid .card-body > .row {
+    flex-direction: column !important;
+    align-items: center;
+    text-align: center;
+    gap: 0;
+    margin: 0;
+}
+
+.modo-grid .card-body > .row > [class*="col-"] {
+    margin-bottom: 0 !important;
+}
+
+/* Ocultar "Avance Meta" label */
+.modo-grid .card-body .fw-bold.fs-5.text-dark + .small {
+    display: none !important;
+}
+
+/* Botón de toggle activo */
+.btn-toggle-vista.active {
+    background-color: var(--bs-primary) !important;
+    color: #fff !important;
+    border-color: var(--bs-primary) !important;
+}
+
+/* Animación suave al cambiar */
+.card-indicador,
+.row.ficha > .container > .card {
+    transition: all 0.25s ease;
+}
+
+/* ========================================================================
+   RESPONSIVE: Lista → columnas a ancho completo en <768px
+   ======================================================================== */
+@media (max-width: 767.98px) {
+    .card-indicador .card-body > .row > [class*="col-"]:not(.col-12),
+    .row.ficha .card-body > .row > [class*="col-"]:not(.col-12) {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .card-indicador .card-body > .row > [class*="col-"] .border-end-lg,
+    .card-indicador .card-body > .row > [class*="col-"] .border-end-md,
+    .row.ficha .card-body > .row > [class*="col-"] .border-end-lg,
+    .row.ficha .card-body > .row > [class*="col-"] .border-end-md {
+        border: none !important;
+    }
+}
+
+/* ========================================================================
+   RESPONSIVE: Grid → 1 columna en <576px + overflow seguro
+   ======================================================================== */
+@media (max-width: 575.98px) {
+    [id^="contenedor-eje-"].modo-grid > .container {
+        grid-template-columns: 1fr;
+    }
+
+    .modo-grid.row.ficha {
+        grid-template-columns: 1fr;
+    }
+
+    .d-flex.align-items-center.gap-2.mb-3.ocultar_impresion {
+        display: none !important;
+    }
+}
+
+.modo-grid .card {
+    overflow: hidden;
+}
+
+.modo-grid .card-body {
+    overflow: hidden;
+}
+
+/* ========================================================================
+   PUNTO 3: EMPTY STATE EN GRID — alert ocupa todo el ancho
+   ======================================================================== */
+[id^="contenedor-eje-"].modo-grid > .container > .alert,
+.modo-grid.row.ficha > .alert {
+    grid-column: 1 / -1;
+    margin: 1rem 0 !important;
+}
+
+/* ========================================================================
+   PUNTO 5: SKELETON / SHIMMER PARA GAUGES MIENTRAS CARGAN
+   ======================================================================== */
+[data-gauge="true"]:empty {
+    position: relative;
+    background: linear-gradient(90deg, #eee 25%, #f8f8f8 50%, #eee 75%);
+    background-size: 200% 100%;
+    animation: gauge-shimmer 1.8s ease-in-out infinite;
+    border-radius: 50%;
+}
+
+[data-gauge="true"]:not(:empty) {
+    background: none;
+    animation: none;
+}
+
+@keyframes gauge-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }

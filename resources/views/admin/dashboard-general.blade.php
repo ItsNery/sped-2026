@@ -8,7 +8,6 @@
         </div>
     </x-slot>
 
-    <script src="{{ asset('js/apexcharts.js') }}"></script>
 
     <div class="dashboard-container container">
         <!-- AVANCE GENERAL -->
@@ -18,7 +17,7 @@
                     <div class="card-body text-center py-5">
                         <h3 class="fw-bold mb-4">Avance General</h3>
                         <div class="gauge-container">
-                            <div id="mainGauge"></div>
+                            <div id="mainGauge" style="height: 100%; width: 100%;"></div>
                             <div class="gauge-value" style="color: {{ $colorPlan }}">{{ number_format($avancePlan, 2) }}%</div>
                         </div>
                         <p class="text-muted mt-3">Promedio general ponderado de todos los indicadores del Plan Estatal.</p>
@@ -100,65 +99,40 @@
         </div>
     </div>
 
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const getGaugeOptions = (value, color, size = '100%') => {
-                return {
-                    series: [value > 100 ? 100 : value],
-                    chart: {
-                        type: 'radialBar',
-                        offsetY: -20,
-                        sparkline: {
-                            enabled: true
-                        }
-                    },
-                    plotOptions: {
-                        radialBar: {
-                            startAngle: -90,
-                            endAngle: 90,
-                            track: {
-                                background: "#e7e7e7",
-                                strokeWidth: '97%',
-                                margin: 5,
-                            },
-                            dataLabels: {
-                                name: {
-                                    show: false
-                                },
-                                value: {
-                                    offsetY: -2,
-                                    fontSize: '22px',
-                                    show: false
-                                }
-                            }
-                        }
-                    },
-                    grid: {
-                        padding: {
-                            top: -10
-                        }
-                    },
-                    fill: {
-                        colors: [color],
-                        type: 'solid',
-                    },
-                    labels: ['Avance'],
-                };
-            };
+            var createdCharts = [];
+            document.addEventListener('DOMContentLoaded', function() {
+                function createGauge(domId, value, color) {
+                var chart = echarts.init(document.getElementById(domId));
+                chart.setOption({
+                    series: [{
+                        type: 'gauge',
+                        startAngle: 180, endAngle: 0,
+                        min: 0, max: 100,
+                        progress: { show: true, width: 15, roundCap: true, itemStyle: { color: color } },
+                        axisLine: { lineStyle: { width: 15, color: [[1, '#e7e7e7']] } },
+                        axisTick: { show: false }, splitLine: { show: false },
+                        axisLabel: { show: false }, pointer: { show: false },
+                        detail: { show: false },
+                        data: [{ value: value > 100 ? 100 : value }]
+                    }]
+                });
+                chart.resize();
+                createdCharts.push(chart);
+                return chart;
+            }
 
             // Gauge Principal
             var chartValAvancePlan = Number("{{ $avancePlan }}");
-            const mainOptions = getGaugeOptions(chartValAvancePlan, "{{ $colorPlan }}");
-            mainOptions.chart.height = 350;
-            new ApexCharts(document.querySelector("#mainGauge"), mainOptions).render();
+            createGauge("mainGauge", chartValAvancePlan, "{{ $colorPlan }}");
 
             @foreach($ejesData as $eje)
                 (function() {
                     let color = "{{ $eje['semaforo_color'] ?? '#333' }}";
                     let avanceVal = Number("{{ $eje['avance'] }}");
-                    let opts = getGaugeOptions(avanceVal, color);
-                    opts.chart.height = 220;
-                    new ApexCharts(document.querySelector("#gauge-eje-{{ $eje['id'] }}"), opts).render();
+                    createGauge("gauge-eje-{{ $eje['id'] }}", avanceVal, color);
                 })();
             @endforeach
 
@@ -167,12 +141,20 @@
                 (function() {
                     let color = "{{ $prog['semaforo_color'] }}";
                     let avanceVal = Number("{{ $prog['avance'] }}");
-                    let opts = getGaugeOptions(avanceVal, color);
-                    opts.chart.height = 180;
-                    new ApexCharts(document.querySelector("#gauge-prog-{{ $prog['id'] }}-{{ $loop->parent->index }}"), opts).render();
+                    createGauge("gauge-prog-{{ $prog['id'] }}-{{ $loop->parent->index }}", avanceVal, color);
                 })();
                 @endforeach
             @endforeach
+
+            // Redimensionar todas las gráficas cuando se cambie de pestaña para evitar que queden estrechas
+            document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(function(tabEl) {
+                tabEl.addEventListener('shown.bs.tab', function() {
+                    createdCharts.forEach(function(chart) {
+                        chart.resize();
+                    });
+                });
+            });
         });
     </script>
+    @endpush
 </x-app-layout>

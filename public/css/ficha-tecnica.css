@@ -1,6 +1,26 @@
-@media print {
+/* =========================================================================
+   ESTILOS DE IMPRESIÓN Y PDF PARA FICHA TÉCNICA
+   ========================================================================= */
 
-    /* Ocultar elementos específicos del layout de SPED */
+/* Configuración nativa del navegador para impresión */
+@media print {
+    @page {
+        margin: 0.3cm;
+        size: auto;
+    }
+    body {
+        background-color: white !important;
+        font-size: 8pt !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
+
+/* =========================================================================
+   1. REGLAS PARA IMPRESIÓN NATIVA (@media print)
+   ========================================================================= */
+@media print {
+    /* Ocultar elementos innecesarios */
     #navbar,
     .footer,
     .textura-footer,
@@ -11,122 +31,195 @@
     .breadcrumb,
     .menu-overlay,
     .mobile-menu,
-    .nav-moderna,
-    .banner-container {
+    .row.nav-moderna,
+    .row.banner-container {
         display: none !important;
         height: 0 !important;
         margin: 0 !important;
         padding: 0 !important;
     }
 
-    /* Mostrar encabezado de impresión compacto y centrado */
+    /* Mostrar encabezado compacto */
     #encabezado {
         display: block !important;
         visibility: visible !important;
-        width: 90% !important;
-        margin: 0 auto 5px auto !important;
+        width: 100% !important;
+        margin: 0 auto 10px auto !important;
         text-align: center !important;
     }
 
     #encabezado img {
-        max-height: 75px;
+        max-height: 55px !important;
         object-fit: contain;
         margin: 0 auto !important;
     }
 
-    /* Forzar que el contenedor ocupe todo el ancho sin márgenes excesivos */
+    /* Ajuste de contenedores */
     #imprimir,
     .container {
         width: 100% !important;
         max-width: none !important;
         margin: 0 !important;
         padding: 0 !important;
-    }
-
-    /* Configuración de página */
-    @page {
-        margin: 0.6cm;
-        size: auto;
-    }
-
-    body {
         background-color: white !important;
-        font-size: 9.5pt !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
     }
 
-    #imprimir .row {
+    #imprimir {
+        margin-top: 0 !important;
+    }
+
+    #imprimir .mt-2,
+    #imprimir .mt-3,
+    #imprimir .mt-4 {
+        margin-top: 0.2rem !important;
+    }
+
+    #imprimir .mb-4,
+    #imprimir .mb-5 {
+        margin-bottom: 0.3rem !important;
+    }
+
+    #imprimir .pb-3 {
+        padding-bottom: 0.3rem !important;
+    }
+
+    #imprimir .g-3,
+    #imprimir .g-4 {
+        gap: 0.3rem !important;
+    }
+
+    #imprimir .border-bottom {
+        border-bottom-width: 1px !important;
+    }
+
+    /* Forzar que las filas utilicen flexbox en impresión */
+    .row {
         display: flex !important;
         flex-wrap: wrap !important;
         width: 100% !important;
-        margin: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
     }
 
-    #imprimir .col-lg-6 {
-        flex: 0 0 50% !important;
-        max-width: 50% !important;
-        display: block !important;
-    }
-
-    #imprimir .col-12 {
+    /* Secciones a ancho completo */
+    .col-lg-6 {
         flex: 0 0 100% !important;
         max-width: 100% !important;
     }
 
-    #imprimir .col-md-6 {
+    .col-md-8 {
+        flex: 0 0 66.666667% !important;
+        max-width: 66.666667% !important;
+    }
+
+    .col-md-4 {
+        flex: 0 0 33.333333% !important;
+        max-width: 33.333333% !important;
+    }
+
+    .pdf-page-break .col-md-8 {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    .pdf-page-break .col-md-4 {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    .col-md-6 {
         flex: 0 0 50% !important;
         max-width: 50% !important;
     }
 
-    #imprimir .col-md-3 {
+    .col-md-3 {
         flex: 0 0 25% !important;
         max-width: 25% !important;
     }
 
-    #imprimir .card-ficha-moderna:has(#gauge-ficha) .row,
-    #imprimir .card-ficha-moderna:has(#grafica-historica) .row {
-        display: block !important;
-    }
-
-    #imprimir .card-ficha-moderna:has(#gauge-ficha) .col-md-8,
-    #imprimir .card-ficha-moderna:has(#gauge-ficha) .col-md-4,
-    #imprimir .card-ficha-moderna:has(#grafica-historica) .col-md-4,
-    #imprimir .card-ficha-moderna:has(#grafica-historica) .col-md-8 {
-        width: 100% !important;
-        max-width: 100% !important;
+    .col-12 {
         flex: 0 0 100% !important;
-        border: none !important;
-        padding: 0 !important;
+        max-width: 100% !important;
     }
 
-    #gauge-ficha {
-        height: 180px !important;
-        margin-top: 5px !important;
-    }
-
+    /* Tarjetas compactas */
     .card-ficha-moderna {
-        padding: 0.8rem !important;
-        margin-top: 0.3rem !important;
-        margin-bottom: 0.3rem !important;
-        border: 1px solid #eee !important;
+        padding: 0.4rem 0.5rem !important;
+        margin-top: 0.15rem !important;
+        margin-bottom: 0.15rem !important;
+        border: 1px solid #e9ecef !important;
         box-shadow: none !important;
+        background-color: #fff !important;
         break-inside: avoid !important;
     }
 
+    #imprimir .card-ficha-moderna .p-4 {
+        padding: 0.4rem 0.5rem !important;
+    }
+
+    #imprimir .h-100 {
+        height: auto !important;
+    }
+
+    /* Salto de página para la gráfica histórica */
+    .pdf-page-break {
+        page-break-before: auto !important;
+        break-before: auto !important;
+    }
+
+    /* Ajuste de tipografía */
+    h1 {
+        font-size: 1.2rem !important;
+        margin-bottom: 2px !important;
+    }
+
     .ficha-section-title {
-        font-size: 1.1rem !important;
-        margin-bottom: 0.6rem !important;
+        font-size: 0.85rem !important;
+        margin-bottom: 0.2rem !important;
+        border-bottom: 1px solid #f1f1f1;
+        padding-bottom: 2px;
     }
 
     .ficha-label {
-        font-size: 0.8rem !important;
+        font-size: 0.62rem !important;
+        margin-bottom: 0 !important;
     }
 
     .ficha-value {
-        font-size: 0.95rem !important;
+        font-size: 0.75rem !important;
     }
 
+    #imprimir .fw-bold {
+        font-weight: 600 !important;
+    }
+
+    #imprimir .fs-4 {
+        font-size: 0.9rem !important;
+    }
+
+    #imprimir .fs-5 {
+        font-size: 0.8rem !important;
+    }
+
+    /* Oculta el velocímetro, solo mostramos badge y % */
+    #gauge-ficha,
+    .grafico-gauge-ficha {
+        display: none !important;
+    }
+
+    #grafica-historica {
+        height: 300px !important;
+        width: 100% !important;
+        margin: 0 auto !important;
+        overflow: visible !important;
+    }
+
+    .grafico-historico-ficha {
+        height: 300px !important;
+        width: 100% !important;
+    }
+
+    /* Tablas */
     .table-responsive {
         overflow: visible !important;
         max-height: none !important;
@@ -134,11 +227,340 @@
 
     .table-historicos td,
     .table-historicos th {
-        padding: 0.4rem !important;
+        padding: 0.15rem 0.3rem !important;
+        font-size: 0.7rem !important;
     }
 
-    .apexcharts-canvas {
-        width: 100% !important;
-        max-width: 100% !important;
+    .table-historicos th {
+        color: #fff !important;
     }
+
+    /* Compactar sección de gestión de gobierno */
+    #imprimir .border-end-sm {
+        border-right: none !important;
+    }
+
+    #imprimir .g-4 {
+        gap: 0.15rem !important;
+    }
+
+    #imprimir .mt-35px {
+        margin-top: 0 !important;
+    }
+
+    #imprimir .py-4 {
+        padding-top: 0.3rem !important;
+        padding-bottom: 0.3rem !important;
+    }
+
+    #imprimir .fs-35rem {
+        font-size: 1.5rem !important;
+    }
+
+    #imprimir .badge {
+        font-size: 0.6rem !important;
+        padding: 0.2rem 0.5rem !important;
+    }
+
+    /* Oculta el popover en impresión */
+    [data-bs-toggle="popover"] {
+        cursor: default !important;
+    }
+
+    /* Evolución histórica a ancho completo */
+    .pdf-page-break .border-end-md {
+        border-right: none !important;
+    }
+
+    .pdf-page-break .pe-md-4 {
+        padding-right: 0 !important;
+    }
+
+    .pdf-page-break .ps-md-4 {
+        padding-left: 0 !important;
+    }
+
+    .pdf-page-break .col-md-4,
+    .pdf-page-break .col-md-8 {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    .pdf-page-break .text-center {
+        overflow: visible !important;
+    }
+}
+
+/* =========================================================================
+   2. REGLAS PARA GENERACIÓN DE PDF (.generating-pdf)
+   ========================================================================= */
+
+/* Ocultar elementos innecesarios */
+.generating-pdf #navbar,
+.generating-pdf .footer,
+.generating-pdf .textura-footer,
+.generating-pdf .navbar,
+.generating-pdf .ocultar_impresion,
+.generating-pdf .btn,
+.generating-pdf #btn-subir,
+.generating-pdf .breadcrumb,
+.generating-pdf .menu-overlay,
+.generating-pdf .mobile-menu,
+.generating-pdf .nav-moderna,
+.generating-pdf .banner-container {
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Mostrar encabezado compacto */
+.generating-pdf #encabezado {
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+    margin: 0 auto 10px auto !important;
+    text-align: center !important;
+}
+
+.generating-pdf #encabezado img {
+    max-height: 55px !important;
+    object-fit: contain;
+    margin: 0 auto !important;
+}
+
+/* Ajuste de contenedores */
+.generating-pdf.container,
+.generating-pdf .container {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: white !important;
+}
+
+#imprimir.generating-pdf {
+    margin-top: 0 !important;
+}
+
+#imprimir.generating-pdf .mt-2,
+#imprimir.generating-pdf .mt-3,
+#imprimir.generating-pdf .mt-4 {
+    margin-top: 0.2rem !important;
+}
+
+#imprimir.generating-pdf .mb-4,
+#imprimir.generating-pdf .mb-5 {
+    margin-bottom: 0.3rem !important;
+}
+
+#imprimir.generating-pdf .pb-3 {
+    padding-bottom: 0.3rem !important;
+}
+
+#imprimir.generating-pdf .g-3,
+#imprimir.generating-pdf .g-4 {
+    gap: 0.3rem !important;
+}
+
+#imprimir.generating-pdf .border-bottom {
+    border-bottom-width: 1px !important;
+}
+
+/* Forzar que las filas utilicen flexbox */
+.generating-pdf .row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Secciones a ancho completo */
+.generating-pdf .col-lg-6 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+}
+
+.generating-pdf .col-md-8 {
+    flex: 0 0 66.666667% !important;
+    max-width: 66.666667% !important;
+}
+
+.generating-pdf .col-md-4 {
+    flex: 0 0 33.333333% !important;
+    max-width: 33.333333% !important;
+}
+
+.generating-pdf .pdf-page-break .col-md-8 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+}
+
+.generating-pdf .pdf-page-break .col-md-4 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+}
+
+.generating-pdf .col-md-6 {
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
+}
+
+.generating-pdf .col-md-3 {
+    flex: 0 0 25% !important;
+    max-width: 25% !important;
+}
+
+.generating-pdf .col-12 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+}
+
+/* Tarjetas compactas */
+.generating-pdf .card-ficha-moderna {
+    padding: 0.4rem 0.5rem !important;
+    margin-top: 0.15rem !important;
+    margin-bottom: 0.15rem !important;
+    border: 1px solid #e9ecef !important;
+    box-shadow: none !important;
+    background-color: #fff !important;
+    break-inside: avoid !important;
+}
+
+#imprimir.generating-pdf .card-ficha-moderna .p-4 {
+    padding: 0.4rem 0.5rem !important;
+}
+
+#imprimir.generating-pdf .h-100 {
+    height: auto !important;
+}
+
+/* Salto de página para la gráfica histórica */
+.generating-pdf .pdf-page-break {
+    page-break-before: auto !important;
+    break-before: auto !important;
+}
+
+/* Ajuste de tipografía */
+.generating-pdf h1 {
+    font-size: 1.2rem !important;
+    margin-bottom: 2px !important;
+}
+
+.generating-pdf .ficha-section-title {
+    font-size: 0.85rem !important;
+    margin-bottom: 0.2rem !important;
+    border-bottom: 1px solid #f1f1f1;
+    padding-bottom: 2px;
+}
+
+.generating-pdf .ficha-label {
+    font-size: 0.62rem !important;
+    margin-bottom: 0 !important;
+}
+
+.generating-pdf .ficha-value {
+    font-size: 0.75rem !important;
+}
+
+#imprimir.generating-pdf .fw-bold {
+    font-weight: 600 !important;
+}
+
+#imprimir.generating-pdf .fs-4 {
+    font-size: 0.9rem !important;
+}
+
+#imprimir.generating-pdf .fs-5 {
+    font-size: 0.8rem !important;
+}
+
+/* Oculta el velocímetro, solo mostramos badge y % */
+.generating-pdf #gauge-ficha,
+.generating-pdf .grafico-gauge-ficha {
+    display: none !important;
+}
+
+.generating-pdf #grafica-historica {
+    height: 300px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    overflow: visible !important;
+}
+
+.generating-pdf .grafico-historico-ficha {
+    height: 300px !important;
+    width: 100% !important;
+}
+
+/* Tablas */
+.generating-pdf .table-responsive {
+    overflow: visible !important;
+    max-height: none !important;
+}
+
+.generating-pdf .table-historicos td,
+.generating-pdf .table-historicos th {
+    padding: 0.15rem 0.3rem !important;
+    font-size: 0.7rem !important;
+}
+
+.generating-pdf .table-historicos th {
+    color: #fff !important;
+}
+
+/* Compactar sección de gestión de gobierno */
+#imprimir.generating-pdf .border-end-sm {
+    border-right: none !important;
+}
+
+#imprimir.generating-pdf .g-4 {
+    gap: 0.15rem !important;
+}
+
+#imprimir.generating-pdf .mt-35px {
+    margin-top: 0 !important;
+}
+
+#imprimir.generating-pdf .py-4 {
+    padding-top: 0.3rem !important;
+    padding-bottom: 0.3rem !important;
+}
+
+#imprimir.generating-pdf .fs-35rem {
+    font-size: 1.5rem !important;
+}
+
+#imprimir.generating-pdf .badge {
+    font-size: 0.6rem !important;
+    padding: 0.2rem 0.5rem !important;
+}
+
+/* Oculta el popover en impresión */
+.generating-pdf [data-bs-toggle="popover"] {
+    cursor: default !important;
+}
+
+/* Evolución histórica a ancho completo */
+.generating-pdf .pdf-page-break .border-end-md {
+    border-right: none !important;
+}
+
+.generating-pdf .pdf-page-break .pe-md-4 {
+    padding-right: 0 !important;
+}
+
+.generating-pdf .pdf-page-break .ps-md-4 {
+    padding-left: 0 !important;
+}
+
+.generating-pdf .pdf-page-break .col-md-4,
+.generating-pdf .pdf-page-break .col-md-8 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.generating-pdf .pdf-page-break .text-center {
+    overflow: visible !important;
 }

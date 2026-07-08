@@ -64,7 +64,19 @@ $descFinal = $descripcion ?? ($programaData->descripcion ?? '');
     </div>
 </div>
 
-<div class="row ficha py-50px" style="background-color:{{ $programa->color }}">
+<div class="d-flex align-items-center gap-2 mb-3 ocultar_impresion" style="padding-left: 1rem;">
+    <span class="text-muted small fw-semibold">Vista:</span>
+    <div class="btn-group btn-group-sm border rounded overflow-hidden">
+        <button type="button" class="btn btn-sm px-3 btn-toggle-vista active" data-view="lista" data-target="contenedor-programa" style="background-color: {{ $programa->color }}; color: #fff; border: none;">
+            <i class="fas fa-list"></i>
+        </button>
+        <button type="button" class="btn btn-sm px-3 btn-toggle-vista" data-view="grid" data-target="contenedor-programa" style="background-color: #fff; color: {{ $programa->color }};">
+            <i class="fas fa-th-large"></i>
+        </button>
+    </div>
+</div>
+
+<div class="row ficha py-50px" id="contenedor-programa" style="background-color:{{ $programa->color }}">
     @forelse ($indicadores as $indicador)
     @php
     $semText = $indicador->semaforizacion_validada ?: 'No Clasificado';
@@ -141,7 +153,7 @@ $descFinal = $descripcion ?? ($programaData->descripcion ?? '');
                         <i class="fas fa-clock text-muted opacity-50 mb-2" style="font-size: 3rem;"></i>
                         <div class="small text-muted mt-2 fw-semibold text-center">Medición Pendiente</div>
                         @else
-                        <div id="gauge-{{ $indicador->id }}" style="height: 140px; width:100%; display:flex; justify-content:center; cursor: help;" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Estado: {{ $semText }}" data-bs-content="{{ $explicacionDetallada }}"></div>
+                        <div class="grafico-gauge-pendiente" data-gauge="true" data-chart-val="{{ $chartVal }}" data-color="{{ $colorSemaforo }}" style="cursor: help;" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Estado: {{ $semText }}" data-bs-content="{{ $explicacionDetallada }}"></div>
                         <div class="fw-bold fs-5 text-dark" style="margin-top: -30px;">{{ number_format($indicador->avance_validado, 1) }}%</div>
                         <div class="small text-muted mt-1 fw-semibold">Avance Meta</div>
                         @endif
@@ -150,46 +162,6 @@ $descFinal = $descripcion ?? ($programaData->descripcion ?? '');
             </div>
         </div>
     </div>
-    @if(!$esDatoLineaBase)
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            new ApexCharts(document.querySelector("#gauge-{{ $indicador->id }}"), {
-                series: [Number("{{ $chartVal }}")],
-                chart: {
-                    type: 'radialBar',
-                    height: 180,
-                    sparkline: {
-                        enabled: true
-                    }
-                },
-                plotOptions: {
-                    radialBar: {
-                        startAngle: -90,
-                        endAngle: 90,
-                        track: {
-                            background: "#f0f0f0",
-                            strokeWidth: '97%'
-                        },
-                        dataLabels: {
-                            name: {
-                                show: false
-                            },
-                            value: {
-                                show: false
-                            }
-                        }
-                    }
-                },
-                fill: {
-                    colors: ['{{ $colorSemaforo }}']
-                },
-                stroke: {
-                    lineCap: 'round'
-                }
-            }).render();
-        });
-    </script>
-    @endif
 
     @empty
     <div class="alert alert-info text-center shadow-sm rounded-4 border-0 p-4">
@@ -201,41 +173,85 @@ $descFinal = $descripcion ?? ($programaData->descripcion ?? '');
 @section('jss-final')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var chartValGeneral = Number("{{ ($avancePrograma ?? 0) > 100 ? 100 : ($avancePrograma ?? 0) }}");
-        new ApexCharts(document.querySelector("#gauge-general"), {
-            series: [chartValGeneral],
-            chart: {
-                type: 'radialBar',
-                height: 220,
-                sparkline: {
-                    enabled: true
+        // Inicializar Toggle Lista/Grid
+        document.querySelectorAll('.btn-toggle-vista').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var view = this.dataset.view;
+                var targetId = this.dataset.target;
+                var container = document.getElementById(targetId);
+                if (!container) return;
+
+                var btnGroup = this.closest('.btn-group');
+                btnGroup.querySelectorAll('.btn-toggle-vista').forEach(function(b) {
+                    b.classList.remove('active');
+                    b.style.backgroundColor = '#fff';
+                    b.style.color = '{{ $programa->color }}';
+                });
+                this.classList.add('active');
+                this.style.backgroundColor = '{{ $programa->color }}';
+                this.style.color = '#fff';
+
+                if (view === 'grid') {
+                    container.classList.add('modo-grid');
+                } else {
+                    container.classList.remove('modo-grid');
                 }
-            },
-            plotOptions: {
-                radialBar: {
-                    startAngle: -90,
-                    endAngle: 90,
-                    track: {
-                        background: "#e7e7e7",
-                        strokeWidth: '97%'
-                    },
-                    dataLabels: {
-                        name: {
-                            show: false
-                        },
-                        value: {
-                            show: false
-                        }
+            });
+        });
+
+        // Inicializar Gauges con Lazy Loading (IntersectionObserver)
+        function renderGauge(el) {
+            var val = Number(el.dataset.chartVal);
+            if (val > 100) val = 100;
+            var color = el.dataset.color;
+            var chart = echarts.init(el);
+            chart.setOption({
+                series: [{
+                    type: 'gauge',
+                    startAngle: 180, endAngle: 0,
+                    min: 0, max: 100,
+                    progress: { show: true, width: 15, roundCap: true, itemStyle: { color: color } },
+                    axisLine: { lineStyle: { width: 15, color: [[1, '#f0f0f0']] } },
+                    axisTick: { show: false }, splitLine: { show: false },
+                    axisLabel: { show: false }, pointer: { show: false },
+                    detail: { show: false },
+                    data: [{ value: val }]
+                }]
+            });
+            chart.resize();
+        }
+
+        var gaugeEls = document.querySelectorAll('[data-gauge="true"]');
+        if ('IntersectionObserver' in window) {
+            var observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        renderGauge(entry.target);
+                        observer.unobserve(entry.target);
                     }
-                }
-            },
-            fill: {
-                colors: ['{{ $programa->color }}']
-            },
-            stroke: {
-                lineCap: 'round'
-            }
-        }).render();
+                });
+            }, { rootMargin: '150px' });
+            gaugeEls.forEach(function(el) { observer.observe(el); });
+        } else {
+            gaugeEls.forEach(renderGauge);
+        }
+
+        var chartValGeneral = Number("{{ ($avancePrograma ?? 0) > 100 ? 100 : ($avancePrograma ?? 0) }}");
+        var chartGeneral = echarts.init(document.getElementById('gauge-general'));
+        chartGeneral.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180, endAngle: 0,
+                min: 0, max: 100,
+                progress: { show: true, width: 15, roundCap: true, itemStyle: { color: '{{ $programa->color }}' } },
+                axisLine: { lineStyle: { width: 15, color: [[1, '#e7e7e7']] } },
+                axisTick: { show: false }, splitLine: { show: false },
+                axisLabel: { show: false }, pointer: { show: false },
+                detail: { show: false },
+                data: [{ value: chartValGeneral }]
+            }]
+        });
+        chartGeneral.resize();
 
         var popoverList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]')).map(function(el) {
             return new bootstrap.Popover(el, {

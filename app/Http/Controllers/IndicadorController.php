@@ -122,7 +122,6 @@ class IndicadorController extends Controller
         $pds = [
             'Plan Estatal de Desarrollo',
             'Programa Especial',
-            'Programa Institucional',
             'Programa Regional',
             'Programa Sectorial',
         ];
@@ -160,9 +159,10 @@ class IndicadorController extends Controller
 
         // Fetch Plans for the new parent selection
         $planes = CatPlanEstatalDesarrollo::all();
+        $programasInstitucionales = CatProgramaDerivadoInstitucional::all();
 
         // dd($odses);
-        return view('panel-indicadores.crear', compact('pds', 'instituciones', 'usuarios', 'odses', 'periodicidades', 'coberturas', 'tendencias', 'planes'));
+        return view('panel-indicadores.crear', compact('pds', 'instituciones', 'usuarios', 'odses', 'periodicidades', 'coberturas', 'tendencias', 'planes', 'programasInstitucionales'));
     }
 
     /**
@@ -239,6 +239,8 @@ class IndicadorController extends Controller
             'formula' => 'required|string',
             // 'odses' => 'required|array',
             // 'odses.*' => 'exists:ods,id',
+            'programas_institucionales' => 'nullable|array',
+            'programas_institucionales.*' => 'exists:cat_programas_derivados_institucionales,id',
             'datos_anuales' => 'nullable|array',
             'datos_anuales.*.anio' => 'required_with:datos_anuales|integer|distinct|min:1900|max:' . (date('Y') + 10),
             'datos_anuales.*.valor_dato' => 'nullable|numeric',
@@ -338,6 +340,11 @@ class IndicadorController extends Controller
             ]);
             Log::info('IndicadorController@store: Indicador creado con ID: ' . $indicador->id); // LOG 7
 
+            // Sincronizar programas institucionales si vienen en el request
+            if ($request->has('programas_institucionales')) {
+                $indicador->programasInstitucionales()->sync($request->input('programas_institucionales', []));
+            }
+
             if (isset($validatedData['linea_base']) && isset($validatedData['dato_linea_base']) && $validatedData['dato_linea_base'] !== '') {
                 $indicador->datosAnuales()->create([
                     'anio' => $validatedData['linea_base'],
@@ -428,7 +435,7 @@ class IndicadorController extends Controller
         $user = auth()->user();
 
         // Obtener el indicador junto con sus relaciones
-        $indicador = Indicador::with(['datosAnuales', 'ods'])->findOrFail($id);
+        $indicador = Indicador::with(['datosAnuales', 'ods', 'programasInstitucionales'])->findOrFail($id);
 
         // Verificar si el usuario tiene acceso al indicador
 
@@ -468,7 +475,7 @@ class IndicadorController extends Controller
 
         // $id = $indicador->id;
         // $indicador = Indicador::findOrFail($id);
-        $indicador = Indicador::with(['datosAnuales'])->findOrFail($id);
+        $indicador = Indicador::with(['datosAnuales', 'programasInstitucionales'])->findOrFail($id);
 
         // Verificar si el usuario tiene acceso al indicador
         if ($user->hasRole('Enlace')) {
@@ -486,7 +493,8 @@ class IndicadorController extends Controller
 
         $instituciones = Institucion::where('id', '!=', 1)->get();
         $odeses = Odses::all();
-        $planes = CatPlanEstatalDesarrollo::all(); // Fetch Planes for Edit View
+        $planes = CatPlanEstatalDesarrollo::all(); // Fetch Plans for Edit View
+        $programasInstitucionales = CatProgramaDerivadoInstitucional::all();
         // $usuarios = User::where('id', '!=', 1)->get();
         $usuarios = User::where('id', '>=', 8) // IDs del 8 en adelante
             ->role('Enlace dependencia')       // Solo con este rol
@@ -516,7 +524,7 @@ class IndicadorController extends Controller
             'Constante'
         ];
 
-        return view('panel-indicadores.editar', compact('indicador', 'instituciones', 'odeses', 'usuarios', 'periodicidades', 'coberturas', 'tendencias', 'planes'));
+        return view('panel-indicadores.editar', compact('indicador', 'instituciones', 'odeses', 'usuarios', 'periodicidades', 'coberturas', 'tendencias', 'planes', 'programasInstitucionales'));
     }
 
     /**
@@ -580,6 +588,8 @@ class IndicadorController extends Controller
             'formula' => 'required|string',
             'odses' => 'sometimes|array',
             'odses.*' => 'exists:ods,id',
+            'programas_institucionales' => 'nullable|array',
+            'programas_institucionales.*' => 'exists:cat_programas_derivados_institucionales,id',
             'indicador_validado' => 'sometimes|boolean',
             'datos_anuales' => 'nullable|array',
             'datos_anuales.*.id' => 'nullable|integer|exists:datos_anuales,id',
@@ -722,7 +732,7 @@ class IndicadorController extends Controller
                 $programaDerivadoString = $parentObj && $parentObj->planEstatal ? $parentObj->planEstatal->nombre : 'Plan Estatal de Desarrollo';
             }
 
-            $indicadorDataToUpdate = collect($validatedData)->except(['odses', 'datos_anuales', '_token', '_method', 'plan_id', 'es_programa_derivado', 'tipo_programa', 'programa_id', 'eje_app'])->toArray();
+            $indicadorDataToUpdate = collect($validatedData)->except(['odses', 'programas_institucionales', 'datos_anuales', '_token', '_method', 'plan_id', 'es_programa_derivado', 'tipo_programa', 'programa_id', 'eje_app'])->toArray();
 
             // Sobrescribir datos calculados
             $indicadorDataToUpdate['programa_derivado'] = $programaDerivadoString;
@@ -747,6 +757,13 @@ class IndicadorController extends Controller
 
             // === 2. ACTUALIZAMOS EL INDICADOR PRINCIPAL ===
             $indicador->update($indicadorDataToUpdate);
+
+            // Sincronizar programas institucionales
+            if ($request->has('programas_institucionales')) {
+                $indicador->programasInstitucionales()->sync($request->input('programas_institucionales', []));
+            } else {
+                $indicador->programasInstitucionales()->sync([]);
+            }
 
             $idsDatosAnualesEnviadosYProcesados = [];
 
@@ -2373,7 +2390,7 @@ class IndicadorController extends Controller
                     throw new \Exception("El Plan Estatal '{$nombrePlan}' no existe en el catálogo.");
                 }
 
-                // 3. Resolver Programa Derivado (Polimórfico)
+                // 3. Resolver Programa Derivado (Polimórfico o N:M)
                 $indicadorableId = null;
                 $indicadorableType = null;
                 $programaDerivadoFinal = $nombreProgramaDeriv;
@@ -2396,8 +2413,10 @@ class IndicadorController extends Controller
                     if (!$programaObj) {
                         throw new \Exception("El programa '{$nombreProgramaDeriv}' no encontrado.");
                     }
-                    $indicadorableId = $programaObj->id;
-                    $indicadorableType = $modelClass;
+                    if ($modelClass !== CatProgramaDerivadoInstitucional::class) {
+                        $indicadorableId = $programaObj->id;
+                        $indicadorableType = $modelClass;
+                    }
                     $programaDerivadoFinal = $programaObj->nombre;
                 }
 
@@ -2476,6 +2495,13 @@ class IndicadorController extends Controller
                         ],
                         $datosIndicador
                     );
+                }
+
+                // Sincronizar relación muchos a muchos si es Institucional
+                if ($modelClass === CatProgramaDerivadoInstitucional::class) {
+                    $indicador->programasInstitucionales()->sync([$programaObj->id]);
+                } else {
+                    $indicador->programasInstitucionales()->sync([]);
                 }
 
                 // 6. Datos Anuales

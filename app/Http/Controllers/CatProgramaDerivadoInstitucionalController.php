@@ -42,7 +42,9 @@ class CatProgramaDerivadoInstitucionalController extends Controller
     {
         $request->validate([
             'nombre' => 'required|string|max:255',
-            'imagen' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'grupo' => 'nullable|string|max:255',
+            'siglas' => 'nullable|string|max:20',
+            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'descripcion' => 'required|string',
             'color' => 'required|string|max:7', // Hex color #RRGGBB
             'plan_estatal' => 'required|exists:cat_planes_estatales_desarrollo,id',
@@ -52,7 +54,7 @@ class CatProgramaDerivadoInstitucionalController extends Controller
         $input = $request->all();
 
         if ($image = $request->file('imagen')) {
-            $destinationPath = 'image/programas-derivados-especiales/';
+            $destinationPath = 'image/programas-derivados-institucionales/';
             $profileImage = date('YmdHis') . "." . $image->getClientOriginalExtension();
             $image->move(public_path($destinationPath), $profileImage);
             $input['imagen'] = "$destinationPath$profileImage";
@@ -100,6 +102,8 @@ class CatProgramaDerivadoInstitucionalController extends Controller
     {
       $request->validate([
             'nombre' => 'required|string|max:255',
+            'grupo' => 'nullable|string|max:255',
+            'siglas' => 'nullable|string|max:20',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'descripcion' => 'required|string',
             'color' => 'required|string|max:7',

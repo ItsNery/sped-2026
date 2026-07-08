@@ -16,7 +16,6 @@
 @section('css')
 @endsection
 @section('jss-inicial')
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 @endsection
 @section('content')
     <div class="row" style="margin-left: auto; margin-right: auto;">
@@ -352,157 +351,85 @@
     </div>
 @section('jss-final')
     <script>
-        var options = {
-            series: [{
-                    name: '{{ $indicador->unidad_medida }}',
-                    data: [{
-                            x: '2019',
-                            y: {{ $indicador->dato_2019 ?? 'null' }}
-                        },
-                        {
-                            x: '2020',
-                            y: {{ $indicador->dato_2020 ?? 'null' }}
-                        },
-                        {
-                            x: '2021',
-                            y: {{ $indicador->dato_2021 ?? 'null' }}
-                        },
-                        {
-                            x: '2022',
-                            y: {{ $indicador->dato_2022 ?? 'null' }}
-                        },
-                        {
-                            x: '2023',
-                            y: {{ $indicador->dato_2023 ?? 'null' }}
-                        },
-                        {
-                            x: '2024',
-                            y: {{ $indicador->dato_2024 ?? 'null' }}
-                        },
-                        {
-                            x: '2025',
-                            y: {{ $indicador->dato_2025 ?? 'null' }}
-                        },
-                        {
-                            x: '2026',
-                            y: {{ $indicador->dato_2026 ?? 'null' }}
-                        },
-                        {
-                            x: '2027',
-                            y: {{ $indicador->dato_2027 ?? 'null' }}
-                        }
-                    ]
-                },
-                {
-                    name: 'Meta 2027',
-                    data: [{
-                            x: '2019',
-                            y: null
-                        },
-                        {
-                            x: '2020',
-                            y: null
-                        },
-                        {
-                            x: '2021',
-                            y: null
-                        },
-                        {
-                            x: '2022',
-                            y: null
-                        },
-                        {
-                            x: '2023',
-                            y: null
-                        },
-                        {
-                            x: '2024',
-                            y: null
-                        },
-                        {
-                            x: '2025',
-                            y: null
-                        },
-                        {
-                            x: '2026',
-                            y: null
-                        },
-                        {
-                            x: '2027',
-                            y: {{ $indicador->meta_2024 ?? 'null' }}
-                        }
-                    ],
-                    type: 'scatter', // Usamos scatter para marcar solo un punto
-                    marker: {
-                        size: 8,
-                        fillColor: '#ff0000', // Cambia el color del marcador de la meta
-                        shape: 'diamond'
-                    },
+        document.addEventListener("DOMContentLoaded", function() {
+            var categorias = ['2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027'];
+            var datosPrincipales = [
+                {{ $indicador->dato_2019 ?? 'null' }},
+                {{ $indicador->dato_2020 ?? 'null' }},
+                {{ $indicador->dato_2021 ?? 'null' }},
+                {{ $indicador->dato_2022 ?? 'null' }},
+                {{ $indicador->dato_2023 ?? 'null' }},
+                {{ $indicador->dato_2024 ?? 'null' }},
+                {{ $indicador->dato_2025 ?? 'null' }},
+                {{ $indicador->dato_2026 ?? 'null' }},
+                {{ $indicador->dato_2027 ?? 'null' }}
+            ];
+            var datosMeta = [null, null, null, null, null, null, null, null, {{ $indicador->meta_2024 ?? 'null' }}];
 
-                    tooltip: {
-                        custom: function({
-                            seriesIndex,
-                            dataPointIndex,
-                            w
-                        }) {
-                            return '<div class="apexcharts-tooltip-text"><span>Meta 2027: </span>' +
-                                w.config.series[seriesIndex].data[dataPointIndex].y + '</div>';
+            var chart = echarts.init(document.getElementById('grafica'));
+            chart.setOption({
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function(params) {
+                        var res = params[0].axisValue;
+                        params.forEach(function(p) {
+                            if (p.value !== null && p.value !== undefined) {
+                                res += '<br/>' + p.marker + ' ' + p.seriesName + ': ' + p.value;
+                            }
+                        });
+                        return res;
+                    }
+                },
+                legend: {
+                    data: ['{{ $indicador->unidad_medida }}', 'Meta 2027'],
+                    top: 'top'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: categorias,
+                    name: 'Año'
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Rango de valores de medición'
+                },
+                series: [
+                    {
+                        name: '{{ $indicador->unidad_medida }}',
+                        type: 'line',
+                        data: datosPrincipales,
+                        smooth: true,
+                        lineStyle: { width: 3, color: '#C1B999' },
+                        itemStyle: { color: '#C1B999' },
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: 'rgba(193,185,153,0.3)' },
+                                { offset: 1, color: 'rgba(193,185,153,0.05)' }
+                            ])
+                        },
+                        symbolSize: 5,
+                        connectNulls: true
+                    },
+                    {
+                        name: 'Meta 2027',
+                        type: 'scatter',
+                        data: datosMeta,
+                        symbolSize: 20,
+                        symbol: 'diamond',
+                        itemStyle: { color: '#ff0000' },
+                        label: {
+                            show: true,
+                            formatter: function(params) {
+                                return params.value !== null && params.value !== undefined ? 'Meta: ' + params.value : '';
+                            },
+                            color: '#ff0000',
+                            fontWeight: 'bold'
                         }
                     }
-                }
-            ],
-            chart: {
-                type: 'area', // Cambiado a gráfico de área
-                height: 350,
-                animations: {
-                    enabled: false
-                },
-                zoom: {
-                    enabled: false
-                },
-            },
-            colors: ['#C1B999',
-                '#ff0000'
-            ],
-            dataLabels: {
-                enabled: true
-            },
-            stroke: {
-                curve: 'smooth', // Usamos spline para las líneas
-            },
-            fill: {
-                opacity: 0.2, // Transparente para la área
-            },
-            markers: {
-                size: 5,
-                hover: {
-                    size: 9
-                }
-            },
-            title: {
-                text: '{{ $indicador->indicador }}',
-            },
-            tooltip: {
-                intersect: true,
-                shared: false
-            },
-            theme: {
-                palette: 'palette1'
-            },
-            xaxis: {
-                categories: ['2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020',
-                    '2021', '2022', '2023', '2024'
-                ],
-            },
-            yaxis: {
-                title: {
-                    text: 'Rango de valores de medición'
-                }
-            }
-        };
-
-        var chart = new ApexCharts(document.querySelector("#grafica"), options);
-        chart.render();
+                ]
+            });
+            chart.resize();
+        });
     </script>
     <script>
         function printDiv(imprimir) {

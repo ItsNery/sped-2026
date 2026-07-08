@@ -61,8 +61,21 @@ $totalIndicadoresGeneral += $grupoDeIndicadores->count();
     </div>
 </div>
 
-{{-- 3. Sección de Indicadores --}}
-<div class="row indicador_{{ $numEje }}">
+{{-- 3. Toggle Lista / Grid --}}
+<div class="d-flex align-items-center gap-2 mb-3 ocultar_impresion">
+    <span class="text-muted small fw-semibold">Vista:</span>
+    <div class="btn-group btn-group-sm border rounded overflow-hidden">
+        <button type="button" class="btn btn-sm px-3 btn-toggle-vista active" data-view="lista" data-target="contenedor-eje-{{ $numEje }}" style="background-color: var(--color-eje{{ $numEje }}); color: #fff; border: none;">
+            <i class="fas fa-list"></i>
+        </button>
+        <button type="button" class="btn btn-sm px-3 btn-toggle-vista" data-view="grid" data-target="contenedor-eje-{{ $numEje }}" style="background-color: #fff; color: var(--color-eje{{ $numEje }});">
+            <i class="fas fa-th-large"></i>
+        </button>
+    </div>
+</div>
+
+{{-- 4. Sección de Indicadores --}}
+<div class="row indicador_{{ $numEje }}" id="contenedor-eje-{{ $numEje }}">
     <div class="container">
         @forelse ($indicadoresAgrupados as $nombreTematica => $listaIndicadoresDeLaTematica)
         <div class="tematica-group mt-4 mb-3">
@@ -190,7 +203,10 @@ $totalIndicadoresGeneral += $grupoDeIndicadores->count();
                                 Medición Pendiente
                             </div>
                             @else
-                            <div id="gauge-{{ $indicador->id }}" class="grafico-gauge-pendiente" style="cursor: help;"
+                            <div class="grafico-gauge-pendiente" data-gauge="true"
+                                data-chart-val="{{ $chartVal }}"
+                                data-color="{{ $colorSemaforo }}"
+                                style="cursor: help;"
                                 data-bs-toggle="popover"
                                 data-bs-trigger="hover focus"
                                 data-bs-placement="top"
@@ -205,46 +221,6 @@ $totalIndicadoresGeneral += $grupoDeIndicadores->count();
                     </div>
                 </div>
             </div>
-
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    var options = {
-                        series: [Number("{{ $chartVal }}")],
-                        chart: {
-                            type: 'radialBar',
-                            height: 180,
-                            sparkline: {
-                                enabled: true
-                            }
-                        },
-                        plotOptions: {
-                            radialBar: {
-                                startAngle: -90,
-                                endAngle: 90,
-                                track: {
-                                    background: "#f0f0f0",
-                                    strokeWidth: '97%'
-                                },
-                                dataLabels: {
-                                    name: {
-                                        show: false
-                                    },
-                                    value: {
-                                        show: false
-                                    }
-                                }
-                            }
-                        },
-                        fill: {
-                            colors: ['{{ $colorSemaforo }}']
-                        },
-                        stroke: {
-                            lineCap: 'round'
-                        }
-                    };
-                    new ApexCharts(document.querySelector("#gauge-{{ $indicador->id }}"), options).render();
-                });
-            </script>
             @endforeach
             @else
             <p class="text-muted">No hay indicadores disponibles para esta temática.</p>
@@ -258,44 +234,101 @@ $totalIndicadoresGeneral += $grupoDeIndicadores->count();
     </div>
 </div>
 
-{{-- 4. Scripts Unificados (Gráfica General y Popovers) --}}
+{{-- 5. Scripts Unificados (Gráfica General, Popovers y Toggle) --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Inicializar Gauge General
         var chartValGeneral = Number("{{ ($avanceEje ?? 0) > 100 ? 100 : ($avanceEje ?? 0) }}");
-        var optionsGeneral = {
-            series: [chartValGeneral],
-            chart: {
-                type: 'radialBar',
-                height: 220,
-                sparkline: {
-                    enabled: true
-                }
-            },
-            plotOptions: {
-                radialBar: {
-                    startAngle: -90,
-                    endAngle: 90,
-                    track: {
-                        background: "#e7e7e7",
-                        strokeWidth: '97%'
-                    },
-                    dataLabels: {
-                        name: {
-                            show: false
-                        },
-                        value: {
-                            show: false
-                        }
+        var chartGeneral = echarts.init(document.getElementById('gauge-general'));
+        chartGeneral.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180, endAngle: 0,
+                min: 0, max: 100,
+                progress: { show: true, width: 15, roundCap: true, itemStyle: { color: '#691A32' } },
+                axisLine: { lineStyle: { width: 15, color: [[1, '#e7e7e7']] } },
+                axisTick: { show: false }, splitLine: { show: false },
+                axisLabel: { show: false }, pointer: { show: false },
+                detail: { show: false },
+                data: [{ value: chartValGeneral }]
+            }]
+        });
+        chartGeneral.resize();
+
+        // Inicializar Toggle Lista/Grid
+        document.querySelectorAll('.btn-toggle-vista').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var view = this.dataset.view;
+                var targetId = this.dataset.target;
+                var container = document.getElementById(targetId);
+                if (!container) return;
+
+                // Actualizar botones
+                var btnGroup = this.closest('.btn-group');
+                btnGroup.querySelectorAll('.btn-toggle-vista').forEach(function(b) {
+                    b.classList.remove('active');
+                    if (b.dataset.view === 'lista') {
+                        b.style.backgroundColor = '#fff';
+                        b.style.color = 'var(--color-eje{{ $numEje }})';
+                    } else {
+                        b.style.backgroundColor = '#fff';
+                        b.style.color = 'var(--color-eje{{ $numEje }})';
                     }
+                });
+                this.classList.add('active');
+                if (view === 'lista') {
+                    this.style.backgroundColor = 'var(--color-eje{{ $numEje }})';
+                    this.style.color = '#fff';
+                } else {
+                    this.style.backgroundColor = 'var(--color-eje{{ $numEje }})';
+                    this.style.color = '#fff';
                 }
-            },
-            fill: {
-                colors: ['#691A32']
-            },
-            labels: ['Avance General'],
-        };
-        new ApexCharts(document.querySelector("#gauge-general"), optionsGeneral).render();
+
+                // Aplicar modo
+                if (view === 'grid') {
+                    container.classList.add('modo-grid');
+                } else {
+                    container.classList.remove('modo-grid');
+                }
+            });
+        });
+
+        // Inicializar Gauges con Lazy Loading (IntersectionObserver)
+        function renderGauge(el) {
+            var val = Number(el.dataset.chartVal);
+            if (val > 100) val = 100;
+            var color = el.dataset.color;
+            var chart = echarts.init(el);
+            chart.setOption({
+                series: [{
+                    type: 'gauge',
+                    startAngle: 180, endAngle: 0,
+                    min: 0, max: 100,
+                    progress: { show: true, width: 15, roundCap: true, itemStyle: { color: color } },
+                    axisLine: { lineStyle: { width: 15, color: [[1, '#f0f0f0']] } },
+                    axisTick: { show: false }, splitLine: { show: false },
+                    axisLabel: { show: false }, pointer: { show: false },
+                    detail: { show: false },
+                    data: [{ value: val }]
+                }]
+            });
+            chart.resize();
+        }
+
+        var gaugeEls = document.querySelectorAll('[data-gauge="true"]');
+        if ('IntersectionObserver' in window) {
+            var observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        renderGauge(entry.target);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { rootMargin: '150px' });
+            gaugeEls.forEach(function(el) { observer.observe(el); });
+        } else {
+            gaugeEls.forEach(renderGauge);
+        }
 
         // Inicializar Popovers
         var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));

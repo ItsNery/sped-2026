@@ -253,6 +253,22 @@
                     </div>
                     <p> {{ $indicador->fecha_actualizacion ?? 'N/D' }}</p>
                 </div>
+                @if($indicador->programasInstitucionales && $indicador->programasInstitucionales->isNotEmpty())
+                <div class="col-md-12 mt-3">
+                    <div class="custom-section-title">
+                        <i class="fa-solid fa-hotel text-primary"></i> Programas Derivados Institucionales Relacionados
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 pt-1 pb-3">
+                        @foreach($indicador->programasInstitucionales as $progInst)
+                            <span class="badge text-white px-3 py-2 rounded-pill shadow-sm" 
+                                  style="background-color: {{ $progInst->color ?? '#691A32' }}; font-size: 0.85rem;"
+                                  title="{{ $progInst->nombre }}">
+                                <strong>{{ $progInst->siglas }}</strong> - {{ $progInst->nombre }}
+                            </span>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
     </div>

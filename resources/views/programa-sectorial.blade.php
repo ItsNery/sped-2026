@@ -25,40 +25,21 @@ del Estado de Puebla')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var chartValGeneral = Number("{{ ($avancePrograma ?? 0) > 100 ? 100 : ($avancePrograma ?? 0) }}");
-        new ApexCharts(document.querySelector("#gauge-general"), {
-            series: [chartValGeneral],
-            chart: {
-                type: 'radialBar',
-                height: 220,
-                sparkline: {
-                    enabled: true
-                }
-            },
-            plotOptions: {
-                radialBar: {
-                    startAngle: -90,
-                    endAngle: 90,
-                    track: {
-                        background: "#e7e7e7",
-                        strokeWidth: '97%'
-                    },
-                    dataLabels: {
-                        name: {
-                            show: false
-                        },
-                        value: {
-                            show: false
-                        }
-                    }
-                }
-            },
-            fill: {
-                colors: ['{{ $programa->color }}']
-            },
-            stroke: {
-                lineCap: 'round'
-            }
-        }).render();
+        var gaugeGeneral = echarts.init(document.getElementById('gauge-general'));
+        gaugeGeneral.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180, endAngle: 0,
+                min: 0, max: 100,
+                progress: { show: true, width: 15, roundCap: true, itemStyle: { color: '{{ $programa->color }}' } },
+                axisLine: { lineStyle: { width: 15, color: [[1, '#e7e7e7']] } },
+                axisTick: { show: false }, splitLine: { show: false },
+                axisLabel: { show: false }, pointer: { show: false },
+                detail: { show: false },
+                data: [{ value: chartValGeneral }]
+            }]
+        });
+        gaugeGeneral.resize();
 
         var popoverList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]')).map(function(el) {
             return new bootstrap.Popover(el, {

@@ -61,6 +61,37 @@
                         </div>
                     </div>
                     <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label custom-section-title" for="siglas">
+                                <i class="fa-solid fa-tag"></i> Siglas / Acrónimo
+                            </label>
+                            <input type="text" class="form-control @error('siglas') is-invalid @enderror" name="siglas"
+                                id="siglas" value="{{ old('siglas', $programa->siglas ?? '') }}" placeholder="Ej: SMT">
+                            @error('siglas')
+                                <small class="invalid-feedback">
+                                    <strong>{{ $message }}</strong>
+                                </small>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label custom-section-title" for="grupo">
+                                <i class="fa-solid fa-folder"></i> Grupo / Categoría
+                            </label>
+                            <select name="grupo" id="grupo" class="form-select @error('grupo') is-invalid @enderror">
+                                <option value="">Seleccione grupo...</option>
+                                <option value="Secretarías" {{ (old('grupo') ?? ($programa->grupo ?? '')) == 'Secretarías' ? 'selected' : '' }}>Secretarías</option>
+                                <option value="Organismos Auxiliares" {{ (old('grupo') ?? ($programa->grupo ?? '')) == 'Organismos Auxiliares' ? 'selected' : '' }}>Organismos Auxiliares</option>
+                            </select>
+                            @error('grupo')
+                                <small class="invalid-feedback">
+                                    <strong>{{ $message }}</strong>
+                                </small>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="col-md-6">
                         <div class="mb-4">
                             <label class="form-label custom-section-title" for="descripcion">
                                 <i class="fa-solid fa-file-signature"></i> Descripción
@@ -101,8 +132,7 @@
                             </div>
                         @endif
                         <input type="file" name="imagen" id="imagen" accept="image/*"
-                            class="form-control @error('imagen') is-invalid @enderror" accept="image/*"
-                            {{ $isEdit ? '' : 'required' }}>
+                            class="form-control @error('imagen') is-invalid @enderror">
                         @error('imagen')
                             <small class="invalid-feedback">
                                 <strong>{{ $message }}</strong>

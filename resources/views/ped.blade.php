@@ -124,67 +124,58 @@ Información para el Seguimiento a la Planeación y Evaluación del Desarrollo d
 </section>
 <!-- FIN SECCIÓN AVANCE -->
 @section('jss-final')
-<script src="{{ asset('js/apexcharts.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const getGaugeOptions = (value, color) => {
-            return {
-                series: [value > 100 ? 100 : value],
-                chart: {
-                    type: 'radialBar',
-                    offsetY: -10,
-                    sparkline: {
-                        enabled: true
-                    }
-                },
-                plotOptions: {
-                    radialBar: {
-                        startAngle: -90,
-                        endAngle: 90,
-                        track: {
-                            background: "#e7e7e7",
-                            strokeWidth: '97%'
-                        },
-                        dataLabels: {
-                            name: {
-                                show: false
-                            },
-                            value: {
-                                show: false
-                            }
-                        }
-                    }
-                },
-                fill: {
-                    colors: [color]
-                },
-                labels: ['Avance'],
-            };
-        };
+        var createdCharts = [];
+        function createGauge(domId, value, color) {
+            var chart = echarts.init(document.getElementById(domId));
+            chart.setOption({
+                series: [{
+                    type: 'gauge',
+                    startAngle: 180, endAngle: 0,
+                    min: 0, max: 100,
+                    progress: { show: true, width: 15, roundCap: true, itemStyle: { color: color } },
+                    axisLine: { lineStyle: { width: 15, color: [[1, '#e7e7e7']] } },
+                    axisTick: { show: false }, splitLine: { show: false },
+                    axisLabel: { show: false }, pointer: { show: false },
+                    detail: { show: false },
+                    data: [{ value: value > 100 ? 100 : value }]
+                }]
+            });
+            chart.resize();
+            createdCharts.push(chart);
+            return chart;
+        }
 
         // Main Gauge
         var avancePlan = Number("{{ $avancePlan }}");
         var colorPlan = "{{ $colorPlan }}";
-        new ApexCharts(document.querySelector("#mainGauge"), getGaugeOptions(avancePlan, colorPlan)).render();
+        createGauge("mainGauge", avancePlan, colorPlan);
 
         // Axis Gauges
         var ejesDataString = '{!! json_encode($ejesData) !!}';
         var ejesData = JSON.parse(ejesDataString);
         ejesData.forEach(function(eje) {
-            new ApexCharts(document.querySelector("#gauge-eje-" + eje.id), getGaugeOptions(eje.avance, eje.semaforo_color)).render();
+            createGauge("gauge-eje-" + eje.id, eje.avance, eje.semaforo_color);
         });
         var programasDataString = '{!! json_encode($programasData) !!}';
         var programasData = JSON.parse(programasDataString);
         programasData.forEach(function(programa, index) {
-            var selector = "#gauge-prog-" + programa.tipo_slug + "-" + programa.id;
-            var element = document.querySelector(selector);
-
+            var selector = "gauge-prog-" + programa.tipo_slug + "-" + programa.id;
+            var element = document.getElementById(selector);
             if (element) {
                 element.innerHTML = '';
-
-                var chart = new ApexCharts(element, getGaugeOptions(programa.avance, programa.semaforo_color));
-                chart.render();
+                createGauge(selector, programa.avance, programa.semaforo_color);
             }
+        });
+
+        // Redimensionar todas las gráficas al cambiar de pestaña para evitar que queden estrechas
+        document.querySelectorAll('a[data-bs-toggle="pill"]').forEach(function(tabEl) {
+            tabEl.addEventListener('shown.bs.tab', function() {
+                createdCharts.forEach(function(chart) {
+                    chart.resize();
+                });
+            });
         });
     });
 </script>

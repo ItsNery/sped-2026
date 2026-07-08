@@ -239,13 +239,6 @@ body {
     }
 }
 
-.apexcharts-title-text {
-    white-space: normal;
-    word-wrap: break-word;
-    max-width: 400px;
-    line-height: 1.2;
-}
-
 /* Header */
 .logo-header {
     width: 500px;

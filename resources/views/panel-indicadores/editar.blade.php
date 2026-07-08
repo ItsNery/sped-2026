@@ -148,9 +148,6 @@
                                     <option value="Programa Especial"
                                         {{ $currentType == 'Programa Especial' ? 'selected' : '' }}>Programa Especial
                                     </option>
-                                    <option value="Programa Institucional"
-                                        {{ $currentType == 'Programa Institucional' ? 'selected' : '' }}>Programa
-                                        Institucional</option>
                                     <option value="Programa Regional"
                                         {{ $currentType == 'Programa Regional' ? 'selected' : '' }}>Programa Regional
                                     </option>
@@ -199,6 +196,43 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+
+                        {{-- VINCULACIÓN CON PROGRAMAS INSTITUCIONALES (RELACIÓN MUCHOS A MUCHOS) --}}
+                        <div class="col-md-12 mb-3 mt-3">
+                            <div class="custom-section-title"><i class="fa-solid fa-hotel"></i>
+                                Vinculación con Programas Institucionales:
+                            </div>
+                            <div class="mb-2">
+                                <input type="text" class="form-control form-control-sm buscar-prog-inst" 
+                                    placeholder="🔍 Buscar por nombre o siglas..." 
+                                    data-target="container-prog-inst-editar">
+                            </div>
+                            <div class="card p-3 container-prog-inst-editar" style="max-height: 250px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 0.25rem;">
+                                <div class="row">
+                                    @php
+                                        $linkedIds = is_array(old('programas_institucionales')) 
+                                            ? old('programas_institucionales') 
+                                            : (isset($indicador) ? $indicador->programasInstitucionales->pluck('id')->toArray() : []);
+                                    @endphp
+                                    @foreach ($programasInstitucionales as $progInst)
+                                    <div class="col-md-6 mb-2 item-prog-inst" data-nombre="{{ strtolower($progInst->nombre) }}" data-siglas="{{ strtolower($progInst->siglas) }}">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="programas_institucionales[]" 
+                                                value="{{ $progInst->id }}" id="prog_inst_{{ $progInst->id }}"
+                                                {{ in_array($progInst->id, $linkedIds) ? 'checked' : '' }}>
+                                            <label class="form-check-label text-muted" for="prog_inst_{{ $progInst->id }}" style="font-size: 0.9rem;">
+                                                <span class="badge text-white mr-1" style="background-color: {{ $progInst->color ?? '#691A32' }};">{{ $progInst->siglas }}</span>
+                                                {{ $progInst->nombre }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @error('programas_institucionales')
+                            <div class="text-danger mt-1" style="font-size: 0.875em;">{{ $message }}</div>
+                            @enderror
+                        </div>
                         {{-- Comentado por que no habrá código tematica --}}
                         {{-- <div class="col-md-2 mb-2">
                             <div class="custom-section-title"><i class="fa-solid fa-barcode"></i>
@@ -221,7 +255,7 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="col-md-4 mb-2">
+                    <div class="col-md-6 mb-2">
                         <div class="custom-section-title"><i class="fa-solid fa-text-width"></i>
                             Definición o descripción: <span class="text-danger">*</span>
                         </div>
@@ -403,7 +437,7 @@
                     </div>
 
                     {{-- Contenedor para los bloques de datos anuales --}}
-                    <div id="datos-anuales-container">
+                    <div id="datos-anuales-container" class="accordion mb-3" id="accordionDatosAnuales">
                         {{--
             CASO DE EDICIÓN:
             Iteramos sobre los datos anuales existentes del indicador y los mostramos.
@@ -413,145 +447,154 @@
                         @foreach ($indicador->datosAnuales->sortBy('anio') as $datoAnual)
                         {{-- Usamos $loop->index o una variable manual para el índice --}}
                         @php $currentIndex = $loop->index; @endphp
-                        <div class="dato-anual-block card mb-3">
-                            <div class="card-body">
-                                <h5 class="card-title">Editando año: {{ $datoAnual->anio }}</h5>
-                                {{-- Campo oculto para el ID del DatoAnual existente, crucial para el update --}}
-                                <input type="hidden" name="datos_anuales[{{ $currentIndex }}][id]"
-                                    value="{{ $datoAnual->id }}">
-
-                                <div class="form-group row mb-2">
-                                    <label class="col-sm-3 col-form-label">Año del dato <span
-                                            class="text-danger">*</span></label>
-                                    <div class="col-sm-9">
-                                        <input type="number"
-                                            class="form-control @error('datos_anuales.' . $currentIndex . '.anio') is-invalid @enderror"
-                                            name="datos_anuales[{{ $currentIndex }}][anio]"
-                                            value="{{ old('datos_anuales.' . $currentIndex . '.anio', $datoAnual->anio) }}"
-                                            placeholder="Ej: {{ date('Y') - 1 }}" required>
-                                        @error('datos_anuales.' . $currentIndex . '.anio')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-
-                                <div class="form-group row mb-2">
-                                    <label class="col-sm-3 col-form-label">Valor del dato</label>
-                                    <div class="col-sm-9">
-                                        <input type="number" step="any"
-                                            class="form-control @error('datos_anuales.' . $currentIndex . '.valor_dato') is-invalid @enderror"
-                                            name="datos_anuales[{{ $currentIndex }}][valor_dato]"
-                                            value="{{ old('datos_anuales.' . $currentIndex . '.valor_dato', $datoAnual->valor_dato) }}"
-                                            placeholder="Valor numérico (ej: 123.45)">
-                                        @error('datos_anuales.' . $currentIndex . '.valor_dato')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-
-                                <div class="form-group row mb-2">
-                                    <label class="col-sm-3 col-form-label">Próxima fecha de
-                                        actualización</label>
-                                    <div class="col-sm-9">
-                                        <input type="date"
-                                            class="form-control @error('datos_anuales.' . $currentIndex . '.fecha_actualizacion') is-invalid @enderror"
-                                            name="datos_anuales[{{ $currentIndex }}][fecha_actualizacion]"
-                                            value="{{ old('datos_anuales.' . $currentIndex . '.fecha_actualizacion', $datoAnual->fecha_actualizacion ? Carbon\Carbon::parse($datoAnual->fecha_actualizacion)->format('Y-m-d') : '') }}">
-                                        @error('datos_anuales.' . $currentIndex .
-                                        '.fecha_actualizacion')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-
-                                <div class="form-group row mb-2">
-                                    <label class="col-sm-3 col-form-label">Resultados (anual)</label>
-                                    <div class="col-sm-9">
-                                        <textarea class="form-control @error('datos_anuales.' . $currentIndex . '.resultados') is-invalid @enderror"
-                                            name="datos_anuales[{{ $currentIndex }}][resultados]" rows="2">{{ old('datos_anuales.' . $currentIndex . '.resultados', $datoAnual->resultados) }}</textarea>
-                                        @error('datos_anuales.' . $currentIndex . '.resultados')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="form-group row mb-2">
-                                    <label class="col-sm-3 col-form-label">Evidencia (PDF)</label>
-                                    <div class="col-sm-9">
-                                        @if ($datoAnual->evidencia)
-                                        <div class="mb-2">
-                                            Archivo actual:
-                                            <a href="{{ asset('assets-administrador/docs/' . $datoAnual->evidencia) }}"
-                                                target="_blank">
-                                                {{ $datoAnual->evidencia }}
-                                            </a>
-                                            <div class="form-check mt-1">
-                                                <input class="form-check-input" type="checkbox"
-                                                    name="datos_anuales[{{ $currentIndex }}][eliminar_evidencia]"
-                                                    id="eliminar_evidencia_{{ $currentIndex }}"
-                                                    value="1">
-                                                <label class="form-check-label"
-                                                    for="eliminar_evidencia_{{ $currentIndex }}">
-                                                    Eliminar evidencia actual (si sube uno nuevo,
-                                                    este se ignorará)
-                                                </label>
-                                            </div>
+                        <div class="accordion-item dato-anual-block" id="dato-anual-item-{{ $currentIndex }}">
+                            <h2 class="accordion-header" id="heading-{{ $currentIndex }}">
+                                <button class="accordion-button collapsed d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapse-{{ $currentIndex }}" aria-expanded="false"
+                                    aria-controls="collapse-{{ $currentIndex }}">
+                                    <div class="w-100 d-flex justify-content-between pr-3 align-items-center">
+                                        <div>
+                                            <span class="fw-bold me-3 text-dark badge bg-light text-dark border mr-2" style="font-size: 0.95rem;">
+                                                Año: <span class="header-anio">{{ $datoAnual->anio }}</span>
+                                            </span>
+                                            <span class="text-muted">
+                                                Valor: <span class="header-valor fw-semibold text-primary">{{ $datoAnual->valor_dato ?? 'Sin registrar' }}</span>
+                                            </span>
                                         </div>
-                                        @else
-                                        <p class="text-muted">No hay evidencia cargada para este
-                                            año.</p>
-                                        @endif
-                                        <input type="file"
-                                            class="form-control @error('datos_anuales.' . $currentIndex . '.evidencia_file') is-invalid @enderror"
-                                            name="datos_anuales[{{ $currentIndex }}][evidencia_file]"
-                                            accept=".pdf">
-                                        <small class="form-text text-muted">Seleccione un nuevo archivo
-                                            PDF si desea reemplazar o agregar evidencia.</small>
-                                        @error('datos_anuales.' . $currentIndex . '.evidencia_file')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                        {{-- Guardaremos el nombre del archivo de evidencia existente en un campo oculto si no se elimina y no se sube uno nuevo --}}
                                         @if ($datoAnual->evidencia)
-                                        <input type="hidden"
-                                            name="datos_anuales[{{ $currentIndex }}][evidencia_actual]"
-                                            value="{{ $datoAnual->evidencia }}">
+                                        <span class="badge bg-success mr-4"><i class="fa-solid fa-file-pdf"></i> Evidencia</span>
                                         @endif
                                     </div>
+                                </button>
+                            </h2>
+                            <div id="collapse-{{ $currentIndex }}" class="accordion-collapse collapse"
+                                aria-labelledby="heading-{{ $currentIndex }}" data-bs-parent="#accordionDatosAnuales">
+                                <div class="accordion-body bg-light">
+                                    {{-- Campo oculto para el ID del DatoAnual existente, crucial para el update --}}
+                                    <input type="hidden" name="datos_anuales[{{ $currentIndex }}][id]"
+                                        value="{{ $datoAnual->id }}">
+
+                                    <div class="form-group row mb-2">
+                                        <label class="col-sm-3 col-form-label">Año del dato <span
+                                                class="text-danger">*</span></label>
+                                        <div class="col-sm-9">
+                                            <input type="number"
+                                                class="form-control anio-input @error('datos_anuales.' . $currentIndex . '.anio') is-invalid @enderror"
+                                                name="datos_anuales[{{ $currentIndex }}][anio]"
+                                                value="{{ old('datos_anuales.' . $currentIndex . '.anio', $datoAnual->anio) }}"
+                                                placeholder="Ej: {{ date('Y') - 1 }}" required>
+                                            @error('datos_anuales.' . $currentIndex . '.anio')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row mb-2">
+                                        <label class="col-sm-3 col-form-label">Valor del dato</label>
+                                        <div class="col-sm-9">
+                                            <input type="number" step="any"
+                                                class="form-control valor-dato-input @error('datos_anuales.' . $currentIndex . '.valor_dato') is-invalid @enderror"
+                                                name="datos_anuales[{{ $currentIndex }}][valor_dato]"
+                                                value="{{ old('datos_anuales.' . $currentIndex . '.valor_dato', $datoAnual->valor_dato) }}"
+                                                placeholder="Valor numérico (ej: 123.45)">
+                                            @error('datos_anuales.' . $currentIndex . '.valor_dato')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row mb-2">
+                                        <label class="col-sm-3 col-form-label">Próxima fecha de
+                                            actualización</label>
+                                        <div class="col-sm-9">
+                                            <input type="date"
+                                                class="form-control @error('datos_anuales.' . $currentIndex . '.fecha_actualizacion') is-invalid @enderror"
+                                                name="datos_anuales[{{ $currentIndex }}][fecha_actualizacion]"
+                                                value="{{ old('datos_anuales.' . $currentIndex . '.fecha_actualizacion', $datoAnual->fecha_actualizacion ? Carbon\Carbon::parse($datoAnual->fecha_actualizacion)->format('Y-m-d') : '') }}">
+                                            @error('datos_anuales.' . $currentIndex .
+                                            '.fecha_actualizacion')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row mb-2">
+                                        <label class="col-sm-3 col-form-label">Resultados (anual)</label>
+                                        <div class="col-sm-9">
+                                            <textarea class="form-control @error('datos_anuales.' . $currentIndex . '.resultados') is-invalid @enderror"
+                                                name="datos_anuales[{{ $currentIndex }}][resultados]" rows="2">{{ old('datos_anuales.' . $currentIndex . '.resultados', $datoAnual->resultados) }}</textarea>
+                                            @error('datos_anuales.' . $currentIndex . '.resultados')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="form-group row mb-2">
+                                        <label class="col-sm-3 col-form-label">Evidencia (PDF)</label>
+                                        <div class="col-sm-9">
+                                            @if ($datoAnual->evidencia)
+                                            <div class="mb-2">
+                                                Archivo actual:
+                                                <a href="{{ asset('assets-administrador/docs/' . $datoAnual->evidencia) }}"
+                                                    target="_blank" class="fw-bold">
+                                                    {{ $datoAnual->evidencia }}
+                                                </a>
+                                                <div class="form-check mt-1">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        name="datos_anuales[{{ $currentIndex }}][eliminar_evidencia]"
+                                                        id="eliminar_evidencia_{{ $currentIndex }}"
+                                                        value="1">
+                                                    <label class="form-check-label"
+                                                        for="eliminar_evidencia_{{ $currentIndex }}">
+                                                        Eliminar evidencia actual (si sube uno nuevo,
+                                                        este se ignorará)
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            @else
+                                            <p class="text-muted mb-2">No hay evidencia cargada para este
+                                                año.</p>
+                                            @endif
+                                            <input type="file"
+                                                class="form-control @error('datos_anuales.' . $currentIndex . '.evidencia_file') is-invalid @enderror"
+                                                name="datos_anuales[{{ $currentIndex }}][evidencia_file]"
+                                                accept=".pdf">
+                                            <small class="form-text text-muted">Seleccione un nuevo archivo
+                                                PDF si desea reemplazar o agregar evidencia.</small>
+                                            @error('datos_anuales.' . $currentIndex . '.evidencia_file')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            {{-- Guardaremos el nombre del archivo de evidencia existente en un campo oculto si no se elimina y no se sube uno nuevo --}}
+                                            @if ($datoAnual->evidencia)
+                                            <input type="hidden"
+                                                name="datos_anuales[{{ $currentIndex }}][evidencia_actual]"
+                                                value="{{ $datoAnual->evidencia }}">
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="form-group row mb-2">
+                                        <label class="col-sm-3 col-form-label">Observaciones
+                                            (anual)
+                                        </label>
+                                        <div class="col-sm-9">
+                                            <textarea class="form-control @error('datos_anuales.' . $currentIndex . '.observaciones') is-invalid @enderror"
+                                                name="datos_anuales[{{ $currentIndex }}][observaciones]" rows="2">{{ old('datos_anuales.' . $currentIndex . '.observaciones', $datoAnual->observaciones) }}</textarea>
+                                            @error('datos_anuales.' . $currentIndex . '.observaciones')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="text-right mt-2 d-flex justify-content-end">
+                                        <button type="button"
+                                            class="btn btn-danger btn-sm remove-dato-anual">
+                                            <i class="fa-solid fa-trash-can"></i> Eliminar Año
+                                        </button>
+                                    </div>
                                 </div>
-                                {{-- <div class="form-group row mb-2">
-                                                    <label class="col-sm-3 col-form-label">Evidencia (anual)</label>
-                                                    <div class="col-sm-9">
-                                                        <input type="text"
-                                                            class="form-control @error('datos_anuales.' . $currentIndex . '.evidencia') is-invalid @enderror"
-                                                            name="datos_anuales[{{ $currentIndex }}][evidencia]"
-                                value="{{ old('datos_anuales.' . $currentIndex . '.evidencia', $datoAnual->evidencia) }}"
-                                placeholder="URL o referencia a la evidencia de este año">
-                                @error('datos_anuales.' . $currentIndex . '.evidencia')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div> --}}
-                        <div class="form-group row mb-2">
-                            <label class="col-sm-3 col-form-label">Observaciones
-                                (anual)
-                            </label>
-                            <div class="col-sm-9">
-                                <textarea class="form-control @error('datos_anuales.' . $currentIndex . '.observaciones') is-invalid @enderror"
-                                    name="datos_anuales[{{ $currentIndex }}][observaciones]" rows="2">{{ old('datos_anuales.' . $currentIndex . '.observaciones', $datoAnual->observaciones) }}</textarea>
-                                @error('datos_anuales.' . $currentIndex . '.observaciones')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
                             </div>
                         </div>
-                        <div class="text-right mt-2">
-                            <button type="button"
-                                class="btn btn-danger btn-sm remove-dato-anual">Eliminar
-                                Año</button>
-                        </div>
+                        @endforeach
+                        @endif
                     </div>
-                </div>
-                @endforeach
-                @endif
-        </div>
 
         <div class="form-group mt-3">
             <button type="button" id="add-dato-anual-button" class="btn btn-success">
@@ -575,67 +618,78 @@
     </div>
     </form>
     <div id="dato-anual-template" style="display: none;">
-        <div class="dato-anual-block card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Nuevo Año</h5>
-                <div class="form-group row mb-2">
-                    <label class="col-sm-3 col-form-label">Año del dato <span
-                            class="text-danger">*</span></label>
-                    <div class="col-sm-9">
-                        <input type="number" class="form-control anio-input"
-                            name="datos_anuales[__INDEX__][anio]" placeholder="Ej: {{ date('Y') }}"
-                            required> {{-- Placeholder actualizado --}}
+        <div class="accordion-item dato-anual-block" id="dato-anual-item-__INDEX__">
+            <h2 class="accordion-header" id="heading-__INDEX__">
+                <button class="accordion-button d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapse-__INDEX__" aria-expanded="true"
+                    aria-controls="collapse-__INDEX__">
+                    <div class="w-100 d-flex justify-content-between pr-3 align-items-center">
+                        <div>
+                            <span class="fw-bold me-3 text-dark badge bg-light text-dark border mr-2" style="font-size: 0.95rem;">
+                                Año: <span class="header-anio">Nueva Entrada</span>
+                            </span>
+                            <span class="text-muted">
+                                Valor: <span class="header-valor fw-semibold text-primary">Sin registrar</span>
+                            </span>
+                        </div>
+                        <span class="badge bg-warning mr-4">Nuevo Año</span>
                     </div>
-                </div>
-                <div class="form-group row mb-2">
-                    <label class="col-sm-3 col-form-label">Valor del dato</label>
-                    <div class="col-sm-9">
-                        <input type="number" step="any" class="form-control valor-dato-input"
-                            name="datos_anuales[__INDEX__][valor_dato]"
-                            placeholder="Valor numérico (ej: 123.45)">
+                </button>
+            </h2>
+            <div id="collapse-__INDEX__" class="accordion-collapse collapse show"
+                aria-labelledby="heading-__INDEX__" data-bs-parent="#accordionDatosAnuales">
+                <div class="accordion-body bg-light">
+                    <div class="form-group row mb-2">
+                        <label class="col-sm-3 col-form-label">Año del dato <span
+                                class="text-danger">*</span></label>
+                        <div class="col-sm-9">
+                            <input type="number" class="form-control anio-input"
+                                name="datos_anuales[__INDEX__][anio]" placeholder="Ej: {{ date('Y') }}"
+                                required>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group row mb-2">
-                    <label class="col-sm-3 col-form-label">Próxima fecha de actualización</label>
-                    <div class="col-sm-9">
-                        <input type="date" class="form-control fecha-actualizacion-input"
-                            name="datos_anuales[__INDEX__][fecha_actualizacion]">
+                    <div class="form-group row mb-2">
+                        <label class="col-sm-3 col-form-label">Valor del dato</label>
+                        <div class="col-sm-9">
+                            <input type="number" step="any" class="form-control valor-dato-input"
+                                name="datos_anuales[__INDEX__][valor_dato]"
+                                placeholder="Valor numérico (ej: 123.45)">
+                        </div>
                     </div>
-                </div>
-                <div class="form-group row mb-2">
-                    <label class="col-sm-3 col-form-label">Resultados (anual)</label>
-                    <div class="col-sm-9">
-                        <textarea class="form-control resultados-input" name="datos_anuales[__INDEX__][resultados]" rows="2"
-                            placeholder="Resultados específicos de este año"></textarea>
+                    <div class="form-group row mb-2">
+                        <label class="col-sm-3 col-form-label">Próxima fecha de actualización</label>
+                        <div class="col-sm-9">
+                            <input type="date" class="form-control"
+                                name="datos_anuales[__INDEX__][fecha_actualizacion]">
+                        </div>
                     </div>
-                </div>
-                {{-- <div class="form-group row mb-2">
-                            <label class="col-sm-3 col-form-label">Evidencia (anual)</label>
-                            <div class="col-sm-9">
-                                <input type="text" class="form-control evidencia-input"
-                                    name="datos_anuales[__INDEX__][evidencia]"
-                                    placeholder="URL o referencia a la evidencia de este año">
-                            </div>
-                        </div> --}}
-                <div class="form-group row mb-2">
-                    <label class="col-sm-3 col-form-label">Evidencia (PDF)</label>
-                    <div class="col-sm-9">
-                        <input type="file" class="form-control evidencia-file-input"
-                            name="datos_anuales[__INDEX__][evidencia_file]" accept=".pdf">
-                        <small class="form-text text-muted">Seleccione un archivo PDF.</small>
-                        {{-- No hay "eliminar evidencia" aquí porque es un bloque nuevo --}}
+                    <div class="form-group row mb-2">
+                        <label class="col-sm-3 col-form-label">Resultados (anual)</label>
+                        <div class="col-sm-9">
+                            <textarea class="form-control" name="datos_anuales[__INDEX__][resultados]" rows="2"
+                                placeholder="Resultados específicos de este año"></textarea>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group row mb-2">
-                    <label class="col-sm-3 col-form-label">Observaciones (anual)</label>
-                    <div class="col-sm-9">
-                        <textarea class="form-control observaciones-input" name="datos_anuales[__INDEX__][observaciones]" rows="2"
-                            placeholder="Observaciones específicas de este año"></textarea>
+                    <div class="form-group row mb-2">
+                        <label class="col-sm-3 col-form-label">Evidencia (PDF)</label>
+                        <div class="col-sm-9">
+                            <input type="file" class="form-control"
+                                name="datos_anuales[__INDEX__][evidencia_file]" accept=".pdf">
+                            <small class="form-text text-muted">Seleccione un archivo PDF.</small>
+                        </div>
                     </div>
-                </div>
-                <div class="text-right mt-2">
-                    <button type="button" class="btn btn-danger btn-sm remove-dato-anual">Eliminar
-                        Año</button>
+                    <div class="form-group row mb-2">
+                        <label class="col-sm-3 col-form-label">Observaciones (anual)</label>
+                        <div class="col-sm-9">
+                            <textarea class="form-control" name="datos_anuales[__INDEX__][observaciones]" rows="2"
+                                placeholder="Observaciones específicas de este año"></textarea>
+                        </div>
+                    </div>
+                    <div class="text-right mt-2 d-flex justify-content-end">
+                        <button type="button" class="btn btn-danger btn-sm remove-dato-anual">
+                            <i class="fa-solid fa-trash-can"></i> Eliminar Año
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -812,6 +866,28 @@
             } else if (!derivedSwitch.checked && planSelect.value) {
                 fetchEjes(true);
             }
+            // --- Programas Institucionales Checklist Filter ---
+            const searchInput = document.querySelector('.buscar-prog-inst');
+            if (searchInput) {
+                const targetClass = searchInput.getAttribute('data-target');
+                const listContainer = document.querySelector('.' + targetClass);
+                if (listContainer) {
+                    const items = listContainer.querySelectorAll('.item-prog-inst');
+                    searchInput.addEventListener('input', function() {
+                        const query = searchInput.value.toLowerCase().trim();
+                        items.forEach(item => {
+                            const nombre = item.getAttribute('data-nombre') || '';
+                            const siglas = item.getAttribute('data-siglas') || '';
+                            if (nombre.includes(query) || siglas.includes(query)) {
+                                item.style.display = '';
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        });
+                    });
+                }
+            }
+
             // --- Existing JavaScript for Datos Anuales ---
             const container = document.getElementById('datos-anuales-container');
 
@@ -832,6 +908,13 @@
 
 
             addButton.addEventListener('click', function() {
+                // Collapsing all other accordion items before adding a new one
+                const openItems = container.querySelectorAll('.accordion-collapse.show');
+                openItems.forEach(item => {
+                    const bsCollapse = bootstrap.Collapse.getInstance(item) || new bootstrap.Collapse(item, {toggle: false});
+                    bsCollapse.hide();
+                });
+
                 const newBlockHtml = templateHtml.replace(/__INDEX__/g, datoAnualIndex);
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = newBlockHtml;
@@ -847,14 +930,39 @@
             });
 
             container.addEventListener('click', function(event) {
-                if (event.target && event.target.classList.contains('remove-dato-anual')) {
-                    const blockToRemove = event.target.closest('.dato-anual-block');
+                const removeBtn = event.target.closest('.remove-dato-anual');
+                if (removeBtn) {
+                    const blockToRemove = removeBtn.closest('.dato-anual-block');
                     if (blockToRemove) {
                         // Si el bloque que se va a eliminar contiene un input con name="...[id]",
                         // podrías querer marcarlo para eliminación en el backend en lugar de solo quitarlo del DOM.
                         // Por ahora, simplemente lo quitamos del DOM. El backend (método update)
                         // tendrá que manejar qué hacer con los IDs que no se reenvían.
                         blockToRemove.remove();
+                    }
+                }
+            });
+
+            // Sync accordion header text on input change
+            container.addEventListener('input', function(event) {
+                if (event.target) {
+                    if (event.target.classList.contains('anio-input')) {
+                        const block = event.target.closest('.dato-anual-block');
+                        if (block) {
+                            const headerAnio = block.querySelector('.header-anio');
+                            if (headerAnio) {
+                                headerAnio.textContent = event.target.value || '___';
+                            }
+                        }
+                    }
+                    if (event.target.classList.contains('valor-dato-input')) {
+                        const block = event.target.closest('.dato-anual-block');
+                        if (block) {
+                            const headerValor = block.querySelector('.header-valor');
+                            if (headerValor) {
+                                headerValor.textContent = event.target.value || 'Sin registrar';
+                            }
+                        }
                     }
                 }
             });

@@ -116,9 +116,6 @@
                                     <option value="Programa Especial"
                                         {{ old('tipo_programa') == 'Programa Especial' ? 'selected' : '' }}>Programa
                                         Especial</option>
-                                    <option value="Programa Institucional"
-                                        {{ old('tipo_programa') == 'Programa Institucional' ? 'selected' : '' }}>
-                                        Programa Institucional</option>
                                     <option value="Programa Regional"
                                         {{ old('tipo_programa') == 'Programa Regional' ? 'selected' : '' }}>Programa
                                         Regional</option>
@@ -166,6 +163,38 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+
+                        {{-- VINCULACIÓN CON PROGRAMAS INSTITUCIONALES (RELACIÓN MUCHOS A MUCHOS) --}}
+                        <div class="col-md-12 mb-3 mt-3">
+                            <div class="custom-section-title"><i class="fa-solid fa-hotel"></i>
+                                Vinculación con Programas Institucionales:
+                            </div>
+                            <div class="mb-2">
+                                <input type="text" class="form-control form-control-sm buscar-prog-inst" 
+                                    placeholder="🔍 Buscar por nombre o siglas..." 
+                                    data-target="container-prog-inst-crear">
+                            </div>
+                            <div class="card p-3 container-prog-inst-crear" style="max-height: 250px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 0.25rem;">
+                                <div class="row">
+                                    @foreach ($programasInstitucionales as $progInst)
+                                    <div class="col-md-6 mb-2 item-prog-inst" data-nombre="{{ strtolower($progInst->nombre) }}" data-siglas="{{ strtolower($progInst->siglas) }}">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="programas_institucionales[]" 
+                                                value="{{ $progInst->id }}" id="prog_inst_{{ $progInst->id }}"
+                                                {{ is_array(old('programas_institucionales')) && in_array($progInst->id, old('programas_institucionales')) ? 'checked' : '' }}>
+                                            <label class="form-check-label text-muted" for="prog_inst_{{ $progInst->id }}" style="font-size: 0.9rem;">
+                                                <span class="badge text-white mr-1" style="background-color: {{ $progInst->color ?? '#691A32' }};">{{ $progInst->siglas }}</span>
+                                                {{ $progInst->nombre }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @error('programas_institucionales')
+                            <div class="text-danger mt-1" style="font-size: 0.875em;">{{ $message }}</div>
+                            @enderror
+                        </div>
                         {{-- Comentado el 20 de mayo, debido a que no hay cod_tematica    --}}
                         {{-- <div class="col-md-2 mb-2">
                             <div class="custom-section-title"><i class="fa-solid fa-barcode"></i>
@@ -189,7 +218,7 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="col-md-8 mb-2">
+                    <div class="col-md-6 mb-2">
                         <div class="custom-section-title"><i class="fa-solid fa-text-width"></i>
                             Definición o descripción: <span class="text-danger">*</span>
                         </div>
@@ -721,6 +750,28 @@
                     // si se eliminan elementos intermedios.
                 }
             });
+
+            // --- Programas Institucionales Checklist Filter ---
+            const searchInput = document.querySelector('.buscar-prog-inst');
+            if (searchInput) {
+                const targetClass = searchInput.getAttribute('data-target');
+                const listContainer = document.querySelector('.' + targetClass);
+                if (listContainer) {
+                    const items = listContainer.querySelectorAll('.item-prog-inst');
+                    searchInput.addEventListener('input', function() {
+                        const query = searchInput.value.toLowerCase().trim();
+                        items.forEach(item => {
+                            const nombre = item.getAttribute('data-nombre') || '';
+                            const siglas = item.getAttribute('data-siglas') || '';
+                            if (nombre.includes(query) || siglas.includes(query)) {
+                                item.style.display = '';
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        });
+                    });
+                }
+            }
 
             // Opcional: Si quieres que se añada un primer año automáticamente al cargar la página
             // addButton.click(); // Descomenta esta línea si quieres un bloque de año por defecto

@@ -1,5 +1,11 @@
-document.addEventListener('DOMContentLoaded', function () {
-    if (typeof window.fichaConfig === 'undefined') return;
+console.log('ficha-tecnica.js script loaded! readyState =', document.readyState);
+
+function initFicha() {
+    console.log('initFicha executed!');
+    if (typeof window.fichaConfig === 'undefined') {
+        console.warn('window.fichaConfig is undefined, aborting initialization.');
+        return;
+    }
 
     const config = window.fichaConfig;
 
@@ -12,59 +18,127 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // =====================================================================
-    // B. BOTÓN DE IMPRESIÓN
+    // B. BOTÓN DE IMPRESIÓN CON GENERACIÓN DE PDF (USANDO BLOB URL)
     // =====================================================================
     const btnImprimir = document.getElementById('btnImprimirFicha');
     if (btnImprimir) {
+        console.log('btnImprimir element found, registering click listener.');
+        
+        // Botón de PDF Vectorial (impresión nativa del navegador)
+        const btnImprimirNativo = document.getElementById('btnImprimirNativo');
+        if (btnImprimirNativo) {
+            btnImprimirNativo.addEventListener('click', function () {
+                window.print();
+            });
+        }
+
         btnImprimir.addEventListener('click', function () {
-            window.print();
+            console.log('btnImprimir clicked!');
+            if (typeof html2pdf === 'undefined') {
+                console.warn('La librería html2pdf.js no está cargada. Usando impresión nativa.');
+                window.print();
+                return;
+            }
+
+            const element = document.getElementById('imprimir');
+            if (!element) {
+                console.error('Elemento #imprimir no encontrado!');
+                return;
+            }
+            
+            // Agregar clase temporal para aplicar estilos específicos de PDF
+            element.classList.add('generating-pdf');
+
+            // Obtener el nombre del indicador para el archivo PDF
+            let titleText = 'ficha-tecnica';
+            const h1Element = element.querySelector('h1');
+            if (h1Element) {
+                titleText = h1Element.innerText
+                    .trim()
+                    .toLowerCase()
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "") // Quitar acentos
+                    .replace(/[^a-z0-9]+/g, '-');   // Reemplazar espacios y caracteres raros con guion
+            }
+
+            const opt = {
+                margin:       [5, 5, 5, 5],
+                filename:     `ficha-tecnica-${titleText}.pdf`,
+                image:        { type: 'jpeg', quality: 0.95 },
+                html2canvas:  { 
+                    scale: 3, 
+                    useCORS: true,
+                    logging: false,
+                    scrollX: 0,
+                    scrollY: 0
+                },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:    { mode: ['css', 'legacy'] }
+            };
+
+            console.log('Starting html2pdf generation with options:', opt);
+            // Generar el PDF como Blob y descargar mediante elemento <a> temporal
+            html2pdf().set(opt).from(element).toPdf().output('blob').then(function(blob) {
+                console.log('PDF generado exitosamente como Blob. Iniciando descarga...');
+                const blobURL = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobURL;
+                a.download = `ficha-tecnica-${titleText}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                
+                // Limpieza de memoria
+                setTimeout(function() {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(blobURL);
+                    console.log('Descarga iniciada y recursos de Blob liberados.');
+                }, 150);
+
+                element.classList.remove('generating-pdf');
+            }).catch(function(err) {
+                console.error('Error al generar PDF:', err);
+                element.classList.remove('generating-pdf');
+            });
         });
     }
 
     // =====================================================================
-    // C. GRÁFICA: VELOCÍMETRO (Gestión de Gobierno)
+    // C. GRÁFICA: VELOCÍMETRO (Gestión de Gobierno) - ECharts Gauge
     // =====================================================================
     if (!config.esDatoLineaBase && document.querySelector("#gauge-ficha")) {
-        var optionsFicha = {
-            series: [Number(config.chartVal)],
-            chart: {
-                type: 'radialBar',
-                height: 220,
-                sparkline: {
-                    enabled: true
-                }
-            },
-            plotOptions: {
-                radialBar: {
-                    startAngle: -90,
-                    endAngle: 90,
-                    track: {
-                        background: "#f0f0f0",
-                        strokeWidth: '97%'
-                    },
-                    dataLabels: {
-                        name: { show: false },
-                        value: { show: false }
-                    }
-                }
-            },
-            fill: {
-                colors: [config.colorSemaforo]
-            },
-            stroke: {
-                lineCap: 'round'
-            }
-        };
-        var chartVelocimetro = new ApexCharts(document.querySelector("#gauge-ficha"), optionsFicha);
-        chartVelocimetro.render();
+        var chartGauge = echarts.init(document.getElementById('gauge-ficha'));
+        chartGauge.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                progress: {
+                    show: true,
+                    width: 15,
+                    roundCap: true,
+                    itemStyle: { color: config.colorSemaforo }
+                },
+                axisLine: {
+                    lineStyle: { width: 15, color: [[1, '#f0f0f0']] }
+                },
+                axisTick: { show: false },
+                splitLine: { show: false },
+                axisLabel: { show: false },
+                pointer: { show: false },
+                detail: { show: false },
+                data: [{ value: Number(config.chartVal) }]
+            }]
+        });
+        chartGauge.resize();
     }
 
     // =====================================================================
-    // D. GRÁFICA: EVOLUCIÓN HISTÓRICA (Líneas)
+    // D. GRÁFICA: EVOLUCIÓN HISTÓRICA (Líneas) - ECharts
     // =====================================================================
     if (document.querySelector("#grafica-historica")) {
         const decimalesIndicador = config.idIndicador == 100 ? 6 : 2;
-        const decimalesYAxis = config.idIndicador == 100 ? 6 : 0;
 
         // Función auxiliar para formatear números en la gráfica
         function formatNumber(value, decimalPlaces = decimalesIndicador) {
@@ -75,95 +149,80 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        var opcionesHistorico = {
-            series: [{
-                name: config.nombreSerieLineaBase,
-                data: config.datosLineaBasePunto,
-                type: 'line',
-                zIndex: 10
-            },
-            {
-                name: config.unidadMedida,
-                data: config.datosParaGraficaPrincipal,
-                type: 'line'
-            },
-            {
-                name: 'Meta 2030',
-                data: config.datosMetaPunto,
-                type: 'line'
-            }
-            ],
-            chart: {
-                id: 'grafica-historica',
-                height: 380,
-                type: 'line',
-                toolbar: { show: false },
-                animations: {
-                    enabled: true,
-                    speed: 400
-                }
-            },
-            colors: ['#00E396', config.colorIndicador, '#FF0000'],
-            stroke: {
-                curve: 'smooth',
-                width: [2, 4, 2],
-                dashArray: [5, 0, 5]
-            },
+        var chartHistorico = echarts.init(document.getElementById('grafica-historica'));
+        chartHistorico.setOption({
             tooltip: {
-                shared: false,
-                intersect: true,
-                theme: 'light',
-                y: {
-                    formatter: (val) => formatNumber(val) + ' ' + config.unidadMedida
+                trigger: 'axis',
+                formatter: function(params) {
+                    var res = params[0].axisValue;
+                    params.forEach(function(p) {
+                        if (p.value !== null && p.value !== undefined && !isNaN(p.value)) {
+                            res += '<br/>' + p.marker + ' ' + p.seriesName + ': ' + formatNumber(p.value) + ' ' + config.unidadMedida;
+                        }
+                    });
+                    return res;
                 }
-            },
-            markers: {
-                size: [6, 4, 7],
-                hover: { sizeOffset: 3 }
-            },
-            xaxis: {
-                categories: config.categoriasEjeX,
-                title: { text: 'Año' }
-            },
-            yaxis: {
-                labels: {
-                    formatter: (val) => formatNumber(val, decimalesYAxis)
-                },
-                title: { text: config.unidadMedida }
             },
             legend: {
-                position: 'top',
-                horizontalAlign: 'center'
+                data: [config.nombreSerieLineaBase, config.unidadMedida, 'Meta 2030'],
+                top: 'top'
             },
-            dataLabels: {
-                enabled: true,
-                enabledOnSeries: [2],
-                formatter: function (val) {
-                    if (val === null || val === undefined || isNaN(parseFloat(val))) {
-                        return "";
-                    }
-                    return parseFloat(val).toLocaleString('en-US', {
-                        minimumFractionDigits: decimalesIndicador,
-                        maximumFractionDigits: decimalesIndicador
-                    });
-                },
-                offsetY: -5,
-                style: {
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    colors: ["#FF0000"]
-                },
-                background: {
-                    enabled: true,
-                    foreColor: '#fff',
-                    borderRadius: 4,
-                    padding: 4,
-                    borderColor: '#FF0000',
+            xAxis: {
+                type: 'category',
+                data: config.categoriasEjeX,
+                name: 'Año'
+            },
+            yAxis: {
+                type: 'value',
+                name: config.unidadMedida,
+                axisLabel: {
+                    formatter: function(val) { return formatNumber(val); }
                 }
-            }
-        };
-
-        var chartHistorico = new ApexCharts(document.querySelector("#grafica-historica"), opcionesHistorico);
-        chartHistorico.render();
+            },
+            series: [
+                {
+                    name: config.nombreSerieLineaBase,
+                    type: 'line',
+                    data: config.datosLineaBasePunto,
+                    lineStyle: { type: 'dashed', width: 2 },
+                    symbolSize: 6,
+                    itemStyle: { color: '#00E396' },
+                    connectNulls: true
+                },
+                {
+                    name: config.unidadMedida,
+                    type: 'line',
+                    data: config.datosParaGraficaPrincipal,
+                    lineStyle: { width: 4, color: config.colorIndicador },
+                    symbolSize: 4,
+                    itemStyle: { color: config.colorIndicador },
+                    smooth: true,
+                    connectNulls: true
+                },
+                {
+                    name: 'Meta 2030',
+                    type: 'line',
+                    data: config.datosMetaPunto,
+                    lineStyle: { type: 'dashed', width: 2 },
+                    symbolSize: 7,
+                    itemStyle: { color: '#FF0000' },
+                    connectNulls: true,
+                    label: {
+                        show: true,
+                        formatter: function(params) { return params.value ? formatNumber(params.value) : ''; },
+                        color: '#FF0000',
+                        fontWeight: 'bold'
+                    }
+                }
+            ]
+        });
+        chartHistorico.resize();
     }
-});
+}
+
+// Inicialización segura evitando problemas de race condition con DOMContentLoaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFicha);
+} else {
+    initFicha();
+}

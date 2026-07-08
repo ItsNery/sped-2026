@@ -83,9 +83,10 @@ class DashboardController extends Controller
                 })->orWhereHasMorph('indicadorable', [
                     CatProgramaDerivadoSectorial::class,
                     CatProgramaDerivadoEspecial::class,
-                    CatProgramaDerivadoRegional::class,
-                    CatProgramaDerivadoInstitucional::class
+                    CatProgramaDerivadoRegional::class
                 ], function ($q) use ($planId) {
+                    $q->where('plan_estatal', $planId);
+                })->orWhereHas('programasInstitucionales', function ($q) use ($planId) {
                     $q->where('plan_estatal', $planId);
                 });
             })->get();

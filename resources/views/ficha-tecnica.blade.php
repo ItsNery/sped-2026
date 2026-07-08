@@ -17,7 +17,6 @@ del Estado de Puebla')
 <link rel="stylesheet" href="{{ asset('css/ficha-tecnica.css') }}">
 @endsection
 @section('jss-inicial')
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 @endsection
 @section('content')
 @php
@@ -95,6 +94,23 @@ $itemActivo = $indicador->indicadorable_type;
                     <div class="col-12">
                         <div class="ficha-label">Temática</div>
                         <div class="ficha-value">{{ $indicador->tematica }}</div>
+                    </div>
+                    @endif
+                    @if($indicador->programasInstitucionales && $indicador->programasInstitucionales->isNotEmpty())
+                    <div class="col-12 mt-2">
+                        <div class="ficha-label">Vinculado a Programas Institucionales</div>
+                        <div class="d-flex flex-wrap gap-2 mt-1">
+                            @foreach($indicador->programasInstitucionales as $progInst)
+                                <a href="{{ url('/ped-programas/institucionales/' . Illuminate\Support\Str::slug($progInst->nombre)) }}" 
+                                   class="badge text-white px-3 py-2 rounded-pill text-decoration-none shadow-sm transition" 
+                                   style="background-color: {{ $progInst->color ?? '#691A32' }}; font-size: 0.8rem;"
+                                   data-bs-toggle="tooltip" 
+                                   data-bs-placement="top"
+                                   title="{{ $progInst->nombre }}">
+                                    {{ $progInst->siglas }}
+                                </a>
+                            @endforeach
+                        </div>
                     </div>
                     @endif
                 </div>
@@ -261,7 +277,7 @@ $itemActivo = $indicador->indicadorable_type;
         </div>
     </div>
 
-    <div class="card card-ficha-moderna p-4 mt-2 mb-5">
+    <div class="card card-ficha-moderna p-4 mt-2 mb-5 pdf-page-break">
         <h3 class="ficha-section-title" style="color: {{ $indicador->color ?? '#484747' }};">Evolución Histórica</h3>
         <div class="row align-items-center">
 
@@ -337,7 +353,10 @@ $itemActivo = $indicador->indicadorable_type;
 </div>
 <div class="container pb-5 text-end ocultar_impresion">
     <button id="btnImprimirFicha" class="btn btn-lg shadow text-white fw-bold px-4 br-50px" style="background-color: {{ $indicador->color ?? '#6c757d' }};">
-        <i class="fas fa-print me-2"></i> Imprimir Ficha
+        <i class="fas fa-print me-2"></i> PDF Raster
+    </button>
+    <button id="btnImprimirNativo" class="btn btn-lg shadow text-white fw-bold px-4 br-50px ms-2" style="background-color: {{ $indicador->color ?? '#6c757d' }};">
+        <i class="fas fa-file-pdf me-2"></i> PDF Vectorial
     </button>
 </div>
 
@@ -408,6 +427,7 @@ for ($year = $anioInicio; $year <= $anioFin; $year++) {
             idIndicador: @json($indicador -> id)
         };
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="{{ asset('js/ficha-tecnica.js') }}"></script>
     @endsection
     @endsection

@@ -5,9 +5,7 @@
             {{ __('Inicio') }}
         </h2>
     </x-slot>
-    {{--
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script> --}}
-    <script src="{{ asset('js/apexcharts.js') }}"></script>
+
 
     @auth
     @if (auth()->user()->hasRole('Administrador'))
@@ -83,7 +81,7 @@
                         <span class="text-muted mb-3">
                             Gráfico de la distribución de la semaforización de los indicadores.
                         </span>
-                        <div id="chart-semaforizacion"></div>
+                        <div id="chart-semaforizacion" style="height: 350px; width: 100%;"></div>
                     </div>
                 </div>
                 <div class="col-lg-6">
@@ -92,7 +90,7 @@
                         <span class="text-muted mb-3">
                             Gráfico de la distribución de la tendencia de los indicadores.
                         </span>
-                        <div id="chart-tendencia"></div>
+                        <div id="chart-tendencia" style="height: 350px; width: 100%;"></div>
                     </div>
                 </div>
             </div>
@@ -203,19 +201,19 @@
                         <span class="text-muted mb-3">
                             Gráfico del estado de validación de los indicadores por enlace.
                         </span>
-                        <div id="chart-avance-enlace"></div>
+                        <div id="chart-avance-enlace" style="height: 400px; width: 100%;"></div>
                     </div>
                     <div class="tab-pane fade" id="pills-anual" role="tabpanel">
                         <span class="text-muted mb-3">
                             Gráfico de la cantidad de datos anuales de los indicadores.
                         </span>
-                        <div id="chart-avance-anual"></div>
+                        <div id="chart-avance-anual" style="height: 400px; width: 100%;"></div>
                     </div>
                     <div class="tab-pane fade" id="pills-periodo" role="tabpanel">
                         <span class="text-muted mb-3">
                             Gráfico de la periodicidad de los indicadores.
                         </span>
-                        <div id="chart-avance-periodo"></div>
+                        <div id="chart-avance-periodo" style="height: 400px; width: 100%;"></div>
                     </div>
                 </div>
             </div>
@@ -444,171 +442,192 @@
         @endif
         @endauth
 
+        @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
         <script>
             // --- GRÁFICO DE SEMAFORIZACIÓN (DONA) ---
-            var optionsSemaforizacion = {
-                series: @json(array_values($semaforizacionCounts)),
-                labels: @json(array_keys($semaforizacionCounts)),
-                chart: {
-                    type: 'donut',
-                    height: 380,
-                    events: {
-                        dataPointSelection: function(event, chartContext, config) {
-                            var categoria = config.w.config.labels[config.dataPointIndex];
-                            window.location.href = "{{ route('indicadores.semaforizacion', ['categoria' => ':cat']) }}".replace(':cat', categoria);
+            var semaforizacionLabels = @json(array_keys($semaforizacionCounts));
+            var semaforizacionValues = @json(array_values($semaforizacionCounts));
+            var semaforizacionColors = ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#adb5bd'];
+            var semaforizacionData = semaforizacionLabels.map(function(label, i) {
+                return { value: semaforizacionValues[i], name: label, itemStyle: { color: semaforizacionColors[i % semaforizacionColors.length] } };
+            });
+            var chartSemaforizacion = echarts.init(document.getElementById('chart-semaforizacion'));
+            chartSemaforizacion.setOption({
+                tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+                legend: {
+                    bottom: '0',
+                    left: 'center'
+                },
+                series: [{
+                    type: 'pie',
+                    radius: ['35%', '60%'],
+                    avoidLabelOverlap: true,
+                    label: {
+                        show: true,
+                        position: 'outside',
+                        formatter: '{b}: {d}%'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: '14',
+                            fontWeight: 'bold'
+                        }
+                    },
+                    data: semaforizacionData
+                }]
+            });
+            chartSemaforizacion.on('click', function(params) {
+                window.location.href = "{{ route('indicadores.semaforizacion', ['categoria' => ':cat']) }}".replace(':cat', params.name);
+            });
+
+            // --- GRÁFICO DE TENDENCIA (BARRAS HORIZONTALES) ---
+            var tendenciaLabels = @json(array_keys($tendenciaCounts));
+            var tendenciaValues = @json(array_values($tendenciaCounts));
+            var tendenciaColors = ['#4f46e5', '#34d399', '#f59e0b', '#94a3b8'];
+            var chartTendencia = echarts.init(document.getElementById('chart-tendencia'));
+            chartTendencia.setOption({
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                grid: { left: '3%', right: '8%', bottom: '3%', containLabel: true },
+                xAxis: { type: 'value' },
+                yAxis: { type: 'category', data: tendenciaLabels },
+                series: [{
+                    type: 'bar',
+                    data: tendenciaValues.map(function(v, i) {
+                        return { value: v, itemStyle: { color: tendenciaColors[i % tendenciaColors.length] } };
+                    }),
+                    label: {
+                        show: true,
+                        position: 'right',
+                        formatter: function(params) {
+                            var total = tendenciaValues.reduce(function(a, b) { return a + b; }, 0);
+                            var pct = total > 0 ? ((params.value / total) * 100).toFixed(1) + '%' : '0%';
+                            return params.value + ' (' + pct + ')';
                         }
                     }
+                }]
+            });
+
+            // --- GRÁFICOS DE OPERACIÓN (TABS) ---
+            var dataGraficas = @json($datosGraficas);
+
+            // Avance por Enlace
+            var chartAvanceEnlace = echarts.init(document.getElementById('chart-avance-enlace'));
+            chartAvanceEnlace.setOption({
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                legend: { data: ['Validados', 'No Validados'], top: 0 },
+                xAxis: {
+                    type: 'category',
+                    data: dataGraficas.map(function(d) { return d.nombre; }),
+                    axisLabel: { rotate: 45, fontSize: 10 }
                 },
-                colors: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#adb5bd'],
-                plotOptions: {
-                    pie: {
-                        donut: {
-                            size: '75%',
-                            labels: {
-                                show: true,
-                                total: {
-                                    show: true,
-                                    label: 'Indicadores',
-                                    formatter: function(w) {
-                                        return w.globals.seriesTotals.reduce((a, b) => a + b, 0)
-                                    }
-                                }
+                yAxis: { type: 'value' },
+                series: [
+                    {
+                        name: 'Validados',
+                        type: 'bar',
+                        stack: 'total',
+                        data: dataGraficas.map(function(d) { return d.validados; }),
+                        itemStyle: { color: '#22c55e' },
+                        label: {
+                            show: true,
+                            position: 'inside',
+                            formatter: function(params) {
+                                return params.value > 0 ? params.value : '';
+                            }
+                        }
+                    },
+                    {
+                        name: 'No Validados',
+                        type: 'bar',
+                        stack: 'total',
+                        data: dataGraficas.map(function(d) { return d.no_validados; }),
+                        itemStyle: { color: '#e2e8f0' },
+                        label: {
+                            show: true,
+                            position: 'inside',
+                            formatter: function(params) {
+                                return params.value > 0 ? params.value : '';
                             }
                         }
                     }
-                },
-                dataLabels: {
-                    enabled: false
-                },
-                legend: {
-                    position: 'bottom'
-                }
-            };
-            new ApexCharts(document.querySelector("#chart-semaforizacion"), optionsSemaforizacion).render();
-
-            // --- GRÁFICO DE TENDENCIA (BARRAS HORIZONTALES) ---
-            var optionsTendencia = {
-                series: [{
-                    name: 'Indicadores',
-                    data: @json(array_values($tendenciaCounts))
-                }],
-                chart: {
-                    type: 'bar',
-                    height: 300,
-                    toolbar: {
-                        show: false
-                    }
-                },
-                plotOptions: {
-                    bar: {
-                        horizontal: true,
-                        borderRadius: 8,
-                        barHeight: '60%',
-                        distributed: true
-                    }
-                },
-                colors: ['#4f46e5', '#34d399', '#f59e0b', '#94a3b8'],
-                xaxis: {
-                    categories: @json(array_keys($tendenciaCounts)),
-                },
-                legend: {
-                    show: false
-                },
-                dataLabels: {
-                    enabled: true
-                }
-            };
-            new ApexCharts(document.querySelector("#chart-tendencia"), optionsTendencia).render();
-
-            // --- GRÁFICOS DE OPERACIÓN (TABS) ---
-
-            // Avance por Enlace
-            var dataGraficas = @json($datosGraficas);
-            var optionsEnlace = {
-                series: [{
-                    name: 'Validados',
-                    data: dataGraficas.map(d => d.validados)
-                }, {
-                    name: 'No Validados',
-                    data: dataGraficas.map(d => d.no_validados)
-                }],
-                chart: {
-                    type: 'bar',
-                    height: 400,
-                    stacked: true,
-                    events: {
-                        dataPointSelection: function(event, chartContext, config) {
-                            var idUsuario = dataGraficas[config.dataPointIndex].id_usuario;
-                            var isValidados = config.seriesIndex === 0;
-                            var filtro = isValidados ? 'validados' : 'no-validados';
-                            var url = "{{ route('usuarios.indicadores', ['id' => ':id']) }}".replace(':id', idUsuario);
-                            window.location.href = url + "?filtro=" + filtro;
-                        }
-                    }
-                },
-                plotOptions: {
-                    bar: {
-                        borderRadius: 4
-                    }
-                },
-                xaxis: {
-                    categories: dataGraficas.map(d => d.nombre),
-                    labels: {
-                        rotate: -45,
-                        style: {
-                            fontSize: '10px'
-                        }
-                    }
-                },
-                colors: ['#22c55e', '#e2e8f0'],
-                legend: {
-                    position: 'top'
-                }
-            };
-            new ApexCharts(document.querySelector("#chart-avance-enlace"), optionsEnlace).render();
+                ]
+            });
+            chartAvanceEnlace.on('click', function(params) {
+                var idUsuario = dataGraficas[params.dataIndex].id_usuario;
+                var filtro = params.seriesName === 'Validados' ? 'validados' : 'no-validados';
+                var url = "{{ route('usuarios.indicadores', ['id' => ':id']) }}".replace(':id', idUsuario);
+                window.location.href = url + "?filtro=" + filtro;
+            });
 
             // Desempeño Anual
-            var optionsAnual = {
+            var chartAvanceAnual = echarts.init(document.getElementById('chart-avance-anual'));
+            chartAvanceAnual.setOption({
+                tooltip: { trigger: 'axis' },
+                legend: {
+                    data: ['Avance Anual'],
+                    bottom: '0'
+                },
+                xAxis: { type: 'category', data: @json($years) },
+                yAxis: { type: 'value' },
                 series: [{
-                    name: 'Indicadores con Datos',
-                    data: @json($datosPorAnio)
-                }],
-                chart: {
+                    name: 'Avance Anual',
                     type: 'bar',
-                    height: 400,
-                    toolbar: {
-                        show: false
+                    data: @json($datosPorAnio),
+                    itemStyle: { color: '#6366f1', borderRadius: [4, 4, 0, 0] },
+                    barWidth: '50%',
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: function(params) {
+                            return params.value > 0 ? params.value : '';
+                        }
                     }
-                },
-                xaxis: {
-                    categories: @json($years)
-                },
-                colors: ['#6366f1'],
-                plotOptions: {
-                    bar: {
-                        borderRadius: 4,
-                        columnWidth: '50%'
-                    }
-                }
-            };
-            new ApexCharts(document.querySelector("#chart-avance-anual"), optionsAnual).render();
+                }]
+            });
 
             // Periodicidad
-            var optionsPeriodo = {
-                series: @json($values_periodicidades),
-                labels: @json($etiquetas_periodicidades),
-                chart: {
-                    type: 'donut',
-                    height: 400
-                },
-                colors: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#94a3b8'],
-                stroke: {
-                    show: false
-                },
+            var periodoLabels = @json($etiquetas_periodicidades);
+            var periodoValues = @json($values_periodicidades);
+            var periodoColors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#94a3b8'];
+            var chartAvancePeriodo = echarts.init(document.getElementById('chart-avance-periodo'));
+            chartAvancePeriodo.setOption({
+                tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
                 legend: {
-                    position: 'bottom'
-                }
-            };
-            new ApexCharts(document.querySelector("#chart-avance-periodo"), optionsPeriodo).render();
+                    bottom: '0',
+                    left: 'center'
+                },
+                series: [{
+                    type: 'pie',
+                    radius: ['35%', '60%'],
+                    avoidLabelOverlap: true,
+                    label: {
+                        show: true,
+                        position: 'outside',
+                        formatter: '{b}: {d}%'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: '14',
+                            fontWeight: 'bold'
+                        }
+                    },
+                    data: periodoLabels.map(function(label, i) {
+                        return { value: periodoValues[i], name: label, itemStyle: { color: periodoColors[i % periodoColors.length] } };
+                    })
+                }]
+            });
+
+            // Redimensionar las gráficas cuando se cambia de pestaña para que se estiren al 100% de ancho
+            document.querySelectorAll('button[data-bs-toggle="pill"]').forEach(function(tabEl) {
+                tabEl.addEventListener('shown.bs.tab', function() {
+                    if (typeof chartAvanceEnlace !== 'undefined') chartAvanceEnlace.resize();
+                    if (typeof chartAvanceAnual !== 'undefined') chartAvanceAnual.resize();
+                    if (typeof chartAvancePeriodo !== 'undefined') chartAvancePeriodo.resize();
+                });
+            });
         </script>
+        @endpush
 </x-app-layout>
