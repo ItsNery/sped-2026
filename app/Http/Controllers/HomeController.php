@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Indicador;
 use App\Models\SliderInicio;
+use App\Models\CatEje;
+use App\Models\CatPlanEstatalDesarrollo;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\CarruselIndicador;
@@ -377,50 +379,177 @@ class HomeController extends Controller
     }
 
     /**
-     * Muestra la página principal (Home) con el carrusel de indicadores y sliders.
+     * Muestra la página principal (Home) con el dashboard del PED.
      *
      * @return \Illuminate\View\View
      */
     public function mostrarCarrusel()
     {
-        $carruselItems = CarruselIndicador::with(['indicador.datosAnuales' => function ($q) {
-            $q->where('validado', true);
-        }])->get();
-        $todosLosIndicadores = Indicador::all();
-
-
-        $imagenesPath = public_path('img/iconos_indicadores');
-        $imagenes = [];
-        if (is_dir($imagenesPath)) {
-            $imagenes = array_diff(scandir($imagenesPath), ['.', '..']);
+        // Plan Estatal por defecto: ID 3 (2024-2030)
+        $planId = 3;
+        $plan = CatPlanEstatalDesarrollo::find($planId);
+        if (!$plan) {
+            $plan = CatPlanEstatalDesarrollo::where('nombre', 'like', '%2024-2030%')->first();
+            if ($plan) $planId = $plan->id;
         }
 
-        $carruselItems->each(function ($item) {
-            if ($item->indicador) {
-                $datoReciente = $this->obtenerDatoRecienteCarrusel($item->indicador);
+        $soloValidados = true; // Vista pública siempre usa validados
 
-                $item->ultimo_dato = $datoReciente['valor'];
-                $item->anio_mas_reciente = $datoReciente['anio'];
-            } else {
-                $item->ultimo_dato = 'Sin datos';
-                $item->anio_mas_reciente = null;
-            }
+        // 1. Todos los indicadores del PED para calcular avance general
+        $indicadoresPlan = Indicador::where(function ($query) use ($planId) {
+            $query->whereHasMorph('indicadorable', [CatEje::class], function ($q) use ($planId) {
+                $q->where('plan_id', $planId);
+            })->orWhereHasMorph('indicadorable', [
+                CatProgramaDerivadoSectorial::class,
+                CatProgramaDerivadoEspecial::class,
+                CatProgramaDerivadoRegional::class
+            ], function ($q) use ($planId) {
+                $q->where('plan_estatal', $planId);
+            })->orWhereHas('programasInstitucionales', function ($q) use ($planId) {
+                $q->where('plan_estatal', $planId);
+            });
+        })->get();
+
+        $totalIndicadores = $indicadoresPlan->count();
+        $avancePlan = $this->calcularPromedioAvanceInicio($indicadoresPlan, $soloValidados);
+        $colorPlan = $this->getSemaforoColorInicio($avancePlan);
+
+        // 2. Distribución por rangos de semáforo
+        $distribucionGeneral = $this->calcularDistribucionRangos($indicadoresPlan, $soloValidados);
+
+        // 3. Avance por Ejes
+        $ejes = CatEje::with('indicadores')->where('plan_id', $planId)->orderBy('numero')->get();
+        $ejesData = $ejes->map(function ($eje) use ($soloValidados) {
+            $indicadores = $eje->indicadores;
+            $avance = $this->calcularPromedioAvanceInicio($indicadores, $soloValidados);
+            return [
+                'id' => $eje->id,
+                'nombre' => $eje->nombre ?? 'No se encontró',
+                'numero' => $eje->numero ?? 'ND',
+                'color' => $eje->color ?? '#CCCCCC',
+                'semaforo_color' => $this->getSemaforoColorInicio($avance),
+                'avance' => $avance,
+                'total_indicadores' => $indicadores->count(),
+                'distribucion' => $this->calcularDistribucionRangos($indicadores, $soloValidados),
+            ];
         });
 
-        $indicadoresRecientes = Indicador::with('datosAnuales')
-            ->orderBy('updated_at', 'desc')
-            ->take(10)
-            ->get();
+        // 4. Avance por Programas Derivados
+        $programasData = $this->getProgramasAvanceInicio($planId, $soloValidados);
 
-        $sliders = SliderInicio::where('activo', '1')->get();
+        // 5. Grupos de Programas Institucionales para filtrado en la vista
+        $gruposInstitucionales = CatProgramaDerivadoInstitucional::select('grupo')
+            ->whereNotNull('grupo')
+            ->where('grupo', '!=', '')
+            ->distinct()
+            ->pluck('grupo');
 
         return view('inicio', compact(
-            'carruselItems',
-            'todosLosIndicadores',
-            'imagenes',
-            'indicadoresRecientes',
-            'sliders'
+            'plan',
+            'avancePlan',
+            'colorPlan',
+            'totalIndicadores',
+            'distribucionGeneral',
+            'ejesData',
+            'programasData',
+            'gruposInstitucionales'
         ));
+    }
+
+    /**
+     * Calcula la distribución de indicadores por rangos de semáforo.
+     */
+    private function calcularDistribucionRangos($indicadores, $soloValidados)
+    {
+        $rangos = ['rojo' => 0, 'amarillo' => 0, 'verde' => 0, 'azul' => 0, 'sin_datos' => 0];
+
+        foreach ($indicadores as $indicador) {
+            $res = $indicador->calcularSemaforizacion($soloValidados);
+            $avance = $res['avance'];
+
+            if ($avance === null || $avance == 0) {
+                $rangos['sin_datos']++;
+            } elseif ($avance >= 110) {
+                $rangos['azul']++;
+            } elseif ($avance >= 91) {
+                $rangos['verde']++;
+            } elseif ($avance >= 71) {
+                $rangos['amarillo']++;
+            } else {
+                $rangos['rojo']++;
+            }
+        }
+
+        return $rangos;
+    }
+
+    /**
+     * Calcula el promedio de avance (replica lógica de DashboardGeneralController).
+     */
+    private function calcularPromedioAvanceInicio($indicadores, $soloValidados)
+    {
+        if ($indicadores->isEmpty()) return 0;
+
+        $sumAvance = 0;
+        $count = 0;
+
+        foreach ($indicadores as $indicador) {
+            $res = $indicador->calcularSemaforizacion($soloValidados);
+            if ($res['avance'] !== null) {
+                $sumAvance += $res['avance'];
+                $count++;
+            }
+        }
+
+        return $count > 0 ? round($sumAvance / $count, 2) : 0;
+    }
+
+    /**
+     * Obtiene el avance de programas derivados (replica lógica de DashboardGeneralController).
+     */
+    private function getProgramasAvanceInicio($planId, $soloValidados)
+    {
+        $tipos = [
+            ['class' => CatProgramaDerivadoSectorial::class, 'nombre' => 'Sectoriales', 'slug' => 'sectoriales', 'order' => 1],
+            ['class' => CatProgramaDerivadoEspecial::class, 'nombre' => 'Especiales', 'slug' => 'especiales', 'order' => 2],
+            ['class' => CatProgramaDerivadoRegional::class, 'nombre' => 'Regionales', 'slug' => 'regionales', 'order' => 3],
+            ['class' => CatProgramaDerivadoInstitucional::class, 'nombre' => 'Institucionales', 'slug' => 'institucionales', 'order' => 4],
+        ];
+
+        $resultados = [];
+        foreach ($tipos as $tipo) {
+            $programas = $tipo['class']::where('plan_estatal', $planId)->get();
+            foreach ($programas as $prog) {
+                $indicadores = $prog->indicadores;
+                $avance = $this->calcularPromedioAvanceInicio($indicadores, $soloValidados);
+                $resultados[] = [
+                    'id' => $prog->id,
+                    'nombre' => $prog->nombre,
+                    'tipo' => $tipo['nombre'],
+                    'tipo_slug' => $tipo['slug'],
+                    'tipo_order' => $tipo['order'],
+                    'avance' => $avance,
+                    'color' => $prog->color,
+                    'semaforo_color' => $this->getSemaforoColorInicio($avance),
+                    'total_indicadores' => $indicadores->count(),
+                    'grupo' => $tipo['nombre'] === 'Institucionales' ? ($prog->grupo ?? null) : null,
+                ];
+            }
+        }
+
+        return collect($resultados)->sortBy('tipo_order')->values();
+    }
+
+    /**
+     * Semáforo de color según avance (rangos SPED).
+     */
+    private function getSemaforoColorInicio($avance)
+    {
+        if ($avance === null || $avance == 0) return '#adb5bd';
+        if ($avance >= 110) return '#0d6efd';
+        if ($avance >= 91) return '#198754';
+        if ($avance >= 71) return '#ffc107';
+        return '#dc3545';
     }
 
     /**
@@ -661,7 +790,11 @@ class HomeController extends Controller
      */
     public function apiDocs()
     {
-        $instituciones = Institucion::select('id', 'nombre')->where('nombre', '!=', 'Administración del SPED')->orderBy('nombre', 'asc')->get();
+        $excluidas = ['Administración del SPED', 'Dependencia'];
+        $instituciones = Institucion::select('id', 'nombre')
+            ->whereNotIn('nombre', $excluidas)
+            ->orderBy('nombre', 'asc')
+            ->get();
         $ods = Odses::select('id', 'nombre')->orderBy('id', 'asc')->get();
         $programasDerivados = Indicador::distinct()
             ->whereNotNull('programa_derivado')
@@ -672,4 +805,3 @@ class HomeController extends Controller
         return view('publico.api_docs', compact('instituciones', 'ods', 'programasDerivados'));
     }
 }
-

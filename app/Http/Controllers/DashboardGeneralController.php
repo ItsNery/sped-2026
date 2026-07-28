@@ -65,6 +65,7 @@ class DashboardGeneralController extends Controller
         })->get();
 
         $avancePlan = $this->calcularPromedioAvance($indicadoresPlan, $soloValidados);
+        $totalIndicadores = $indicadoresPlan->count();
 
         // 2. Avance por Eje
         $ejes = CatEje::with('indicadores')->where('plan_id', $planId)->orderBy('numero')->get();
@@ -92,6 +93,7 @@ class DashboardGeneralController extends Controller
             'plan',
             'avancePlan',
             'colorPlan',
+            'totalIndicadores',
             'ejesData',
             'programasData',
             'programasDerivadosAgrupados',

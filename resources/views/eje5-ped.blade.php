@@ -22,6 +22,8 @@ del Estado de Puebla')
 'Sección dedicada al Eje 5 del Plan Estatal de Desarrollo 2024-2030 dentro del Sistema
 de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
 del Estado de Puebla')
+@section('css')
+@endsection
 @section('content')
     @include('partials.contenido-ejes', [
         'numEje' => 5,

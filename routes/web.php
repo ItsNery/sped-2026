@@ -47,9 +47,8 @@ use App\Http\Controllers\DashboardGeneralController;
 */
 
 Route::get('/', [HomeController::class, 'mostrarCarrusel']);
-Route::get('/informacion-general', function () {
-    return view('informacion-general');
-});
+Route::get('/informacion-general/api', [HomeController::class, 'apiDocs'])->name('public.api_docs');
+
 Route::get('/normatividad', function () {
     return view('normatividad');
 });
@@ -137,7 +136,6 @@ Route::get('/ficha-tecnica/{indicador}', [HomeController::class, 'show'])
     ->name('ficha-tecnica.show');
 Route::get('/ficha-tecnica-municipal/{id}', [IndicadorMunicipalController::class, 'mostrarFicha'])->name('mostrarFicha');
 Route::get('/ficha-tecnica/generar/{id}', [HomeController::class, 'generarFicha'])->name('generarFicha');
-Route::get('/docs/api-indicadores', [HomeController::class, 'apiDocs'])->name('public.api_docs');
 
 /*
 |--------------------------------------------------------------------------

@@ -20,16 +20,15 @@ del Estado de Puebla')
 @endsection
 @section('content')
 @php
-// 1. Deducir si es PED o Derivado
-$esPED = $indicador->programa_derivado == 'Plan Estatal de Desarrollo';
+$esEjePED = $indicador->indicadorable instanceof \App\Models\CatEje;
+$esPED = $esEjePED || $indicador->programa_derivado == 'Plan Estatal de Desarrollo';
 $tipoNav = $esPED ? 'ped' : 'derivados';
 
-// 2. Deducir el ítem activo y el banner
 $itemActivo = null;
 $bannerImg = null;
 
 if ($esPED) {
-// Mapeamos el nombre del programa al número de eje
+
 $mapaEjes = [
 'Humanismo con Bienestar' => 1,
 'Prosperidad y Estabilidad Económica' => 2,
@@ -38,15 +37,23 @@ $mapaEjes = [
 'Gobierno Transformador y de Resultados' => 5,
 'Por Amor a Puebla' => 6,
 ];
-$itemActivo = $mapaEjes[$indicador->programa] ?? null;
+$itemActivo = $esEjePED
+    ? (int) $indicador->indicadorable->numero
+    : ($mapaEjes[$indicador->programa] ?? null);
 if ($itemActivo) {
 $bannerImg = 'img/Banners/Banner_PED/Eje_' . $itemActivo . '.jpg';
 }
 } else {
-// Para derivados usamos su namespace completo
 $itemActivo = $indicador->indicadorable_type;
-// Si tienes banners para derivados, los puedes asignar aquí
-// $bannerImg = 'img/Banners/Banner_Derivados.jpg';
+if (!$itemActivo) {
+    $itemActivo = match (true) {
+        \Illuminate\Support\Str::startsWith($indicador->programa_derivado, 'Programa Sectorial') => 'App\\Models\\CatProgramaDerivadoSectorial',
+        \Illuminate\Support\Str::startsWith($indicador->programa_derivado, 'Programa Especial') => 'App\\Models\\CatProgramaDerivadoEspecial',
+        \Illuminate\Support\Str::startsWith($indicador->programa_derivado, 'Programa Regional') => 'App\\Models\\CatProgramaDerivadoRegional',
+        \Illuminate\Support\Str::startsWith($indicador->programa_derivado, 'Programa Institucional') => 'App\\Models\\CatProgramaDerivadoInstitucional',
+        default => null,
+    };
+}
 }
 @endphp
 
@@ -56,7 +63,7 @@ $itemActivo = $indicador->indicadorable_type;
 'bannerImg' => $bannerImg,
 'colorTema' => $indicador->color ?? '#691A32'
 ])
-<div class="container mt-4" id="imprimir">
+<div class="container mt-4 contenedor__ficha" id="imprimir">
     <div class="row" id="encabezado" style="display:none;">
         <img class="img-fluid w-100" src="{{ asset('img/logos_sped.png') }}" title="Pleca ficha">
     </div>
@@ -244,7 +251,7 @@ $itemActivo = $indicador->indicadorable_type;
                     data-bs-placement="top"
                     title="Estado: {{ $semText }}"
                     data-bs-content="{{ $explicacionDetallada }}"></div>
-                <div class="fw-bold fs-4 text-dark mt-35px">{{ number_format($avanceVal, 1) }}%</div>
+                <div class="fw-bold fs-4 text-dark mt-35px">{{ number_format($avanceVal, 2) }}%</div>
                 <div class="small text-muted mt-1 fw-semibold">Avance Meta</div>
                 @endif
 

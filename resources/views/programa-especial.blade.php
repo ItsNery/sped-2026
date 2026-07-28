@@ -16,10 +16,12 @@ $programa->nombre .
 del Estado de Puebla')
 @section('twitter-description', $descripcion)
 
+@section('css')
+@endsection
 @section('content')
     @include('partials.programa-derivado-contenido', [
         'itemActivoNav' => 'App\Models\CatProgramaDerivadoEspecial',
         'tituloBadge' => 'Programa Especial',
         // Variables pre-existentes necesarias para el partial (programa, indicadores, imagen, descripcion, avancePrograma)
     ])
-@endsection
+@endsection

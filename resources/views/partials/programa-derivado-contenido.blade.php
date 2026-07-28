@@ -1,82 +1,75 @@
 @php
-// Definir descripción final (para soportar tanto $descripcion como $programaData->descripcion)
-$descFinal = $descripcion ?? ($programaData->descripcion ?? '');
+    $descFinal = $descripcion ?? ($programaData->descripcion ?? '');
+    $programaColor = $programa->color ?? '#691A32';
+    $colorGaugeGeneral = '#adb5bd';
+    if (($avancePrograma ?? 0) >= 110) {
+        $colorGaugeGeneral = '#0d6efd';
+    } elseif (($avancePrograma ?? 0) >= 91) {
+        $colorGaugeGeneral = '#198754';
+    } elseif (($avancePrograma ?? 0) >= 71) {
+        $colorGaugeGeneral = '#ffc107';
+    } elseif (($avancePrograma ?? 0) > 0) {
+        $colorGaugeGeneral = '#dc3545';
+    }
 @endphp
 
 @include('partials.nav-unificada', [
-'tipoNav' => 'derivados',
-'itemActivo' => $itemActivoNav,
-'colorTema' => $programa->color
+    'tipoNav' => 'derivados',
+    'itemActivo' => $itemActivoNav,
+    'colorTema' => $programaColor
 ])
-<div class="container mt-4 mb-5">
-    <div class="card shadow-sm border-0 mb-5 overflow-hidden br-15px">
+<main class="eje-dashboard" style="--eje-color: {{ $programaColor }};">
+<section class="eje-dashboard__intro">
+    <div class="eje-dashboard__container">
+        <span class="eje-dashboard__eyebrow">{{ $tituloBadge }}</span>
+        <h1 class="eje-dashboard__title">{{ $programa->nombre }}</h1>
+        <p class="eje-dashboard__intro-text">Consulta el avance de los indicadores asociados a este programa derivado.</p>
+    </div>
+</section>
 
-        <div class="row g-0">
-
-            <div class="col-lg-8 p-4 p-md-5 bg-white" style="border-left: 8px solid {{ $programa->color }};">
-
-                <div class="d-flex flex-column flex-sm-row align-items-sm-center mb-4">
-                    <img src="{{ asset($imagen) }}"
-                        class="shadow rounded-3 mb-3 mb-sm-0 me-sm-4 portada-derivado"
-                        alt="Portada de {{ $programa->nombre }}">
-
-                    <div>
-                        <span class="badge rounded-pill px-3 py-1 mb-2 fs-6 shadow-sm text-white" style="background-color: {{ $programa->color }};">
-                            {{ $tituloBadge }}
-                        </span>
-                        <h2 class="mb-0 fw-bold text-dark lh-sm">{{ $programa->nombre }}</h2>
-                    </div>
-                </div>
-
-                <p class="fs-5 text-muted lh-lg mb-4" style="text-align: justify;">
-                    {{ $descFinal }}
-                </p>
-
-                @if ($programa->documento)
-                <a target="_blank" href="{{ $programa->documento }}" class="btn text-white fw-bold px-4 py-2 rounded-pill shadow-sm" style="background-color: {{ $programa->color }}; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                    <i class="fas fa-file-pdf me-2"></i> Ver Documento
+<section class="eje-dashboard__container">
+    <div class="eje-dashboard__summary">
+        <div class="eje-dashboard__summary-copy">
+            <h2 class="eje-dashboard__summary-title">{{ $programa->nombre }}</h2>
+            <p class="eje-dashboard__summary-description">{{ $descFinal }}</p>
+            @if ($programa->documento)
+                <a target="_blank" href="{{ $programa->documento }}" class="btn text-white fw-bold px-4 py-2 rounded-pill shadow-sm mt-4"
+                    style="background-color: {{ $programaColor }};">
+                    <i class="fas fa-file-pdf me-2"></i>Ver documento
                 </a>
-                @endif
-            </div>
-
-            <div class="col-lg-4 p-4 p-md-5 d-flex flex-column justify-content-center align-items-center border-start bg-light">
-
-                <div class="text-center mb-4">
-                    <h3 class="fw-bold mb-0 contador-indicadores" style="color: {{ $programa->color }};">
-                        {{ $indicadores->count() }}
-                    </h3>
-                    <div class="text-uppercase fw-semibold text-muted small tracking-wide mt-1">Indicadores en Total</div>
+            @endif
+        </div>
+        <div class="eje-dashboard__summary-stats">
+            <div class="eje-dashboard__total">{{ $indicadores->count() }}</div>
+            <div class="eje-dashboard__total-label">Indicadores en total</div>
+            <div class="eje-dashboard__gauge-wrap">
+                <div id="gauge-general" class="eje-dashboard__gauge"></div>
+                <div class="eje-dashboard__gauge-value" style="color: {{ $colorGaugeGeneral }};">
+                    {{ number_format($avancePrograma, 2) }}%
                 </div>
-
-                <div class="position-relative w-100 d-flex flex-column align-items-center justify-content-center">
-                    <div id="gauge-general" class="grafico-gauge-general"></div>
-                    <div class="position-absolute text-center" style="top: 60px;">
-                        <div class="fw-bold text-dark mt-3 grafico-gauge-general_texto">
-                            {{ number_format($avancePrograma, 2) }}%
-                        </div>
-                        <div class="small text-muted fw-semibold">Avance</div>
-                    </div>
-                </div>
-
             </div>
-
         </div>
     </div>
-</div>
 
-<div class="d-flex align-items-center gap-2 mb-3 ocultar_impresion" style="padding-left: 1rem;">
-    <span class="text-muted small fw-semibold">Vista:</span>
-    <div class="btn-group btn-group-sm border rounded overflow-hidden">
-        <button type="button" class="btn btn-sm px-3 btn-toggle-vista active" data-view="lista" data-target="contenedor-programa" style="background-color: {{ $programa->color }}; color: #fff; border: none;">
-            <i class="fas fa-list"></i>
-        </button>
-        <button type="button" class="btn btn-sm px-3 btn-toggle-vista" data-view="grid" data-target="contenedor-programa" style="background-color: #fff; color: {{ $programa->color }};">
-            <i class="fas fa-th-large"></i>
-        </button>
+    <div class="eje-dashboard__list-header">
+        <div>
+            <span class="eje-dashboard__eyebrow">Consulta detallada</span>
+            <h2 class="eje-dashboard__list-title">Listado de indicadores</h2>
+        </div>
+        <div class="eje-dashboard__toolbar ocultar_impresion">
+            <span class="eje-dashboard__toolbar-label">Visualización</span>
+            <div class="btn-group btn-group-sm border rounded overflow-hidden">
+                <button type="button" class="btn btn-sm px-3 btn-toggle-vista active" data-view="lista" data-target="contenedor-programa">
+                    <i class="fas fa-list"></i><span class="visually-hidden">Vista de lista</span>
+                </button>
+                <button type="button" class="btn btn-sm px-3 btn-toggle-vista" data-view="grid" data-target="contenedor-programa">
+                    <i class="fas fa-th-large"></i><span class="visually-hidden">Vista de cuadrícula</span>
+                </button>
+            </div>
+        </div>
     </div>
-</div>
 
-<div class="row ficha py-50px" id="contenedor-programa" style="background-color:{{ $programa->color }}">
+<div class="eje-dashboard__indicators row ficha" id="contenedor-programa">
     @forelse ($indicadores as $indicador)
     @php
     $semText = $indicador->semaforizacion_validada ?: 'No Clasificado';
@@ -99,12 +92,12 @@ $descFinal = $descripcion ?? ($programaData->descripcion ?? '');
     $chartVal = $avanceVal > 100 ? 100 : $avanceVal;
     @endphp
     <div class="container">
-        <div class="card shadow-sm mb-4 border-0 rounded-4" style="border-left: 6px solid {{ $colorSemaforo }}; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div class="card shadow-sm mb-4 border-0 rounded-4 card-indicador" style="--semaforo-color: {{ $colorSemaforo }}; border-left: 6px solid {{ $colorSemaforo }}; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
             <div class="card-body p-4">
                 <div class="row align-items-center">
 
                     <div class="col-12 col-lg-4 mb-4 mb-lg-0 pe-lg-4 border-end-lg" style="border-color: #eee !important;">
-                        <a href="{{ route('ficha-tecnica.show', $indicador) }}" class="text-decoration-none fw-bold fs-5 d-block mb-3" style="color: {{ $programa->color }}; line-height: 1.3;">
+                        <a href="{{ route('ficha-tecnica.show', $indicador) }}" class="text-decoration-none fw-bold fs-5 d-block mb-3" style="color: {{ $programaColor }}; line-height: 1.3;">
                             {{ $indicador->nombre }}
                         </a>
                         @if ($indicador->ods->isNotEmpty())
@@ -154,7 +147,7 @@ $descFinal = $descripcion ?? ($programaData->descripcion ?? '');
                         <div class="small text-muted mt-2 fw-semibold text-center">Medición Pendiente</div>
                         @else
                         <div class="grafico-gauge-pendiente" data-gauge="true" data-chart-val="{{ $chartVal }}" data-color="{{ $colorSemaforo }}" style="cursor: help;" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Estado: {{ $semText }}" data-bs-content="{{ $explicacionDetallada }}"></div>
-                        <div class="fw-bold fs-5 text-dark" style="margin-top: -30px;">{{ number_format($indicador->avance_validado, 1) }}%</div>
+                        <div class="fw-bold fs-5 text-dark" style="margin-top: -30px;">{{ number_format($indicador->avance_validado, 2) }}%</div>
                         <div class="small text-muted mt-1 fw-semibold">Avance Meta</div>
                         @endif
                     </div>
@@ -170,6 +163,8 @@ $descFinal = $descripcion ?? ($programaData->descripcion ?? '');
     </div>
     @endforelse
 </div>
+</section>
+</main>
 @section('jss-final')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -185,10 +180,10 @@ $descFinal = $descripcion ?? ($programaData->descripcion ?? '');
                 btnGroup.querySelectorAll('.btn-toggle-vista').forEach(function(b) {
                     b.classList.remove('active');
                     b.style.backgroundColor = '#fff';
-                    b.style.color = '{{ $programa->color }}';
+                    b.style.color = '{{ $programaColor }}';
                 });
                 this.classList.add('active');
-                this.style.backgroundColor = '{{ $programa->color }}';
+                this.style.backgroundColor = '{{ $programaColor }}';
                 this.style.color = '#fff';
 
                 if (view === 'grid') {
@@ -243,7 +238,7 @@ $descFinal = $descripcion ?? ($programaData->descripcion ?? '');
                 type: 'gauge',
                 startAngle: 180, endAngle: 0,
                 min: 0, max: 100,
-                progress: { show: true, width: 15, roundCap: true, itemStyle: { color: '{{ $programa->color }}' } },
+                 progress: { show: true, width: 15, roundCap: true, itemStyle: { color: @json($colorGaugeGeneral) } },
                 axisLine: { lineStyle: { width: 15, color: [[1, '#e7e7e7']] } },
                 axisTick: { show: false }, splitLine: { show: false },
                 axisLabel: { show: false }, pointer: { show: false },
@@ -260,6 +255,5 @@ $descFinal = $descripcion ?? ($programaData->descripcion ?? '');
         });
         document.addEventListener('click', function(e) {});
     });
-</script>
 </script>
 @endsection

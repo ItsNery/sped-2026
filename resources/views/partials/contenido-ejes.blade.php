@@ -7,76 +7,79 @@
 ])
 
 @php
-// Calculamos el total de indicadores
 $totalIndicadoresGeneral = 0;
 if (isset($indicadoresAgrupados) && $indicadoresAgrupados->count() > 0) {
-foreach ($indicadoresAgrupados as $grupoDeIndicadores) {
-$totalIndicadoresGeneral += $grupoDeIndicadores->count();
+    foreach ($indicadoresAgrupados as $grupoDeIndicadores) {
+        $totalIndicadoresGeneral += $grupoDeIndicadores->count();
+    }
 }
+
+$avanceGeneral = min((float) ($avanceEje ?? 0), 100);
+$colorGaugeGeneral = '#adb5bd';
+if (($avanceEje ?? 0) >= 110) {
+    $colorGaugeGeneral = '#0d6efd';
+} elseif (($avanceEje ?? 0) >= 91) {
+    $colorGaugeGeneral = '#198754';
+} elseif (($avanceEje ?? 0) >= 71) {
+    $colorGaugeGeneral = '#ffc107';
+} elseif (($avanceEje ?? 0) > 0) {
+    $colorGaugeGeneral = '#dc3545';
 }
 @endphp
 
-{{-- 2. TARJETA RESUMEN UNIFICADA (Enfoque + Velocímetro) --}}
-<div class="card shadow-sm border-0 mb-5 overflow-hidden container" style="border-radius: 15px;">
-    <div class="row g-0">
-
-        <div class="col-lg-8 p-4 p-md-5 bg-white" style="border-left: 8px solid var(--color-eje{{ $numEje }});">
-            <div class="d-flex align-items-center mb-4">
-                <span class="badge rounded-pill px-3 py-2 me-3 fs-6 text-white"
-                    style="background-color: var(--color-eje{{ $numEje }});">
-                    Eje {{ $numEje }}
-                </span>
-                <h2 class="mb-0 fw-bold text-dark">Enfoque</h2>
-            </div>
-            <p class="fs-5 text-muted lh-lg mb-0 text-justify">
-                {{ $textoEnfoque }}
+<main class="eje-dashboard" style="--eje-color: var(--color-eje{{ $numEje }});">
+    <section class="eje-dashboard__intro">
+        <div class="eje-dashboard__container">
+            <span class="eje-dashboard__eyebrow">Seguimiento del PED 2024-2030</span>
+            <h1 class="eje-dashboard__title">Eje {{ $numEje }}</h1>
+            <p class="eje-dashboard__intro-text">
+                Consulta el avance de los indicadores y el enfoque estratégico de este eje de desarrollo.
             </p>
         </div>
+    </section>
 
-        <div
-            class="col-lg-4 p-4 p-md-5 d-flex flex-column justify-content-center align-items-center border-start bg-light">
-
-            <div class="text-center mb-4">
-                <h3 class="fw-bold mb-0 fs-25rem" style="color: var(--color-eje{{ $numEje }});">
-                    {{ $totalIndicadoresGeneral }}
-                </h3>
-                <div class="text-uppercase fw-semibold text-muted small tracking-wide">
-                    Indicadores en Total
-                </div>
+    <section class="eje-dashboard__container">
+        <div class="eje-dashboard__summary">
+            <div class="eje-dashboard__summary-copy">
+                <span class="eje-dashboard__summary-badge">Eje {{ $numEje }}</span>
+                <h2 class="eje-dashboard__summary-title">Enfoque estratégico</h2>
+                <p class="eje-dashboard__summary-description">{{ $textoEnfoque }}</p>
             </div>
-
-            <div class="position-relative w-100 d-flex flex-column align-items-center justify-content-center">
-                <div id="gauge-general" class="grafico-gauge-listado">
-                </div>
-
-                <div class="position-absolute text-center top-70px">
-                    <div class="fw-bold text-dark mt-3 fs-18rem">
+            <div class="eje-dashboard__summary-stats">
+                <div class="eje-dashboard__total">{{ $totalIndicadoresGeneral }}</div>
+                <div class="eje-dashboard__total-label">Indicadores en total</div>
+                <div class="eje-dashboard__gauge-wrap">
+                    <div id="gauge-general" class="eje-dashboard__gauge"></div>
+                    <div class="eje-dashboard__gauge-value" style="color: {{ $colorGaugeGeneral }};">
                         {{ number_format($avanceEje ?? 0, 2) }}%
                     </div>
-                    <div class="small text-muted fw-semibold">Avance</div>
                 </div>
             </div>
-
         </div>
-    </div>
-</div>
 
-{{-- 3. Toggle Lista / Grid --}}
-<div class="d-flex align-items-center gap-2 mb-3 ocultar_impresion">
-    <span class="text-muted small fw-semibold">Vista:</span>
-    <div class="btn-group btn-group-sm border rounded overflow-hidden">
-        <button type="button" class="btn btn-sm px-3 btn-toggle-vista active" data-view="lista" data-target="contenedor-eje-{{ $numEje }}" style="background-color: var(--color-eje{{ $numEje }}); color: #fff; border: none;">
-            <i class="fas fa-list"></i>
-        </button>
-        <button type="button" class="btn btn-sm px-3 btn-toggle-vista" data-view="grid" data-target="contenedor-eje-{{ $numEje }}" style="background-color: #fff; color: var(--color-eje{{ $numEje }});">
-            <i class="fas fa-th-large"></i>
-        </button>
-    </div>
-</div>
+        <div class="eje-dashboard__list-header">
+            <div>
+                <span class="eje-dashboard__eyebrow">Consulta detallada</span>
+                <h2 class="eje-dashboard__list-title">Listado de indicadores</h2>
+                <p class="eje-dashboard__list-description">Revisa los resultados, metas y avances registrados para este eje.</p>
+            </div>
+            <div class="eje-dashboard__toolbar ocultar_impresion">
+            <span class="eje-dashboard__toolbar-label">Visualización de indicadores</span>
+            <div class="btn-group btn-group-sm border rounded overflow-hidden">
+                <button type="button" class="btn btn-sm px-3 btn-toggle-vista active" data-view="lista"
+                    data-target="contenedor-eje-{{ $numEje }}">
+                    <i class="fas fa-list"></i><span class="visually-hidden">Vista de lista</span>
+                </button>
+                <button type="button" class="btn btn-sm px-3 btn-toggle-vista" data-view="grid"
+                    data-target="contenedor-eje-{{ $numEje }}">
+                    <i class="fas fa-th-large"></i><span class="visually-hidden">Vista de cuadrícula</span>
+                </button>
+            </div>
+        </div>
+        </div>
 
-{{-- 4. Sección de Indicadores --}}
-<div class="row indicador_{{ $numEje }}" id="contenedor-eje-{{ $numEje }}">
-    <div class="container">
+        <div class="eje-dashboard__indicators row indicador_{{ $numEje }}" id="contenedor-eje-{{ $numEje }}">
+            <div class="container">
         @forelse ($indicadoresAgrupados as $nombreTematica => $listaIndicadoresDeLaTematica)
         <div class="tematica-group mt-4 mb-3">
             <h3 class="titulo-tematica fw-bold mb-4">
@@ -128,13 +131,14 @@ $totalIndicadoresGeneral += $grupoDeIndicadores->count();
 
             {{-- 2. TARJETA COMPACTA DEL INDICADOR --}}
             <div class="card shadow-sm mb-4 border-0 rounded-4 card-indicador"
-                style="border-left: 6px solid {{ $colorSemaforo }};">
+                style="--semaforo-color: {{ $colorSemaforo }}; border-left: 6px solid {{ $colorSemaforo }};">
                 <div class="card-body p-4">
                     <div class="row align-items-center">
 
-                        <div class="col-12 col-lg-4 mb-4 mb-lg-0 pe-lg-4 border-end-lg card-indicador_info">
+                        <div class="col-12 col-lg-4 mb-4 mb-lg-0 pe-lg-4 border-end-lg card-indicador_info eje-indicador__identity">
                             <a href="{{ route('ficha-tecnica.show', $indicador) }}"
-                                class="text-decoration-none text-dark fw-bold fs-5 d-block mb-3 hover-primary lh-13rem">
+                                class="text-decoration-none text-dark fw-bold fs-5 d-block mb-3 hover-primary lh-13rem"
+                                title="{{ $indicador->nombre }}">
                                 {{ $indicador->nombre }}
                             </a>
                             @if ($indicador->ods->isNotEmpty())
@@ -148,7 +152,7 @@ $totalIndicadoresGeneral += $grupoDeIndicadores->count();
                             @endif
                         </div>
 
-                        <div class="col-6 col-md-4 col-lg-4 text-center px-lg-4 mb-4 mb-md-0 border-end-lg card-indicador_info">
+                        <div class="col-6 col-md-4 col-lg-4 text-center px-lg-4 mb-4 mb-md-0 border-end-lg card-indicador_info eje-indicador__metrics">
                             <div class="row g-3">
                                 <div class="col-6">
                                     <div class="small text-muted mb-1">Unidad de medida</div>
@@ -175,7 +179,7 @@ $totalIndicadoresGeneral += $grupoDeIndicadores->count();
                                 </div>
                             </div>
                         </div>
-                        <div class="col-6 col-md-4 col-lg-2 text-center mb-4 mb-md-0 border-end-md card-indicador_info">
+                        <div class="col-6 col-md-4 col-lg-2 text-center mb-4 mb-md-0 border-end-md card-indicador_info eje-indicador__status">
                             <div class="text-uppercase small fw-semibold text-muted mb-1">
                                 Resultado {{ $indicador->anio_reciente_validado ?? '' }}
                             </div>
@@ -196,7 +200,7 @@ $totalIndicadoresGeneral += $grupoDeIndicadores->count();
                             </span>
                         </div>
                         <div
-                            class="col-12 col-md-4 col-lg-2 text-center d-flex flex-column align-items-center justify-content-center">
+                            class="col-12 col-md-4 col-lg-2 text-center d-flex flex-column align-items-center justify-content-center eje-indicador__progress">
                             @if($esDatoLineaBase)
                             <i class="fas fa-clock text-muted opacity-50 mb-2 fs-3rem"></i>
                             <div class="small text-muted mt-2 fw-semibold text-center">
@@ -233,19 +237,22 @@ $totalIndicadoresGeneral += $grupoDeIndicadores->count();
         @endforelse
     </div>
 </div>
+</div>
+</section>
+</main>
 
 {{-- 5. Scripts Unificados (Gráfica General, Popovers y Toggle) --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Inicializar Gauge General
-        var chartValGeneral = Number("{{ ($avanceEje ?? 0) > 100 ? 100 : ($avanceEje ?? 0) }}");
+        var chartValGeneral = Number("{{ $avanceGeneral }}");
         var chartGeneral = echarts.init(document.getElementById('gauge-general'));
         chartGeneral.setOption({
             series: [{
                 type: 'gauge',
                 startAngle: 180, endAngle: 0,
                 min: 0, max: 100,
-                progress: { show: true, width: 15, roundCap: true, itemStyle: { color: '#691A32' } },
+                progress: { show: true, width: 15, roundCap: true, itemStyle: { color: @json($colorGaugeGeneral) } },
                 axisLine: { lineStyle: { width: 15, color: [[1, '#e7e7e7']] } },
                 axisTick: { show: false }, splitLine: { show: false },
                 axisLabel: { show: false }, pointer: { show: false },

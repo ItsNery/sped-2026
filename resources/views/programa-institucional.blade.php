@@ -14,15 +14,15 @@ $programa->nombre .
 ' - Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
 del Estado de Puebla')
 @section('twitter-description', $programaData->descripcion)
-@section('css')
-@endsection
 @section('jss-inicial')
 @endsection
 
+@section('css')
+@endsection
 @section('content')
     @include('partials.programa-derivado-contenido', [
         'itemActivoNav' => 'App\Models\CatProgramaDerivadoInstitucional',
         'tituloBadge' => 'Programa Institucional',
         // Variables pre-existentes disponibles en el controlador para la vista (programa, programaData, indicadores, imagen, avancePrograma)
     ])
-@endsection
+@endsection

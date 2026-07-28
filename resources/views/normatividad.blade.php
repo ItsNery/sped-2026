@@ -17,21 +17,23 @@
 @section('twitter-description',
     'Sección de Normatividad del Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo del
     Estado de Puebla')
+@section('css')
+    <link href="{{ asset('css/normatividad.css') }}" rel="stylesheet">
+@endsection
 @section('content')
-    <div class="contenedor mx-0">
-        <div class="container">
-            <h1 class="my-3">Normatividad</h1>
-            <img class="w-100 block-auto" src="{{ asset('img/pleca-nueva.png') }}" title="Pleca"
-                alt="Pleca conformada por una línea partida por cuatro colores">
-            <div class="container">
-                <div class="row contenido" style="margin:auto;">
-                    <div class="col-md-12">
-                        <p class="font-weight-bold">
-                            Consulta los documentos normativos disponibles para su descarga.
-                        </p>
-                    </div>
+    <div class="normatividad">
+        <section class="normatividad__hero">
+            <div class="normatividad__hero-container">
+                <div class="normatividad__hero-content">
+                    <span class="normatividad__hero-tag">Marco jurídico</span>
+                    <h1 class="normatividad__hero-title">Normatividad</h1>
+                    <p class="normatividad__hero-desc">Consulta los documentos normativos que orientan la planeación, el seguimiento y la evaluación del desarrollo del Estado de Puebla.</p>
                 </div>
             </div>
+        </section>
+        <main class="normatividad__main">
+            <div class="container normatividad__container">
+                <p class="normatividad__intro">Documentos disponibles para consulta y descarga.</p>
             <div class="container my-4">
                 <ul class="normatividad-lista">
                     <li class="normatividad-item">
@@ -208,7 +210,8 @@
                     </div> --}}
                 </div>
             </div>
-        </div>
+            </div>
+        </main>
     </div>
 @section('jss-final')
 @endsection

@@ -9,7 +9,7 @@ $bannerImg = $bannerImg ?? null; // Ruta de la imagen si lleva banner
 
 {{-- 1. SECCIÓN DEL BANNER (Opcional) --}}
 @if($bannerImg)
-<div class="row mx-0 mb-3 banner-container ocultar_impresion">
+<div class="row mx-0 banner-container nav-unificada-banner ocultar_impresion">
     <img src="{{ asset($bannerImg) }}"
         alt="Banner de la sección"
         class="w-100 px-0 shadow-sm banner-img">
@@ -17,9 +17,9 @@ $bannerImg = $bannerImg ?? null; // Ruta de la imagen si lleva banner
 @endif
 
 {{-- 2. BARRA DE NAVEGACIÓN MODERNA --}}
-<div class="row mx-0 mb-4 nav-moderna ocultar_impresion">
+<div class="row mx-0 nav-moderna nav-unificada ocultar_impresion">
     <div class="col-12 px-0">
-        <div class="bg-light rounded-pill p-1 shadow-sm d-flex w-100 border" style="overflow-x: auto;">
+        <div class="nav-unificada__tabs d-flex w-100" style="overflow-x: auto;">
 
             @if($tipoNav === 'ped')
             {{-- MODO 1: EJES DEL PED --}}
@@ -37,7 +37,7 @@ $bannerImg = $bannerImg ?? null; // Ruta de la imagen si lleva banner
             @php $esActivo = ($itemActivo == $numEje); @endphp
             <a href="{{ url($eje['url']) }}"
                 class="flex-fill text-center text-decoration-none py-2 px-3 nav-item-modern {{ $esActivo ? 'active shadow-sm' : '' }}"
-                {!! $esActivo ? 'style="background-color: var(--color-eje' .$numEje.', '.$colorTema.' );"' : '' !!}>
+                style="--nav-item-color: var(--color-eje{{ $numEje }});{!! $esActivo ? ' background-color: var(--color-eje' .$numEje.', '.$colorTema.' );' : '' !!}">
                 {{ $eje['nombre'] }}
             </a>
             @endforeach
@@ -56,7 +56,7 @@ $bannerImg = $bannerImg ?? null; // Ruta de la imagen si lleva banner
             @php $esActivo = ($itemActivo === $modelo); @endphp
             <a href="{{ url($derivado['url']) }}"
                 class="flex-fill text-center text-decoration-none py-2 px-3 nav-item-modern {{ $esActivo ? 'active shadow-sm' : '' }}"
-                {!! $esActivo ? 'style="background-color: ' .$colorTema.';"' : '' !!}>
+                style="--nav-item-color: {{ $colorTema }};{!! $esActivo ? ' background-color: ' .$colorTema.';' : '' !!}">
                 {{ $derivado['nombre'] }}
             </a>
             @endforeach

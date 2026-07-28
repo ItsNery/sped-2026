@@ -25,15 +25,21 @@
     Sistema de Información para el
     Seguimiento a la Planeación y Evaluación del Desarrollo
     del Estado de Puebla.')
+@section('css')
+    <link href="{{ asset('css/datos_abiertos.css') }}" rel="stylesheet">
+@endsection
 @section('content')
-    <div class="container">
-        <h1 class="my-3">Datos Abiertos: Histórico de los Planes Estatales de Desarrollo</h1>
-        <img class="w-100 block-auto" src="{{ asset('img/pleca-nueva.png') }}" title="Pleca"
-            alt="Pleca conformada por una línea partida por cuatro colores">
-        &nbsp;
-        <h4 class="text-justify my-3">Los datos abiertos disponibles pueden ser utilizados, reutilizados y
-            redistribuidos libremente por cualquier persona, se encuentran sujetos al requerimiento de atribución de
-            la misma manera en que aparecen.</h4>
+    <div class="datos-abiertos">
+        <section class="datos-abiertos__hero">
+            <div class="datos-abiertos__hero-container">
+                <div class="datos-abiertos__hero-content">
+                    <span class="datos-abiertos__hero-tag">Archivo histórico</span>
+                    <h1 class="datos-abiertos__hero-title">Datos Abiertos Históricos</h1>
+                    <p class="datos-abiertos__hero-desc">Consulta los conjuntos de datos de los Planes Estatales de Desarrollo y sus modificaciones.</p>
+                </div>
+            </div>
+        </section>
+        <div class="container datos-abiertos-page">
         <section id="ped-section" class="mb-5">
             <h3 class="h3 section-title">Plan Estatal de Desarrollo 2019-2024</h3>
             <div class="row g-4">
@@ -642,5 +648,6 @@
                 </div>
             </div>
         </section>
+        </div>
     </div>
 @endsection

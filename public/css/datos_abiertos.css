@@ -1,101 +1,287 @@
-.grid {
- list-style: none;
- margin-left: -40px;
+/* Datos Abiertos: presentación pública alineada con el inicio y el PED */
+
+.datos-abiertos {
+    overflow: hidden;
+    background: var(--whiteColor);
 }
 
-.gc {
- box-sizing: border-box;
- display: inline-block;
- margin-right: -.25em;
- min-height: 1px;
- padding-left: 40px;
- vertical-align: top;
+.datos-abiertos__hero {
+    display: flex;
+    min-height: 430px;
+    padding: 5rem 0;
+    align-items: center;
+    position: relative;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.72)), url('../img/puebla_hero_bg.png');
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    color: #fff;
 }
 
-.gc--1-of-3 {
- width: 33.33333%;
+.datos-abiertos__hero-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    position: relative;
+    z-index: 1;
 }
 
-.gc--2-of-3 {
- width: 66.66666%;
+.datos-abiertos__hero-content {
+    max-width: 800px;
 }
 
-.naccs {
- position: relative;
- width: 90%;
- margin: 10px auto 25px;
- padding-bottom: 180px;
+.datos-abiertos__hero-tag {
+    display: inline-block;
+    margin-bottom: 1rem;
+    padding: 0.3rem 1.1rem;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 5px;
+    color: var(--arena);
+    font-family: 'Gilroy-SemiBold', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
 }
 
-.naccs .menus div {
- padding: 15px 20px 25px 40px;
- margin-bottom: 10px;
- color: #d6d1c4;
- background: #681931;
- box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
- cursor: pointer;
- position: relative;
- vertical-align: middle;
- font-weight: 700;
- transition: 1s all cubic-bezier(0.075, 0.82, 0.165, 1);
+.datos-abiertos__hero-title {
+    margin-bottom: 1.25rem;
+    color: var(--color-eje2);
+    font-family: 'Gilroy-Bold', 'Corra-Montserra-Bold', sans-serif;
+    font-size: 3rem;
+    line-height: 1.2;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
-.naccs .menus div:hover {
- box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
- background-color: #a39383;
+.datos-abiertos__hero-desc {
+    max-width: 700px;
+    margin: 0;
+    color: #dfebe9;
+    font-family: 'Gilroy-Medium', 'Corra-Montserra-Medium', sans-serif;
+    font-size: 1.15rem;
+    line-height: 1.6;
+    text-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
 }
 
-.naccs .menus div span.light {
- height: 10px;
- width: 10px;
- position: absolute;
- top: 24px;
- left: 15px;
- background-color: #FBC02D;
- border-radius: 100%;
- transition: 1s all cubic-bezier(0.075, 0.82, 0.165, 1);
+.datos-abiertos-page {
+    max-width: 1200px;
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+    color: var(--color-texto-principal-ultimos);
 }
 
-.naccs .menus div.active span.light {
- background-color: #FBC02D;
- left: 0;
- height: 100%;
- width: 3px;
- top: 0;
- border-radius: 0;
+.datos-abiertos-page > h1 {
+    margin-bottom: 0.75rem !important;
+    color: var(--color1-2024);
+    font-family: 'Gilroy-Bold', sans-serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 1.1;
 }
 
-.naccs .menus div.active {
- color: #fff;
- padding: 15px 20px 25px 20px;
+.datos-abiertos-page > img {
+    display: block;
+    width: min(100%, 920px) !important;
+    height: 7px;
+    margin: 0 0 1.5rem;
+    border-radius: 999px;
+    object-fit: cover;
 }
 
-ul.nacc {
- position: static;
- height: 0px;
- list-style: none;
- margin: 0;
- padding: 0;
- transition: .5s all cubic-bezier(0.075, 0.82, 0.165, 1);
+.datos-abiertos-page > h4 {
+    max-width: 900px;
+    margin: 0 0 2.5rem !important;
+    color: var(--color-5);
+    font-size: 1.05rem;
+    font-weight: 400;
+    line-height: 1.7;
 }
 
-ul.nacc li {
- opacity: 0;
- transform: translateX(50px);
- position: absolute;
- display: none;
- list-style: none;
- transition: 1s all cubic-bezier(0.075, 0.82, 0.165, 1);
+.datos-abiertos-page section {
+    margin-bottom: 2rem !important;
+    padding: 1.5rem;
+    border: 1px solid rgba(44, 62, 80, 0.08);
+    border-radius: 14px;
+    background: var(--whiteColor);
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
 }
 
-ul.nacc li.active {
-display: block;
- transition-delay: .3s;
- z-index: 1;
- opacity: 1;
- transform: translateX(0px);
+.datos-abiertos-page .section-title {
+    margin: 0 0 1.25rem;
+    color: var(--color1-2024);
+    font-family: 'Gilroy-Bold', sans-serif;
+    font-size: 1.45rem;
 }
 
-ul.nacc li p {
- margin: 0;
+.datos-abiertos-page .row.g-4 {
+    --bs-gutter-y: 1.5rem;
+}
+
+.datos-abiertos-page .nav-pills {
+    gap: 0.5rem;
+}
+
+.datos-abiertos-page .nav-pills .nav-link {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid rgba(105, 26, 50, 0.16);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--color1-2024);
+    font-family: 'Gilroy-Bold', sans-serif;
+    font-size: 0.88rem;
+    text-align: left;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.datos-abiertos-page .nav-pills .nav-link:hover {
+    background: rgba(105, 26, 50, 0.06);
+    transform: translateX(2px);
+}
+
+.datos-abiertos-page .nav-pills .nav-link.active {
+    border-color: var(--color1-2024);
+    background: var(--color1-2024);
+    box-shadow: 0 5px 14px rgba(105, 26, 50, 0.2);
+    color: #fff;
+}
+
+.datos-abiertos-page .tab-content {
+    min-height: 100%;
+    padding: 1.5rem;
+    border: 1px solid #edf0f2;
+    border-radius: 12px;
+    background: #fbfcfd;
+}
+
+.datos-abiertos-page .tab-pane > h4 {
+    color: var(--color1-2024) !important;
+    font-family: 'Gilroy-Bold', sans-serif;
+    font-size: 1.25rem;
+}
+
+.datos-abiertos-page .tab-pane > p {
+    color: var(--color-5) !important;
+    line-height: 1.55;
+}
+
+.datos-abiertos-page .data-table {
+    overflow: hidden;
+    margin-bottom: 0;
+    border: 1px solid #e7eaee;
+    border-radius: 9px;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #fff;
+}
+
+.datos-abiertos-page .data-table thead th {
+    padding: 0.9rem 1rem;
+    border-bottom: 0;
+    background: var(--color1-2024);
+    color: #fff;
+    font-family: 'Gilroy-Bold', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.25px;
+    text-transform: uppercase;
+}
+
+.datos-abiertos-page .data-table tbody td {
+    padding: 0.9rem 1rem;
+    border-color: #edf0f2;
+    color: var(--color-texto-principal-ultimos);
+    vertical-align: middle;
+}
+
+.datos-abiertos-page .data-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.datos-abiertos-page .data-table tbody tr:hover td {
+    background: rgba(105, 26, 50, 0.035);
+}
+
+.datos-abiertos-page .download-icons {
+    width: 155px;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.datos-abiertos-page .download-icons a,
+.datos-abiertos-page .download-icons form {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    margin: 0 0.18rem;
+    vertical-align: middle;
+}
+
+.datos-abiertos-page .download-icons a,
+.datos-abiertos-page .download-icons button {
+    border: 0;
+    background: transparent;
+    line-height: 1;
+}
+
+.datos-abiertos-page .download-icons img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.datos-abiertos-page .download-icons a:hover img,
+.datos-abiertos-page .download-icons button:hover img {
+    filter: drop-shadow(0 3px 4px rgba(44, 62, 80, 0.2));
+    transform: translateY(-2px);
+}
+
+@media (max-width: 767.98px) {
+    .datos-abiertos__hero {
+        min-height: 360px;
+        padding: 4rem 0;
+    }
+
+    .datos-abiertos__hero-title {
+        font-size: 2.25rem;
+    }
+
+    .datos-abiertos__hero-desc {
+        font-size: 1rem;
+    }
+
+    .datos-abiertos-page {
+        padding-top: 2rem;
+        padding-right: 1rem;
+        padding-left: 1rem;
+    }
+
+    .datos-abiertos-page section {
+        padding: 1rem;
+    }
+
+    .datos-abiertos-page .nav-pills {
+        flex-direction: row !important;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 0.25rem;
+    }
+
+    .datos-abiertos-page .nav-pills .nav-link {
+        width: auto;
+        flex: 0 0 auto;
+        white-space: nowrap;
+        text-align: center;
+    }
+
+    .datos-abiertos-page .tab-content {
+        padding: 1rem;
+    }
+
+    .datos-abiertos-page .data-table {
+        min-width: 560px;
+    }
+
+    .datos-abiertos-page .tab-pane {
+        overflow-x: auto;
+    }
 }

@@ -30,11 +30,22 @@
     ' dentro del Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
     del Estado de Puebla')
 @section('css')
+    <link href="{{ asset('css/municipales.css') }}" rel="stylesheet">
 @endsection
 @section('jss-inicial')
 @endsection
 @section('content')
-    <img src="{{ asset($municipio->banner) }}" width="100%" class="px-0">
+<div class="municipales municipales-detalle">
+    <section class="municipales__hero municipales__hero--municipio" style="background-image: linear-gradient(rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.72)), url('{{ asset($municipio->banner) }}');">
+        <div class="municipales__hero-container">
+            <div class="municipales__hero-content">
+                <span class="municipales__hero-tag">Plan Municipal de Desarrollo</span>
+                <h1 class="municipales__hero-title">{{ $municipio->municipio->nombre }}</h1>
+                <p class="municipales__hero-desc">Seguimiento a los indicadores del Plan Municipal de Desarrollo.</p>
+            </div>
+        </div>
+    </section>
+    <main class="municipales__main">
     <div class="row contenido" style="margin-left: auto; margin-right: auto;">
         <div class="col-md-1"></div>
         <div class="col-md-3 objetivo">
@@ -186,6 +197,8 @@
 
 
     </div>
+    </main>
+</div>
 
 @section('jss-final')
 

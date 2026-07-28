@@ -24,6 +24,8 @@ de Información para el Seguimiento a la Planeación y Evaluación del Desarroll
 del Estado de Puebla')
 @section('jss-inicial')
 @endsection
+@section('css')
+@endsection
 @section('content')
     @include('partials.contenido-ejes', [
         'numEje' => 2,

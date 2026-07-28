@@ -1,0 +1,468 @@
+/* API Documentation Styles - Homologated with homepage design */
+/* Uses site CSS variables from estilos.css :root */
+
+/* ============================================================
+   Hero Section (matches inicio-hero pattern)
+   ============================================================ */
+.api-docs {
+    overflow: hidden;
+}
+
+.api-docs__hero {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.72)), url('../img/puebla_hero_bg.png');
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    color: #fff;
+    padding: 5rem 0;
+    min-height: 480px;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.api-docs__hero-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+.api-docs__hero-content {
+    max-width: 800px;
+}
+
+.api-docs__hero-tag {
+    font-family: 'Gilroy-SemiBold', sans-serif;
+    display: inline-block;
+    color: var(--arena);
+    padding: 0.3rem 1.1rem;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.api-docs__hero-title {
+    font-family: "Gilroy-Bold", "Corra-Montserra-Bold", sans-serif;
+    font-size: 3rem;
+    margin-bottom: 1.25rem;
+    line-height: 1.2;
+    color: var(--color-eje2);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.api-docs__hero-desc {
+    font-family: "Gilroy-Medium", "Corra-Montserra-Medium", sans-serif;
+    font-size: 1.15rem;
+    opacity: 0.95;
+    line-height: 1.6;
+    max-width: 700px;
+    margin-bottom: 2rem;
+    color: #dfebe9;
+    text-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+}
+
+.api-docs__hero-cta {
+    background-color: #c79b66;
+    color: var(--color-3);
+    font-weight: 600;
+    padding: 0.75rem 3rem;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: none;
+    display: inline-block;
+    font-size: 1rem;
+    font-family: 'Gilroy-SemiBold', sans-serif;
+}
+
+.api-docs__hero-cta:hover {
+    background-color: #b08554;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(199, 155, 102, 0.6);
+    text-decoration: none;
+}
+
+/* ============================================================
+   Sections (matches homepage section patterns)
+   ============================================================ */
+.api-docs__section {
+    padding: 4rem 0;
+}
+
+.api-docs__section--light {
+    background: var(--whiteColor);
+}
+
+.api-docs__section--gray {
+    background: var(--bg-content);
+}
+
+.api-docs__section--dark {
+    background-image: linear-gradient(rgba(61, 17, 32, 0.92), rgba(95, 27, 45, 0.92)), url('../img/puebla_hero_bg.png');
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    color: #fff;
+}
+
+.api-docs__section-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* Section titles (matches inicio-section-title / inicio-section-subtitle) */
+.api-docs__section-subtitle {
+    font-family: 'Gilroy-SemiBold', sans-serif;
+    display: inline-block;
+    color: var(--color-texto-principal-ultimos);
+    padding: 0.3rem 1.1rem;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    margin-bottom: 0;
+    font-weight: 600;
+    border: 1px solid rgba(232, 229, 229, 0.623);
+}
+
+.api-docs__section--dark .api-docs__section-subtitle {
+    color: var(--arena);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.api-docs__section-title {
+    font-family: 'Gilroy-Bold', sans-serif;
+    color: var(--color-eje3);
+    font-weight: 700;
+    font-size: 2.8rem;
+    margin-bottom: 0;
+}
+
+.api-docs__section--dark .api-docs__section-title {
+    color: var(--color-eje2);
+}
+
+/* ============================================================
+   Cards (matches inicio-cumplimiento__card pattern)
+   ============================================================ */
+.api-docs__card {
+    background: var(--whiteColor);
+    border-radius: 12px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    margin-bottom: 25px;
+}
+
+.api-docs__card-header {
+    background: var(--color1-2024);
+    background-image: linear-gradient(135deg, #3d1120, var(--color1-2024));
+    color: #fff;
+    padding: 1.25rem 2rem;
+    text-align: center;
+}
+
+.api-docs__card-header h2,
+.api-docs__card-header h3 {
+    margin: 0;
+    font-family: "Gilroy-Bold", sans-serif;
+    font-size: 1.15rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.api-docs__card-header-sub {
+    display: block;
+    font-size: 0.8rem;
+    opacity: 0.85;
+    margin-top: 0.25rem;
+}
+
+.api-docs__card-body {
+    padding: 2rem;
+}
+
+.api-docs__card-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--color-texto-principal-ultimos);
+    margin-bottom: 20px;
+    border-left: 4px solid var(--colorpricipalbackup);
+    padding-left: 12px;
+}
+
+.api-docs__card-title--no-border {
+    border: none;
+    padding-left: 0;
+}
+
+/* ============================================================
+   Tabs Navigation
+   ============================================================ */
+.api-docs__tabs {
+    display: flex;
+    border-bottom: 2px solid #E5E7EB;
+    margin-bottom: 30px;
+    gap: 15px;
+}
+
+.api-docs__tab-btn {
+    background: none;
+    border: none;
+    padding: 12px 24px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #6B7280;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    bottom: -2px;
+    border-bottom: 3px solid transparent;
+    font-family: var(--fontFamily);
+}
+
+.api-docs__tab-btn:hover {
+    color: var(--colorpricipalbackup);
+}
+
+.api-docs__tab-btn--active {
+    color: var(--colorpricipalbackup);
+    border-bottom-color: var(--colorpricipalbackup);
+}
+
+.api-docs__tab-content {
+    display: none;
+    animation: apiDocsFadeIn 0.4s ease;
+}
+
+.api-docs__tab-content--active {
+    display: block;
+}
+
+@keyframes apiDocsFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================================
+   HTTP Badges & URL
+   ============================================================ */
+.api-docs__method-badge {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    display: inline-block;
+}
+
+.api-docs__method-badge--get {
+    background-color: #E0F2FE;
+    color: #0369A1;
+    border: 1px solid #BAE6FD;
+}
+
+.api-docs__url-string {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    background-color: #F3F4F6;
+    padding: 6px 12px;
+    border-radius: 6px;
+    color: #374151;
+    font-size: 0.9rem;
+    word-break: break-all;
+}
+
+/* ============================================================
+   Code Blocks
+   ============================================================ */
+.api-docs__code-wrapper {
+    position: relative;
+    margin: 15px 0;
+}
+
+.api-docs__code-block {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    background-color: #1E293B;
+    color: #E2E8F0;
+    padding: 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    max-height: 450px;
+}
+
+/* ============================================================
+   Forms
+   ============================================================ */
+.api-docs__form-group label {
+    font-weight: 600;
+    color: #4B5563;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.api-docs__form-control,
+.api-docs__form-select {
+    border-radius: 8px;
+    border: 1px solid #D1D5DB;
+    padding: 10px 14px;
+    font-size: 0.95rem;
+}
+
+.api-docs__form-control:focus,
+.api-docs__form-select:focus {
+    border-color: var(--colorpricipalbackup);
+    box-shadow: 0 0 0 3px rgba(105, 26, 50, 0.15);
+}
+
+.api-docs__btn {
+    background-color: var(--colorpricipalbackup);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-family: var(--fontFamily);
+}
+
+.api-docs__btn:hover {
+    background-color: var(--color2-2024);
+    color: white;
+    box-shadow: 0 4px 10px rgba(105, 26, 50, 0.2);
+}
+
+/* ============================================================
+   Tables
+   ============================================================ */
+.api-docs__table-wrapper {
+    max-height: 500px;
+}
+
+.api-docs__table th {
+    background-color: #F9FAFB;
+    color: #374151;
+    font-weight: 600;
+    border-bottom: 2px solid #E5E7EB;
+    padding: 12px 16px;
+    font-size: 0.9rem;
+}
+
+.api-docs__table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #F3F4F6;
+    vertical-align: middle;
+    font-size: 0.9rem;
+}
+
+.api-docs__table-row--hover:hover {
+    background-color: #F9FAFB;
+}
+
+/* ============================================================
+   Semaforo badges
+   ============================================================ */
+.api-docs__semaforo {
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    display: inline-block;
+    text-align: center;
+}
+
+.api-docs__semaforo--secondary {
+    background-color: #E5E7EB;
+    color: #6B7280;
+}
+
+/* ============================================================
+   Pagination
+   ============================================================ */
+.api-docs__pagination-panel--hidden {
+    display: none !important;
+}
+
+/* ============================================================
+   Modal (matches homepage modal pattern)
+   ============================================================ */
+.api-docs__modal-xl {
+    max-width: 1140px;
+}
+
+.api-docs__modal-content {
+    border-radius: 16px;
+    overflow: hidden;
+    border: none;
+}
+
+.api-docs__modal-header {
+    background: var(--color1-2024);
+    background-image: linear-gradient(135deg, #3d1120, var(--color1-2024));
+    color: white;
+    padding: 20px 25px;
+}
+
+.api-docs__modal-header .btn-close {
+    filter: invert(1) grayscale(1) brightness(2);
+}
+
+.api-docs__modal-body {
+    background-color: var(--bg-content);
+}
+
+.api-docs__modal-footer {
+    background-color: #E5E7EB;
+}
+
+.api-docs__modal-section-title {
+    font-size: 0.75rem;
+}
+
+.api-docs__modal-desc {
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.api-docs__modal-icon {
+    font-size: 1.2rem;
+}
+
+/* ODS badge */
+.api-docs__badge-ods {
+    background-color: #FEF3C7;
+    color: #92400E;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    display: inline-block;
+    margin-right: 6px;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+}
+
+/* ============================================================
+   Snippet tabs
+   ============================================================ */
+#snippet-tabs .nav-link {
+    color: #6B7280;
+    font-weight: 600;
+}
+
+#snippet-tabs .nav-link.active {
+    color: var(--colorpricipalbackup);
+    border-bottom-color: var(--colorpricipalbackup);
+}

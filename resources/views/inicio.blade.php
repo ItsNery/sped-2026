@@ -1,331 +1,703 @@
 @extends('layouts.plantilla')
 @section('title', 'Inicio')
 @section('meta-description',
-'Página principal del Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
-del Estado de Puebla')
+    'Página principal del Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
+    del Estado de Puebla. Consulta el avance de los indicadores del PED 2024-2030.')
 @section('canonical-url', url()->current())
 @section('og-title',
-'Inicio - Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
-del Estado de Puebla')
+    'Inicio - Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
+    del Estado de Puebla')
 @section('og-description',
-'Bienvenido a la página de inicio del Sistema de Información para el Seguimiento a la Planeación y Evaluación del
-Desarrollo
-del Estado de Puebla.')
+    'Dashboard de seguimiento al Plan Estatal de Desarrollo 2024-2030 del Estado de Puebla.
+    Consulta el avance de indicadores estratégicos, sectoriales, especiales, institucionales y regionales.')
 @section('og:url', url()->current())
 @section('twitter-title',
-'Inicio - Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
-del Estado de Puebla')
+    'Inicio - Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
+    del Estado de Puebla')
 @section('twitter-description',
-'Bienvenido a la página de inicio del Sistema de Información para el Seguimiento a la Planeación y Evaluación del
-Desarrollo
-del Estado de Puebla.')
+    'Dashboard de seguimiento al Plan Estatal de Desarrollo 2024-2030 del Estado de
+    Puebla.')
 @section('css')
-<link rel="stylesheet" href="{{ asset('css/swiper-bundle.min.css') }}">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/driver.css" />
 @endsection
 @section('jss-inicial')
-<!-- <script src="https://cdn.jsdelivr.net/npm/driver.js@latest/dist/driver.js.iife.js"></script> -->
-<script src="{{ asset('js/swiper-bundle.min.js') }}"></script>
 @endsection
 
 @section('content')
-@if ($carruselItems && count($carruselItems) > 0)
-<section class="seccion-slider">
-    <div class="slider slider_indicadores">
-        <div class="slide-track">
-            @foreach ($carruselItems as $item)
-            <a class="text-decoration-none text-black"
-                href="{{ route('ficha-tecnica.show', $item->indicador) }}"
-                title="{{ $item->indicador->nombre }}" rel="noopener noreferrer">
-                <div class="slide">
-                    <div class="row">
-                        <div class="col-md-2 imagen">
-                            <img src="{{ asset('img/iconos_indicadores/' . $item->imagen) }}"
-                                alt="Icono del indicador {{ $item->indicador->nombre }}"
-                                title="{{ $item->indicador->nombre }}">
+
+    {{-- ============================================================
+     1. HERO SECTION
+     ============================================================ --}}
+    <section class="inicio-hero">
+        <div class="inicio-hero__container">
+            <div class="inicio-hero__content">
+                <span class="inicio-hero__tag">Acerca del SPED</span>
+                <h1 class="inicio-hero__title">
+                    Sistema Estatal de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
+                </h1>
+                <p class="inicio-hero__subtitle">
+                    Plataforma oficial e integradora que organiza y difunde el seguimiento puntual al avance de los
+                    Indicadores
+                    Estratégicos, Sectoriales, Especiales, Institucionales y Regionales del Estado de Puebla, fortaleciendo
+                    la planeación democrática y la toma de decisiones públicas.
+                </p>
+                <a href="#vision-estrategica" target="_self" rel="noopener noreferrer" class="inicio-hero__cta">
+                    Ver más
+                </a>
+            </div>
+            <div class="inicio-hero__logo-wrapper">
+                <div class="inicio-hero__logo">
+                    <img src="{{ asset('img/logo_sped.png') }}"
+                        alt="Logo del Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- ============================================================
+     2. DASHBOARD RESUMEN (Avance General del PED)
+     ============================================================ --}}
+    <section class="inicio-dashboard" id="avance-general">
+        <div class="inicio-dashboard__container">
+            <div class="row align-items-center g-5">
+                {{-- Columna Izquierda: Logo + Ejes + CTA (Estilo MIDE Jalisco) --}}
+                <div class="col-lg-5 col-md-12 text-center text-lg-start border-end-lg">
+                    <div class="inicio-dashboard__brand-block">
+                        <img src="{{ asset('img/imagotipo-logo-ped.png') }}" alt="Plan Estatal de Desarrollo 2024-2030"
+                            class="inicio-dashboard__mide-logo">
+                        <h2 class="inicio-dashboard__mide-title">Plan Estatal de Desarrollo 2024–2030</h2>
+
+                        {{-- Ejes Navigation (Pills debajo del logo como MIDE) --}}
+                        <div class="inicio-dashboard__mide-ejes-wrapper">
+                            <span class="inicio-dashboard__mide-ejes-label">Ejes del Desarrollo:</span>
+                            <div class="inicio-dashboard__mide-ejes">
+                                @foreach ($ejesData as $eje)
+                                    <a href="#eje-{{ $eje['numero'] }}" class="inicio-eje-pill"
+                                        style="background-color: var(--color-eje{{ $eje['numero'] }});"
+                                        title="Eje {{ $eje['numero'] }} — {{ $eje['nombre'] }}">
+                                        {{ $eje['numero'] }}
+                                    </a>
+                                @endforeach
+                            </div>
                         </div>
-                        <div class="col-md-9 col-sm-12 informacion">
-                            <div class="row">
-                                <h3>
-                                    {{ $item->indicador->nombre }}
+
+                        {{-- CTA Button --}}
+                        <div class="mt-4">
+                            <a href="https://ped2024-2030.puebla.gob.mx/" target="_blank" rel="noopener noreferrer"
+                                class="inicio-dashboard__cta">
+                                Consulta el Plan Estatal aquí <i class="fas fa-external-link-alt ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Columna Derecha: Indicadores y Avance (Estilo MIDE Jalisco) --}}
+                <div class="col-lg-7 col-md-12">
+                    <div class="inicio-dashboard__stats-block">
+                        <div
+                            class="d-flex align-items-center gap-4 flex-wrap flex-sm-nowrap justify-content-center justify-content-sm-start mb-3">
+                            {{-- Círculo / Gauge de Avance --}}
+                            <div class="inicio-dashboard__mide-gauge-wrapper">
+                                <div id="mainGaugeInicio" class="inicio-dashboard__gauge"></div>
+                                <div class="inicio-dashboard__gauge-label" style="color: {{ $colorPlan }};">
+                                    {{ number_format($avancePlan, 2) }}%
+                                </div>
+                            </div>
+
+                            {{-- Textos principales --}}
+                            <div class="text-center text-sm-start">
+                                <h3 class="inicio-dashboard__stats-title">
+                                    <strong>{{ $totalIndicadores }}</strong> Indicadores
                                 </h3>
-                            </div>
-                            <div class="row">
-                                <h2>
-                                    @isset($item->ultimo_dato)
-                                    {{ number_format($item->ultimo_dato, 2, '.', ',') }}
-                                    @else
-                                    Sin datos
-                                    @endisset
-                                </h2>
-                            </div>
-                            <div class="col-12">
-                                <h4>
-                                    {{ $item->anio_mas_reciente ?? 'N/A' }}
+                                <p class="inicio-dashboard__stats-subtitle">
+                                    Avance de cumplimiento de metas
+                                </p>
+                                <h4 class="inicio-dashboard__stats-percentage" style="color: {{ $colorPlan }};">
+                                    {{ number_format($avancePlan, 2) }}% Cumplimiento Promedio
                                 </h4>
+                            </div>
+                        </div>
+
+                        {{-- Párrafo explicativo debajo --}}
+                        <p class="inicio-dashboard__stats-desc">
+                            Los avances son determinados por los cumplimientos de meta de cada indicador que refleja actualizaciones en el año de referencia. Para más detalles del desglose por rango de semáforo de cumplimiento, consulta la barra horizontal:
+                        </p>
+
+                        {{-- Distribución de Semáforo: Barra Segmentada Horizontal y Leyenda --}}
+                        <div class="inicio-dashboard__semaforo-bar mt-4">
+                            @php
+                                $totalEvaluables =
+                                    $distribucionGeneral['rojo'] +
+                                    $distribucionGeneral['amarillo'] +
+                                    $distribucionGeneral['verde'] +
+                                    $distribucionGeneral['azul'] +
+                                    $distribucionGeneral['sin_datos'];
+                                $pctRojo =
+                                    $totalEvaluables > 0 ? ($distribucionGeneral['rojo'] / $totalEvaluables) * 100 : 0;
+                                $pctAmarillo =
+                                    $totalEvaluables > 0
+                                        ? ($distribucionGeneral['amarillo'] / $totalEvaluables) * 100
+                                        : 0;
+                                $pctVerde =
+                                    $totalEvaluables > 0 ? ($distribucionGeneral['verde'] / $totalEvaluables) * 100 : 0;
+                                $pctAzul =
+                                    $totalEvaluables > 0 ? ($distribucionGeneral['azul'] / $totalEvaluables) * 100 : 0;
+                                $pctGris =
+                                    $totalEvaluables > 0
+                                        ? ($distribucionGeneral['sin_datos'] / $totalEvaluables) * 100
+                                        : 0;
+                            @endphp
+                            <div class="progress rounded-pill shadow-sm"
+                                style="height: 14px; overflow: hidden; background-color: #e9ecef;">
+                                @if ($pctRojo > 0)
+                                    <div class="progress-bar"
+                                        style="width: {{ $pctRojo }}%; background-color: var(--color-insuficiente);"
+                                        title="Rezago: {{ $distribucionGeneral['rojo'] }} ({{ round($pctRojo, 1) }}%)">
+                                    </div>
+                                @endif
+                                @if ($pctAmarillo > 0)
+                                    <div class="progress-bar"
+                                        style="width: {{ $pctAmarillo }}%; background-color: var(--color-moderado);"
+                                        title="En proceso: {{ $distribucionGeneral['amarillo'] }} ({{ round($pctAmarillo, 1) }}%)">
+                                    </div>
+                                @endif
+                                @if ($pctVerde > 0)
+                                    <div class="progress-bar"
+                                        style="width: {{ $pctVerde }}%; background-color: var(--color-aceptable);"
+                                        title="Meta cumplida: {{ $distribucionGeneral['verde'] }} ({{ round($pctVerde, 1) }}%)">
+                                    </div>
+                                @endif
+                                @if ($pctAzul > 0)
+                                    <div class="progress-bar"
+                                        style="width: {{ $pctAzul }}%; background-color: var(--color-excedido);"
+                                        title="Superó meta: {{ $distribucionGeneral['azul'] }} ({{ round($pctAzul, 1) }}%)">
+                                    </div>
+                                @endif
+                                @if ($pctGris > 0)
+                                    <div class="progress-bar"
+                                        style="width: {{ $pctGris }}%; background-color: var(--color-nulas);"
+                                        title="Sin datos: {{ $distribucionGeneral['sin_datos'] }} ({{ round($pctGris, 1) }}%)">
+                                    </div>
+                                @endif
+                            </div>
+
+                            {{-- Leyenda interactiva simplificada --}}
+                            <div class="d-flex justify-content-between flex-wrap gap-2 mt-3 text-muted"
+                                style="font-size: 0.78rem;">
+                                <div><span class="d-inline-block rounded-circle me-1"
+                                        style="width:10px; height:10px; background-color:var(--color-insuficiente);"></span>
+                                    Rezago:
+                                    <strong>{{ $distribucionGeneral['rojo'] }}</strong>
+                                </div>
+                                <div><span class="d-inline-block rounded-circle me-1"
+                                        style="width:10px; height:10px; background-color:var(--color-moderado);"></span> En
+                                    proceso: <strong>{{ $distribucionGeneral['amarillo'] }}</strong></div>
+                                <div><span class="d-inline-block rounded-circle me-1"
+                                        style="width:10px; height:10px; background-color:var(--color-aceptable);"></span>
+                                    Cumplido: <strong>{{ $distribucionGeneral['verde'] }}</strong></div>
+                                <div><span class="d-inline-block rounded-circle me-1"
+                                        style="width:10px; height:10px; background-color:var(--color-excedido);"></span>
+                                    Superado: <strong>{{ $distribucionGeneral['azul'] }}</strong></div>
+                                @if ($distribucionGeneral['sin_datos'] > 0)
+                                    <div><span class="d-inline-block rounded-circle me-1"
+                                            style="width:10px; height:10px; background-color:var(--color-nulas);"></span>
+                                        Sin
+                                        datos: <strong>{{ $distribucionGeneral['sin_datos'] }}</strong></div>
+                                @endif
                             </div>
                         </div>
                     </div>
                 </div>
-            </a>
-            @endforeach
-        </div>
-    </div>
-</section>
-<img src="{{asset('img/pleca-nueva.png')}}" alt="" class="w-100 py-2" title="Pleca de separación de secciones hola">
-@endif
-<section class="seccion-inicial">
-    <div class="custom-container">
-        <div class="left-panel">
-            <img src="{{ asset('img/que-es-nuevo.png') }}"
-                alt="Panel izquierdo con diseño gráfico que indica 'Qué es el Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo'">
-        </div>
-        <div class="right-panel">
-            <p>Es una herramienta integradora para el seguimiento puntual al avance de los Indicadores Estratégicos, así
-                como los Indicadores Sectoriales, Especiales, Institucionales y Regionales, establecidos en los
-                documentos programáticos vigentes.</p>
-        </div>
-    </div>
-
-</section>
-
-<!-- Swiper -->
-@if ($sliders && count($sliders) > 0)
-<section class="seccion-banners">
-    <div class="contenido container swiper mySwiper">
-        <div class="swiper-wrapper">
-            @foreach ($sliders as $slide)
-            <div class="swiper-slide">
-                <img src="{{ asset($slide->imagen) }}" alt="{{ $slide->descripcion }}"
-                    title="{{ $slide->titulo }}">
-            </div>
-            @endforeach
-        </div>
-        <div class="swiper-button-next"></div>
-        <div class="swiper-button-prev"></div>
-        <div class="swiper-pagination"></div>
-    </div>
-</section>
-@endif
-@if ($indicadoresRecientes->count() > 0)
-<section class="seccion-ultimos">
-    <div class="container actualizaciones">
-        <h2>
-            Últimas actualizaciones de indicadores
-        </h2>
-        <ul class="lista-indicadores">
-            @foreach ($indicadoresRecientes as $indicador)
-            <li>
-                <a href="{{ route('ficha-tecnica.show', $indicador) }}">
-                    <h4>
-                        {{ $indicador->nombre }}
-                    </h4>
-                </a>
-            </li>
-            @endforeach
-        </ul>
-    </div>
-</section>
-@endif
-
-<section class="seccion-rejilla">
-    <div class="container">
-        <div class="row my-5">
-            <div class="col-md-6">
-                <div class="row hvr-shrink mb-4">
-                    <a style="text-decoration:none;" href="https://ped2024-2030.puebla.gob.mx/" target="_blank">
-                        <img class="imagen-noticias" src="{{ asset('img/Banners/General/Baby_1.jpg') }}" alt="PED"
-                            title="Banner Plan Estatal de Desarrollo">
-                    </a>
-                </div>
-            </div>
-            <div class="col-md-6">
-                {{-- <div class="row hvr-shrink mb-4">
-                        <a style="text-decoration:none;" href="{{ url('/agenda-mod') }}">
-                <img class="imagen-noticias" src="{{ asset('img/Banners/General/Baby_3.jpg') }}" alt="DATOS"
-                    title="Banner Datos Abiertos">
-                </a>
-            </div> --}}
-            {{-- <div class="row hvr-shrink">
-                        <a style="text-decoration:none;" href="{{ url('/mod-ped-programas') }}">
-            <img class="imagen-noticias" src="{{ asset('img/Banners/General/Baby_4.jpg') }}"
-                alt="DERIVADOS" title="Banner Programas Derivados">
-            </a>
-        </div> --}}
-        {{-- Movi datos abiertos aqui para estabilidad visual - 16 05 25 --}}
-        <div class="row hvr-shrink">
-            <a style="text-decoration:none;" href="{{ url('/datos-abiertos-ped') }}">
-                <img class="imagen-noticias" src="{{ asset('img/Banners/General/Baby_2.jpg') }}" alt="AGENDA"
-                    title="Banner Agenda 2030">
-            </a>
-        </div>
-    </div>
-    </div>
-    </div>
-</section>
-
-<section class="seccion-fuentes">
-    <div class="container ligas" style="margin:auto;">
-        &nbsp;
-        <div class="col-md-12" style="margin-left: -50px; margin-right: auto;">
-            <h2>Fuentes de Consulta</h2>
-        </div>
-        &nbsp;
-        <div class="row">
-            <img class="pleca-img" src="{{ asset('img/linea-1.png') }}" title="Pleca de titulo Fuentes de Consulta"
-                alt="Pleca compuesta por una barra de cuatro colores en forma horizontal">
-        </div>
-        <div class="logo-slider">
-            <div class="logo-slide-track">
-                <div class="slide">
-                    <a href="https://www.iadb.org/es" target="blank_" style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/BID.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
-                <div class="slide">
-                    <a href="https://www.coneval.org.mx/Paginas/principal.aspx" target="blank_"
-                        style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/CONEVAL.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
-                <div class="slide">
-                    <a href="https://imco.org.mx/" target="blank_" style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/IMCO.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
-                <div class="slide">
-                    <a href="https://www.inegi.org.mx/" target="blank_" style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/INEGI.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
-                <div class="slide">
-                    <a href="https://www.transparenciapresupuestaria.gob.mx/" target="blank_"
-                        style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/OBSERVATORIO.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
-                <div class="slide">
-                    <a href="https://www1.undp.org/content/undp/es/home.html" target="blank_"
-                        style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/PNUD.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
-                <div class="slide">
-                    <a href="https://www.gob.mx/siap" target="blank_" style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/SADER.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
-                <div class="slide">
-                    <a href="https://www.gob.mx/sep/acciones-y-programas/estadistica-educativa-15782?state=published"
-                        target="blank_" style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/SEP.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
-                <div class="slide">
-                    <a href="https://www.gob.mx/sesnsp/acciones-y-programas/informacion-de-incidencia-delictiva-nacional?state=published"
-                        target="blank_" style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/SESNSP.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
-                <div class="slide">
-                    <a href="http://www.stps.gob.mx/gobmx/estadisticas/" target="blank_"
-                        style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/STPS.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
-                <div class="slide">
-                    <a href="https://www.iadb.org/es" target="blank_" style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/BID.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
-                <div class="slide">
-                    <a href="https://www.coneval.org.mx/Paginas/principal.aspx" target="blank_"
-                        style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/CONEVAL.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
-                <div class="slide">
-                    <a href="https://imco.org.mx/" target="blank_" style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/IMCO.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
-                <div class="slide">
-                    <a href="https://www.inegi.org.mx/" target="blank_" style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/INEGI.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
-                <div class="slide">
-                    <a href="https://www.transparenciapresupuestaria.gob.mx/" target="blank_"
-                        style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/OBSERVATORIO.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
-                <div class="slide">
-                    <a href="https://www1.undp.org/content/undp/es/home.html" target="blank_"
-                        style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/PNUD.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
-                <div class="slide">
-                    <a href="https://www.gob.mx/siap" target="blank_" style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/SADER.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
-                <div class="slide">
-                    <a href="https://www.gob.mx/sep/acciones-y-programas/estadistica-educativa-15782?state=published"
-                        target="blank_" style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/SEP.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
-                <div class="slide">
-                    <a href="https://www.gob.mx/sesnsp/acciones-y-programas/informacion-de-incidencia-delictiva-nacional?state=published"
-                        target="blank_" style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/SESNSP.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
-                <div class="slide">
-                    <a href="http://www.stps.gob.mx/gobmx/estadisticas/" target="blank_"
-                        style="text-decoration:none; color:#fff;">
-                        <img src="{{ asset('img/sitios_interes/STPS.png') }}" class="w-100" alt="">
-                    </a>
-                </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
+
+    {{-- ============================================================
+     3. AVANCE POR EJES Y PROGRAMAS
+     ============================================================ --}}
+    <section class="inicio-cumplimiento" id="cumplimiento">
+        <div class="inicio-cumplimiento__container">
+            <div class="inicio-cumplimiento__card">
+
+                {{-- Cabecera del Reporte de Ejes --}}
+                <div class="inicio-cumplimiento__header">
+                    <h3>Cumplimiento promedio de indicadores por Eje de Desarrollo</h3>
+                    <span class="inicio-cumplimiento__header-sub">Indicadores por rango de cumplimiento</span>
+                </div>
+
+                {{-- Cuerpo de Ejes --}}
+                <div class="inicio-cumplimiento__body">
+                    <div class="inicio-ejes__list">
+                        @foreach ($ejesData as $eje)
+                            <div class="inicio-ejes__row" id="eje-{{ $eje['numero'] }}"
+                                style="border-left-color: var(--color-eje{{ $eje['numero'] }});">
+                                {{-- Ícono del eje --}}
+                                <img src="{{ asset('img/iconos/eje-' . $eje['numero'] . '.png') }}"
+                                    class="inicio-ejes__icon"
+                                    alt="Icono del {{ $eje['nombre'] }}">
+
+                                {{-- Info --}}
+                                <div class="inicio-ejes__info">
+                                    <div class="inicio-ejes__name">{{ $eje['nombre'] }}</div>
+                                    <div class="inicio-ejes__meta">
+                                        <span class="inicio-ejes__badge"
+                                            style="background-color: var(--color-eje{{ $eje['numero'] }});">
+                                            {{ $eje['total_indicadores'] }} indicadores
+                                        </span>
+                                        <span class="inicio-ejes__avance-text">
+                                            Avance promedio: <strong
+                                                style="color: {{ $eje['semaforo_color'] }};">{{ number_format($eje['avance'], 2) }}%</strong>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {{-- Rangos de cumplimiento --}}
+                                <div class="inicio-ejes__rangos">
+                                    <div class="inicio-ejes__rango inicio-ejes__rango--rojo">
+                                        <span class="inicio-ejes__rango-count">{{ $eje['distribucion']['rojo'] }}</span>
+                                        <span class="inicio-ejes__rango-label">menos de 71%</span>
+                                    </div>
+                                    <div class="inicio-ejes__rango inicio-ejes__rango--amarillo">
+                                        <span
+                                            class="inicio-ejes__rango-count">{{ $eje['distribucion']['amarillo'] }}</span>
+                                        <span class="inicio-ejes__rango-label">71% a 90%</span>
+                                    </div>
+                                    <div class="inicio-ejes__rango inicio-ejes__rango--verde">
+                                        <span class="inicio-ejes__rango-count">{{ $eje['distribucion']['verde'] }}</span>
+                                        <span class="inicio-ejes__rango-label">91% a 109%</span>
+                                    </div>
+                                    <div class="inicio-ejes__rango inicio-ejes__rango--azul">
+                                        <span class="inicio-ejes__rango-count">{{ $eje['distribucion']['azul'] }}</span>
+                                        <span class="inicio-ejes__rango-label">110% o más</span>
+                                    </div>
+                                </div>
+
+                                {{-- Link detalle --}}
+                                <a href="{{ url('/ped/eje-' . $eje['numero']) }}" class="inicio-ejes__link">
+                                    + detalle
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Reporte de Programas Derivados --}}
+                @if ($programasData->count() > 0)
+                    <div class="inicio-cumplimiento__header inicio-cumplimiento__header--programas">
+                        <h3>Avance por Programas Derivados</h3>
+                        <span class="inicio-cumplimiento__header-sub">Cumplimiento promedio de indicadores por tipo de
+                            programa</span>
+                    </div>
+
+                    <div class="inicio-cumplimiento__body">
+                        @php
+                            $programasAgrupados = $programasData->groupBy('tipo');
+                            $ordenDeseado = ['Sectoriales', 'Especiales', 'Regionales', 'Institucionales'];
+                            $programasOrdenados = $programasAgrupados->sortBy(function ($programas, $tipo) use (
+                                $ordenDeseado,
+                            ) {
+                                $posicion = array_search($tipo, $ordenDeseado);
+                                return $posicion !== false ? $posicion : 999;
+                            });
+                        @endphp
+
+                        {{-- Buscador General de Programas Derivados --}}
+                        <div class="row mb-4 justify-content-center">
+                            <div class="col-md-8 col-lg-6">
+                                <div class="input-group shadow-sm rounded-pill overflow-hidden border">
+                                    <span class="input-group-text bg-white border-0 ps-3">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </span>
+                                    <input type="text" id="buscador-programas" class="form-control border-0 ps-2"
+                                        placeholder="Buscar programa derivado por nombre..." style="box-shadow: none;">
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Pestañas de Navegación por Tipo de Programa --}}
+                        <ul class="nav nav-pills" id="programasTab" role="tablist">
+                            @foreach ($programasOrdenados as $tipo => $programas)
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link @if ($loop->first) active @endif"
+                                        id="tab-{{ Illuminate\Support\Str::slug($tipo) }}" data-bs-toggle="pill"
+                                        data-bs-target="#pane-{{ Illuminate\Support\Str::slug($tipo) }}" type="button"
+                                        role="tab" aria-controls="pane-{{ Illuminate\Support\Str::slug($tipo) }}"
+                                        aria-selected="{{ $loop->first ? 'true' : 'false' }}">
+                                        {{ $tipo }}
+                                    </button>
+                                </li>
+                            @endforeach
+                        </ul>
+
+                        {{-- Contenedor de Contenidos por Pestaña --}}
+                        <div class="tab-content" id="programasTabContent">
+                            @foreach ($programasOrdenados as $tipo => $programas)
+                                <div class="tab-pane fade @if ($loop->first) show active @endif"
+                                    id="pane-{{ Illuminate\Support\Str::slug($tipo) }}" role="tabpanel"
+                                    aria-labelledby="tab-{{ Illuminate\Support\Str::slug($tipo) }}">
+
+                                    {{-- Filtro de Grupos para la pestaña de Institucionales --}}
+                                    @if ($tipo === 'Institucionales' && count($gruposInstitucionales) > 0)
+                                        <div class="d-flex justify-content-center flex-wrap gap-2 mb-4"
+                                            id="grupo-filters">
+                                            <button
+                                                class="btn btn-danger btn-sm rounded-pill px-3 py-1 group-filter-btn active"
+                                                data-group-filter="all">
+                                                Todos
+                                            </button>
+                                            @foreach ($gruposInstitucionales as $grupo)
+                                                <button
+                                                    class="btn btn-outline-danger btn-sm rounded-pill px-3 py-1 group-filter-btn"
+                                                    data-group-filter="{{ Illuminate\Support\Str::slug($grupo) }}">
+                                                    {{ $grupo }}
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    @endif
+
+                                    <div class="inicio-programas__grid">
+                                        @foreach ($programas as $programa)
+                                            <a href="{{ url('/ped-programas/' . $programa['tipo_slug'] . '/' . Illuminate\Support\Str::slug($programa['nombre'])) }}"
+                                                class="inicio-programa-card"
+                                                data-nombre="{{ strtolower($programa['nombre']) }}"
+                                                @if ($tipo === 'Institucionales') data-grupo="{{ Illuminate\Support\Str::slug($programa['grupo'] ?? '') }}" @endif
+                                                style="border-left-color: {{ $programa['color'] ?? '#691A32' }};">
+                                                <div class="inicio-programa-card__indicator"
+                                                    style="background-color: {{ $programa['color'] ?? '#691A32' }};">
+                                                    {{ $programa['id'] }}
+                                                </div>
+                                                <div class="inicio-programa-card__body">
+                                                    <div class="inicio-programa-card__name">{{ $programa['nombre'] }}
+                                                    </div>
+                                                    <div class="inicio-programa-card__avance"
+                                                        style="color: {{ $programa['semaforo_color'] }};">
+                                                        {{ number_format($programa['avance'], 2) }}%
+                                                    </div>
+                                                    <div class="inicio-programa-card__count">
+                                                        {{ $programa['total_indicadores'] }} indicadores
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+            </div>
+        </div>
+    </section>
+
+    {{-- ============================================================
+     5. VISIÓN ESTRATÉGICA
+     ============================================================ --}}
+    <section class="inicio-vision" id="vision-estrategica">
+        <div class="inicio-vision__container">
+            <p class="inicio-section-subtitle">Plan Estatal de Desarrollo 2024-2030</p>
+            <h2 class="inicio-section-title">Visión Estratégica</h2>
+
+
+            <div class="inicio-vision__grid">
+                <div class="inicio-vision__image-wrapper">
+                    <img src="{{ asset('img/esquemas/PED2024-2030.png') }}" alt="Esquema PED 2024-2030"
+                        class="inicio-vision__image">
+                </div>
+                <div class="inicio-vision__text">
+                    <h2>Enfoque</h2>
+                    <p>
+                        El PED 2024-2030 se distingue por su carácter innovador y por mantener
+                        plena observancia de las disposiciones jurídicas. Su rasgo más sobresaliente
+                        es la colaboración inédita de los poderes jurisdiccionales en su elaboración.
+                        Este hecho marca un punto de inflexión en el estado porque se adopta una
+                        gobernanza inclusiva como elemento eficaz de planeación, con lo cual se
+                        fortalece la visión integral del desarrollo y se consolida el modelo de gobierno que
+                        se habrá de seguir. Este modelo es el del Humanismo Mexicano, planteado en el
+                        Plan Nacional de Desarrollo 2025-2030, el cual se verá reflejado en la entidad bajo
+                        un enfoque de Bioética Social que se cimienta en tres dimensiones:
+                    </p>
+                    <ul>
+                        <li><strong>a) Seguridad.</strong> Mediante un trabajo coordinado, se garantizarán entornos seguros
+                            que permitan tener condiciones de vida dignas y la protección ante adversidades.</li>
+                        <li><strong>b) Justicia.</strong> Este término representará equidad en el acceso a la salud,
+                            educación, oportunidades laborales y mecanismos eficaces para corregir discrepancias
+                            estructurales.</li>
+                        <li><strong>c) Riqueza Comunitaria.</strong> Se instrumentará una nueva forma de gobernar, que
+                            implicará la priorización de los derechos sociales, reconociendo al ser humano desde su
+                            integridad como un agente capaz de fortalecer la solidaridad, la cultura, la participación, el
+                            sentido de pertenencia y los saberes ancestrales.</li>
+                    </ul>
+                    <p>
+                        Como se puede observar, este documento trasciende la mera gestión
+                        administrativa. Se erige como una guía que nos orientará en la superación de
+                        los desafíos que enfrentamos, con el objetivo de reducir las desigualdades
+                        sociales, fortalecer la seguridad, impulsar el desarrollo económico, asegurar la
+                        sostenibilidad ambiental y consolidar un gobierno eficiente y transparente.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- ============================================================
+     6. ESQUEMA INSTITUCIONAL
+     ============================================================ --}}
+    <section class="inicio-esquema" id="esquema">
+        <div class="inicio-esquema__container">
+            <p class="inicio-section-subtitle">Sistema Estatal de Planeación Democrática</p>
+            <h2 class="inicio-section-title">Esquema Integral</h2>
+
+            <div class="inicio-esquema__grid">
+                {{-- Esquema del SEPD --}}
+                <div class="inicio-esquema__block">
+                    <img src="{{ asset('img/Banners/General/sepd.png') }}"
+                        alt="Sistema Estatal de Planeación Democrática" style="max-width: 800px;">
+                    <p>
+                        El esquema integral define el conjunto de procedimientos y actividades mediante las cuales
+                        las instituciones de la Administración Pública Estatal y Municipal, entre sí, y en colaboración con
+                        los sectores de la sociedad, toman decisiones para llevar de forma coordinada el proceso de
+                        planeación a fin de garantizar el desarrollo integral y sostenible del estado.
+                    </p>
+                </div>
+
+                {{-- Pirámide de programas derivados --}}
+                <div class="inicio-esquema__block">
+                    <img src="{{ asset('img/esquemas/piramide.png') }}"
+                        alt="Esquema de pirámide de los programas derivados" style="max-width: 600px;">
+                    <p>
+                        Posteriormente, a través de la vinculación con el Sistema de Evaluación del Desempeño, el
+                        esquema integral de seguimiento se articula entre toda la APE, la sociedad, las regiones y los
+                        municipios.
+                    </p>
+                </div>
+
+                {{-- Esquema SED --}}
+                <div class="inicio-esquema__block">
+                    <img src="{{ asset('img/Banners/General/esquema_sed.png') }}"
+                        alt="Esquema de Seguimiento del Sistema de Evaluación del Desempeño" style="max-width: 800px;">
+                    <p>
+                        De tal forma el SPED automatiza el proceso de seguimiento de las acciones y metas de los
+                        instrumentos
+                        de planeación, el Informe de Gobierno, los programas presupuestales y los ODS de la Agenda 2030.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- ============================================================
+     7. FUENTES DE CONSULTA (rediseñada)
+     ============================================================ --}}
+    <section class="inicio-fuentes" id="fuentes">
+        <div class="inicio-fuentes__container">
+            <p class="inicio-section-subtitle"></p>
+            <h2 class="inicio-section-title">Fuentes de Consulta</h2>
+
+            <div class="inicio-fuentes__track-wrapper">
+                <div class="inicio-fuentes__track" id="fuentesTrack">
+                    @php
+                        $fuentes = [
+                            ['url' => 'https://www.iadb.org/es', 'img' => 'BID.png', 'alt' => 'BID'],
+                            [
+                                'url' => 'https://www.coneval.org.mx/Paginas/principal.aspx',
+                                'img' => 'CONEVAL.png',
+                                'alt' => 'CONEVAL',
+                            ],
+                            ['url' => 'https://imco.org.mx/', 'img' => 'IMCO.png', 'alt' => 'IMCO'],
+                            ['url' => 'https://www.inegi.org.mx/', 'img' => 'INEGI.png', 'alt' => 'INEGI'],
+                            [
+                                'url' => 'https://www.transparenciapresupuestaria.gob.mx/',
+                                'img' => 'OBSERVATORIO.png',
+                                'alt' => 'Observatorio',
+                            ],
+                            [
+                                'url' => 'https://www1.undp.org/content/undp/es/home.html',
+                                'img' => 'PNUD.png',
+                                'alt' => 'PNUD',
+                            ],
+                            ['url' => 'https://www.gob.mx/siap', 'img' => 'SADER.png', 'alt' => 'SADER'],
+                            [
+                                'url' =>
+                                    'https://www.gob.mx/sep/acciones-y-programas/estadistica-educativa-15782?state=published',
+                                'img' => 'SEP.png',
+                                'alt' => 'SEP',
+                            ],
+                            [
+                                'url' =>
+                                    'https://www.gob.mx/sesnsp/acciones-y-programas/informacion-de-incidencia-delictiva-nacional?state=published',
+                                'img' => 'SESNSP.png',
+                                'alt' => 'SESNSP',
+                            ],
+                            [
+                                'url' => 'http://www.stps.gob.mx/gobmx/estadisticas/',
+                                'img' => 'STPS.png',
+                                'alt' => 'STPS',
+                            ],
+                        ];
+                    @endphp
+                    @foreach ($fuentes as $fuente)
+                        <div class="inicio-fuentes__item">
+                            <a href="{{ $fuente['url'] }}" target="_blank" rel="noopener noreferrer"
+                                title="{{ $fuente['alt'] }}">
+                                <img src="{{ asset('img/sitios_interes/' . $fuente['img']) }}"
+                                    alt="{{ $fuente['alt'] }}">
+                            </a>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </section>
 
 @section('jss-final')
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        var slideTrack = document.querySelector(".slide-track");
-        var swiperContainer = document.querySelector(".mySwiper");
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // 1. Gauge principal
+            var mainGaugeEl = document.getElementById('mainGaugeInicio');
+            if (mainGaugeEl) {
+                var mainChart = echarts.init(mainGaugeEl);
+                var avancePlan = Number("{{ $avancePlan }}");
+                var colorPlan = "{{ $colorPlan }}";
 
-        // Si existe slide-track, duplicamos su contenido
-        if (slideTrack) {
-            slideTrack.innerHTML += slideTrack.innerHTML;
-        }
+                mainChart.setOption({
+                    series: [{
+                        type: 'gauge',
+                        startAngle: 180,
+                        endAngle: 0,
+                        min: 0,
+                        max: 100,
+                        progress: {
+                            show: true,
+                            width: 18,
+                            roundCap: true,
+                            itemStyle: {
+                                color: colorPlan
+                            }
+                        },
+                        axisLine: {
+                            lineStyle: {
+                                width: 18,
+                                color: [
+                                    [1, '#e7e7e7']
+                                ]
+                            }
+                        },
+                        axisTick: {
+                            show: false
+                        },
+                        splitLine: {
+                            show: false
+                        },
+                        axisLabel: {
+                            show: false
+                        },
+                        pointer: {
+                            show: false
+                        },
+                        detail: {
+                            show: false
+                        },
+                        data: [{
+                            value: avancePlan > 100 ? 100 : avancePlan
+                        }]
+                    }]
+                });
 
-        // Si existe un Swiper, lo inicializamos
-        if (swiperContainer) {
-            var swiper = new Swiper(".mySwiper", {
-                spaceBetween: 30,
-                centeredSlides: true,
-                autoplay: {
-                    delay: 4500,
-                    disableOnInteraction: false,
-                },
-                pagination: {
-                    el: ".swiper-pagination",
-                    clickable: true,
-                },
-                navigation: {
-                    nextEl: ".swiper-button-next",
-                    prevEl: ".swiper-button-prev",
-                },
+                window.addEventListener('resize', function() {
+                    mainChart.resize();
+                });
+            }
+
+            // 2. Duplicar track de fuentes para scroll infinito
+            var fuentesTrack = document.getElementById('fuentesTrack');
+            if (fuentesTrack) {
+                fuentesTrack.innerHTML += fuentesTrack.innerHTML;
+            }
+
+            // 3. Smooth scroll para pills de ejes
+            document.querySelectorAll('.inicio-eje-pill').forEach(function(pill) {
+                pill.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }
+                });
             });
-        }
-    });
-</script>
 
+            // 4. Buscador y Filtros de Grupo para Programas Derivados
+            var buscador = document.getElementById('buscador-programas');
+            var groupFilterBtns = document.querySelectorAll('.group-filter-btn');
+            var programCards = document.querySelectorAll('.inicio-programa-card');
+
+            var searchVal = '';
+            var activeGroupVal = 'all';
+
+            function filterPrograms() {
+                programCards.forEach(function(card) {
+                    var nombre = card.getAttribute('data-nombre') || '';
+                    var grupo = card.getAttribute('data-grupo') || '';
+
+                    var matchesSearch = nombre.includes(searchVal);
+                    var matchesGroup = (activeGroupVal === 'all' || grupo === activeGroupVal);
+
+                    if (matchesSearch && matchesGroup) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+
+            if (buscador) {
+                buscador.addEventListener('input', function(e) {
+                    searchVal = e.target.value.toLowerCase().trim();
+                    filterPrograms();
+                });
+            }
+
+            groupFilterBtns.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    groupFilterBtns.forEach(function(b) {
+                        b.classList.remove('btn-danger', 'active');
+                        b.classList.add('btn-outline-danger');
+                    });
+
+                    this.classList.add('btn-danger', 'active');
+                    this.classList.remove('btn-outline-danger');
+
+                    activeGroupVal = this.getAttribute('data-group-filter');
+                    filterPrograms();
+                });
+            });
+
+            // Al cambiar de pestaña (Sectoriales, Especiales, etc.) reseteamos filtros
+            var tabTriggers = document.querySelectorAll('button[data-bs-toggle="pill"]');
+            tabTriggers.forEach(function(tabTrigger) {
+                tabTrigger.addEventListener('shown.bs.tab', function(e) {
+                    if (buscador) {
+                        buscador.value = '';
+                    }
+                    searchVal = '';
+                    activeGroupVal = 'all';
+
+                    groupFilterBtns.forEach(function(b) {
+                        if (b.getAttribute('data-group-filter') === 'all') {
+                            b.classList.add('btn-danger', 'active');
+                            b.classList.remove('btn-outline-danger');
+                        } else {
+                            b.classList.remove('btn-danger', 'active');
+                            b.classList.add('btn-outline-danger');
+                        }
+                    });
+
+                    filterPrograms();
+                });
+            });
+        });
+    </script>
 @endsection
 @endsection
