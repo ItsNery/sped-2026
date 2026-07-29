@@ -19,6 +19,7 @@ use App\Models\CatProgramaDerivadoEspecial;
 use App\Models\CatProgramaDerivadoRegional;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Spatie\Browsershot\Browsershot;
 
 /**
  * Class HomeController
@@ -35,6 +36,51 @@ class HomeController extends Controller
      * @return \Illuminate\View\View
      */
     public function show(Indicador $indicador)
+    {
+        return view('ficha-tecnica', $this->fichaData($indicador));
+    }
+
+    /**
+     * Muestra la misma plantilla que se utiliza para generar el PDF.
+     */
+    public function fichaPreview(Indicador $indicador)
+    {
+        return view('ficha-tecnica-pdf', $this->fichaPdfData($indicador));
+    }
+
+    /**
+     * Genera la ficha mediante Chromium para conservar el diseño CSS real.
+     */
+    public function downloadFicha(Indicador $indicador)
+    {
+        $nombre = Str::slug($indicador->nombre ?: 'indicador');
+        $html = view('ficha-tecnica-pdf', $this->fichaPdfData($indicador))->render();
+        $pdf = Browsershot::html($html)
+            ->format('a4')
+            ->margins(5, 5, 5, 5)
+            ->timeout(120)
+            ->protocolTimeout(120)
+            ->showBackground()
+            ->setOption('viewport', [
+                'width' => 1240,
+                'height' => 1754,
+                'deviceScaleFactor' => 2,
+            ])
+            ->setOption('args', [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--font-render-hinting=none',
+            ])
+            ->waitForFunction('window.pdfReady === true', null, 110000)
+            ->pdf();
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => "attachment; filename=\"ficha-tecnica-{$nombre}.pdf\"",
+        ]);
+    }
+
+    private function fichaData(Indicador $indicador): array
     {
         // 1. Cargamos el indicador con sus relaciones.
         $indicador->load(['datosAnuales' => function ($q) {
@@ -69,7 +115,175 @@ class HomeController extends Controller
         // 4. Asignar el color final o el default
         $indicador->color = $colorFinal ?? $colorPorDefectoGeneral;
 
-        return view('ficha-tecnica', compact('indicador'));
+        return compact('indicador');
+    }
+
+    private function fichaPdfData(Indicador $indicador): array
+    {
+        $data = $this->fichaData($indicador);
+        $chart = $this->fichaChartData($indicador);
+
+        return [
+            'indicador' => $data['indicador'],
+            'chartConfig' => $chart['config'],
+            'semaforizacion' => $chart['semaforizacion'],
+            'colorSemaforo' => $chart['colorSemaforo'],
+            'esDatoLineaBase' => $chart['esDatoLineaBase'],
+            'pdfAsset' => fn (string $path): string => $this->inlinePublicAsset($path),
+            'pdfCss' => $this->inlineFichaPdfCss(),
+            'pdfEcharts' => file_get_contents(public_path('js/echarts.min.js')),
+            'pdfFichaJs' => file_get_contents(public_path('js/ficha-tecnica.js')),
+        ];
+    }
+
+    private function fichaChartData(Indicador $indicador): array
+    {
+        $semaforizacion = $indicador->semaforizacion_validada ?: 'No Clasificado';
+        $colors = [
+            'excedido' => '#0d6efd',
+            'aceptable' => '#198754',
+            'moderado' => '#ffc107',
+            'insuficiente' => '#dc3545',
+            'solo línea base' => '#adb5bd',
+        ];
+        $colorSemaforo = $colors[mb_strtolower($semaforizacion)] ?? '#6c757d';
+        $ultimoDatoValidado = $indicador->datos_anuales_validados
+            ->filter(fn ($dato) => trim((string) $dato->valor_dato) !== '')
+            ->sortByDesc('anio')
+            ->first();
+        $esDatoLineaBase = !$ultimoDatoValidado
+            || ($indicador->linea_base && (int) $ultimoDatoValidado->anio <= (int) $indicador->linea_base);
+        $anioInicio = min(
+            $indicador->linea_base ? (int) $indicador->linea_base : 2015,
+            $indicador->datos_anuales_validados->min('anio') ?: 2015
+        );
+        $categorias = [];
+        $datos = [];
+        $lineaBase = [];
+        $meta = [];
+        $valorLB = $indicador->dato_linea_base !== null
+            ? (float) preg_replace('/[^0-9.-]/', '', (string) $indicador->dato_linea_base)
+            : null;
+        $valorMeta = $indicador->meta_2024 !== null
+            ? (float) preg_replace('/[^0-9.-]/', '', (string) $indicador->meta_2024)
+            : null;
+
+        for ($year = $anioInicio; $year <= 2030; $year++) {
+            $categorias[] = (string) $year;
+            $dato = $indicador->datos_anuales_validados->firstWhere('anio', $year);
+            $valor = $dato && trim((string) $dato->valor_dato) !== ''
+                ? preg_replace('/[^0-9.-]/', '', (string) $dato->valor_dato)
+                : null;
+            $datos[] = is_numeric($valor) ? (float) $valor : null;
+            $lineaBase[] = $year == (int) $indicador->linea_base ? $valorLB : null;
+            $meta[] = $year === 2030 ? $valorMeta : null;
+        }
+
+        $avance = (float) ($indicador->avance_validado ?? $indicador->avance ?? 0);
+
+        return [
+            'semaforizacion' => $semaforizacion,
+            'colorSemaforo' => $colorSemaforo,
+            'esDatoLineaBase' => $esDatoLineaBase,
+            'config' => [
+                'chartVal' => min(100, $avance),
+                'colorSemaforo' => $colorSemaforo,
+                'nombreSerieLineaBase' => 'Línea Base ' . ($indicador->linea_base ?? ''),
+                'datosLineaBasePunto' => $lineaBase,
+                'unidadMedida' => $indicador->unidad_medida ?? 'Valor',
+                'datosParaGraficaPrincipal' => $datos,
+                'datosMetaPunto' => $meta,
+                'colorIndicador' => $indicador->color ?? '#008FFB',
+                'categoriasEjeX' => $categorias,
+                'esDatoLineaBase' => $esDatoLineaBase,
+                'idIndicador' => $indicador->id,
+                'pdfMode' => true,
+                'ultimoDato' => $ultimoDatoValidado?->valor_dato,
+                'anioUltimoDato' => $ultimoDatoValidado?->anio,
+            ],
+        ];
+    }
+
+    private function inlineFichaPdfCss(): string
+    {
+        $files = [
+            public_path('fontAwesome/css/fontawesome.css'),
+            public_path('fontAwesome/css/brands.css'),
+            public_path('fontAwesome/css/solid.css'),
+            public_path('css/media_queries.css'),
+            public_path('css/efectos.css'),
+            public_path('css/app.css'),
+            public_path('css/estilos.css'),
+        ];
+
+        $seen = [];
+        $css = '';
+        foreach ($files as $file) {
+            $css .= $this->inlineCssFile($file, $seen) . "\n";
+        }
+
+        return $css;
+    }
+
+    private function inlineCssFile(string $path, array &$seen): string
+    {
+        $realPath = realpath($path);
+        if (!$realPath || isset($seen[$realPath])) {
+            return '';
+        }
+
+        $seen[$realPath] = true;
+        $css = file_get_contents($realPath);
+
+        $css = preg_replace_callback(
+            '/@import\s+(?:url\(\s*)?["\']?([^\)"\';]+)["\']?\s*\)?\s*;/i',
+            function (array $match) use ($realPath, &$seen): string {
+                $importPath = realpath(dirname($realPath) . DIRECTORY_SEPARATOR . trim($match[1]));
+                return $importPath ? $this->inlineCssFile($importPath, $seen) : '';
+            },
+            $css
+        );
+
+        return preg_replace_callback(
+            '/url\(\s*(["\']?)([^)"\']+)\1\s*\)/i',
+            function (array $match) use ($realPath): string {
+                $url = trim($match[2]);
+                if ($url === '' || str_starts_with($url, 'data:') || str_starts_with($url, 'http://') || str_starts_with($url, 'https://') || str_starts_with($url, '#')) {
+                    return $match[0];
+                }
+
+                $assetPath = realpath(dirname($realPath) . DIRECTORY_SEPARATOR . $url);
+                if (!$assetPath || !is_file($assetPath)) {
+                    return $match[0];
+                }
+
+                $mime = match (strtolower(pathinfo($assetPath, PATHINFO_EXTENSION))) {
+                    'css' => 'text/css',
+                    'eot' => 'application/vnd.ms-fontobject',
+                    'otf' => 'font/otf',
+                    'svg' => 'image/svg+xml',
+                    'ttf' => 'font/ttf',
+                    'woff' => 'font/woff',
+                    'woff2' => 'font/woff2',
+                    default => mime_content_type($assetPath) ?: 'application/octet-stream',
+                };
+
+                return 'url("data:' . $mime . ';base64,' . base64_encode(file_get_contents($assetPath)) . '")';
+            },
+            $css
+        );
+    }
+
+    private function inlinePublicAsset(string $path): string
+    {
+        $path = ltrim($path, '/');
+        $assetPath = public_path($path);
+        if (!is_file($assetPath)) {
+            return asset($path);
+        }
+
+        $mime = mime_content_type($assetPath) ?: 'application/octet-stream';
+        return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($assetPath));
     }
 
     /**

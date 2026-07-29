@@ -143,10 +143,27 @@
                                 <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}"
                                     id="ped-pane-{{ Illuminate\Support\Str::slug($tipo) }}" role="tabpanel"
                                     aria-labelledby="ped-tab-{{ Illuminate\Support\Str::slug($tipo) }}">
+                                    @if($tipo === 'Institucionales' && $gruposInstitucionales->isNotEmpty())
+                                        <div class="d-flex justify-content-center flex-wrap gap-2 mb-4"
+                                            id="ped-grupo-filters">
+                                            <button class="btn btn-danger btn-sm rounded-pill px-3 py-1 ped-group-filter-btn active"
+                                                data-group-filter="all">
+                                                Todos
+                                            </button>
+                                            @foreach($gruposInstitucionales as $grupo)
+                                                <button class="btn btn-outline-danger btn-sm rounded-pill px-3 py-1 ped-group-filter-btn"
+                                                    data-group-filter="{{ Illuminate\Support\Str::slug($grupo) }}">
+                                                    {{ $grupo }}
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    @endif
+
                                     <div class="ped-dashboard__programas-grid">
                                         @foreach($programas as $programa)
                                             <article class="ped-dashboard__programa-card ped-program-card"
                                                 data-nombre="{{ strtolower($programa['nombre']) }}"
+                                                data-grupo="{{ Illuminate\Support\Str::slug($programa['grupo'] ?? '') }}"
                                                 style="--card-accent: {{ $programa['color'] }}; --card-status: {{ $programa['semaforo_color'] }};">
                                                 <div class="ped-dashboard__card-top">
                                                     <span class="ped-dashboard__card-index">{{ $programa['id'] }}</span>
@@ -237,27 +254,66 @@
             });
 
             const programSearch = document.getElementById('ped-program-search');
+            const groupFilterBtns = document.querySelectorAll('.ped-group-filter-btn');
+            let activeGroupValue = 'all';
+
+            function filterPrograms() {
+                const searchValue = (programSearch ? programSearch.value : '').toLowerCase().trim();
+
+                document.querySelectorAll('#pedProgramasTabContent .tab-pane').forEach(function(pane) {
+                    let visibleCards = 0;
+
+                    pane.querySelectorAll('.ped-program-card').forEach(function(card) {
+                        const matchesSearch = (card.dataset.nombre || '').includes(searchValue);
+                        const matchesGroup = activeGroupValue === 'all' || (card.dataset.grupo || '') === activeGroupValue;
+                        const visible = matchesSearch && matchesGroup;
+
+                        card.style.display = visible ? '' : 'none';
+                        if (visible) visibleCards++;
+                    });
+
+                    const emptyMessage = pane.querySelector('.ped-dashboard__empty--search');
+                    if (emptyMessage) {
+                        emptyMessage.classList.toggle('d-none', visibleCards > 0);
+                    }
+                });
+            }
 
             if (programSearch) {
                 programSearch.addEventListener('input', function() {
-                    const searchValue = this.value.toLowerCase().trim();
-
-                    document.querySelectorAll('#pedProgramasTabContent .tab-pane').forEach(function(pane) {
-                        let visibleCards = 0;
-
-                        pane.querySelectorAll('.ped-program-card').forEach(function(card) {
-                            const matches = (card.dataset.nombre || '').includes(searchValue);
-                            card.style.display = matches ? '' : 'none';
-                            if (matches) visibleCards++;
-                        });
-
-                        const emptyMessage = pane.querySelector('.ped-dashboard__empty--search');
-                        if (emptyMessage) {
-                            emptyMessage.classList.toggle('d-none', visibleCards > 0);
-                        }
-                    });
+                    filterPrograms();
                 });
             }
+
+            groupFilterBtns.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    groupFilterBtns.forEach(function(filterBtn) {
+                        filterBtn.classList.remove('btn-danger', 'active');
+                        filterBtn.classList.add('btn-outline-danger');
+                    });
+
+                    this.classList.add('btn-danger', 'active');
+                    this.classList.remove('btn-outline-danger');
+                    activeGroupValue = this.dataset.groupFilter || 'all';
+                    filterPrograms();
+                });
+            });
+
+            document.querySelectorAll('#pedProgramasTabs [data-bs-toggle="pill"]').forEach(function(tab) {
+                tab.addEventListener('shown.bs.tab', function() {
+                    if (programSearch) programSearch.value = '';
+                    activeGroupValue = 'all';
+
+                    groupFilterBtns.forEach(function(filterBtn) {
+                        const isAll = filterBtn.dataset.groupFilter === 'all';
+                        filterBtn.classList.toggle('btn-danger', isAll);
+                        filterBtn.classList.toggle('active', isAll);
+                        filterBtn.classList.toggle('btn-outline-danger', !isAll);
+                    });
+
+                    filterPrograms();
+                });
+            });
 
             window.addEventListener('resize', function() {
                 createdCharts.forEach(function(chart) {

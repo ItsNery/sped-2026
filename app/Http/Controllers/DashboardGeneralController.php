@@ -86,6 +86,12 @@ class DashboardGeneralController extends Controller
         // 3. Avance por Programas Derivados
         $programasData = $this->getProgramasAvance($planId, $soloValidados);
         $programasDerivadosAgrupados = $programasData->groupBy('tipo');
+        $gruposInstitucionales = CatProgramaDerivadoInstitucional::where('plan_estatal', $planId)
+            ->whereNotNull('grupo')
+            ->where('grupo', '!=', '')
+            ->distinct()
+            ->orderBy('grupo')
+            ->pluck('grupo');
 
         $colorPlan = $this->getSemaforoColor($avancePlan);
 
@@ -97,6 +103,7 @@ class DashboardGeneralController extends Controller
             'ejesData',
             'programasData',
             'programasDerivadosAgrupados',
+            'gruposInstitucionales',
             'soloValidados'
         ));
     }
@@ -151,7 +158,8 @@ class DashboardGeneralController extends Controller
                     'avance' => $avance,
                     'color' => $prog->color,
                     'semaforo_color' => $this->getSemaforoColor($avance),
-                    'total_indicadores' => $indicadores->count()
+                    'total_indicadores' => $indicadores->count(),
+                    'grupo' => $prog->grupo ?? null,
                 ];
             }
         }

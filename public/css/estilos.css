@@ -57,9 +57,83 @@
     font-family: "Gilroy-Bold";
     src: url("./fuentes/Gilroy/Gilroy-Bold.ttf");
 }
+
+@font-face {
+    font-family: "Gilroy-SemiBold";
+    src: url("./fuentes/Gilroy/Gilroy-SemiBold.ttf") format("truetype");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
 @font-face {
     font-family: "Gilroy-Black";
     src: url("./fuentes/Gilroy/Gilroy-Black.ttf");
+}
+
+/* Familias tipográficas canónicas para interfaces nuevas. */
+@font-face {
+    font-family: "Corra Montserra";
+    src: url("./fuentes/Corra-Montserra/TTF/Corra_Montserra_Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Corra Montserra";
+    src: url("./fuentes/Corra-Montserra/TTF/Corra_Montserra_Medium.ttf") format("truetype");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Corra Montserra";
+    src: url("./fuentes/Corra-Montserra/TTF/Corra_Montserra_Semibold.ttf") format("truetype");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Gilroy";
+    src: url("./fuentes/Gilroy/Gilroy-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Gilroy";
+    src: url("./fuentes/Gilroy/Gilroy-Medium.ttf") format("truetype");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Gilroy";
+    src: url("./fuentes/Gilroy/Gilroy-SemiBold.ttf") format("truetype");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Gilroy";
+    src: url("./fuentes/Gilroy/Gilroy-Bold.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Gilroy";
+    src: url("./fuentes/Gilroy/Gilroy-Black.ttf") format("truetype");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
 }
 
 :root {
@@ -5289,68 +5363,6 @@ nav {
 
 }
 
-.ficha-label {
-    font-size: 0.85rem;
-    color: #6c757d;
-    font-weight: 600;
-    margin-bottom: 0.2rem;
-}
-
-.ficha-value {
-    font-size: 1.05rem;
-    color: #2b2b2b;
-    font-weight: 500;
-}
-
-.card-ficha-moderna {
-    border: none;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-    margin-bottom: 1.5rem;
-    background: #fff;
-}
-
-.ficha-section-title {
-    font-weight: 700;
-    font-size: 1.1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 1.5rem;
-    border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 0.5rem;
-}
-
-.table-historicos th {
-    color: white;
-    border: none;
-}
-
-.table-historicos td {
-    vertical-align: middle;
-    font-weight: 500;
-}
-
-@media print {
-    .card-ficha-moderna {
-        box-shadow: none;
-        border: 1px solid #dee2e6;
-    }
-
-    .ocultar_impresion {
-        display: none !important;
-    }
-
-    .col-md-8 {
-        width: 66% !important;
-        float: left;
-    }
-
-    .col-md-4 {
-        width: 33% !important;
-        float: left;
-    }
-}
-
 /* Clases auxiliares para bordes responsivos en la sección de Gestión */
 @media (min-width: 768px) {
     .border-end-sm {
@@ -5607,19 +5619,19 @@ nav {
 .nav-unificada .nav-item-modern {
     flex: 1 0 auto;
     min-width: 120px;
-    background-color: color-mix(in srgb, var(--nav-item-color) 14%, #ffffff);
+    background-color: rgba(157, 36, 73, 0.14);
     border: 1px solid #dee2e6;
     border-top: 0;
     border-radius: 0 0 12px 12px;
-    color: color-mix(in srgb, var(--nav-item-color) 72%, #212529);
+    color: #691a32;
     white-space: nowrap;
     font-size: 1.25rem;
     font-family: 'Gilroy-Bold', sans-serif;
 }
 
 .nav-unificada .nav-item-modern:hover:not(.active) {
-    background-color: color-mix(in srgb, var(--nav-item-color) 24%, #ffffff);
-    color: color-mix(in srgb, var(--nav-item-color) 86%, #212529);
+    background-color: rgba(157, 36, 73, 0.24);
+    color: #4f1427;
 }
 
 .nav-unificada .nav-item-modern.active {
@@ -5630,28 +5642,26 @@ nav {
     border-radius: 0 0 12px 12px;
     margin-top: -8px;
     padding-top: calc(0.5rem + 8px) !important;
-    clip-path: polygon(
-        0 0,
-        7% 0,
-        8.5% 0.5px,
-        10% 1px,
-        11.5% 2px,
-        13% 3.5px,
-        14.5% 5px,
-        16% 6.5px,
-        18% 8px,
-        82% 8px,
-        84% 6.5px,
-        85.5% 5px,
-        87% 3.5px,
-        88.5% 2px,
-        90% 1px,
-        91.5% 0.5px,
-        93% 0,
-        100% 0,
-        100% 100%,
-        0 100%
-    );
+    clip-path: polygon(0 0,
+            7% 0,
+            8.5% 0.5px,
+            10% 1px,
+            11.5% 2px,
+            13% 3.5px,
+            14.5% 5px,
+            16% 6.5px,
+            18% 8px,
+            82% 8px,
+            84% 6.5px,
+            85.5% 5px,
+            87% 3.5px,
+            88.5% 2px,
+            90% 1px,
+            91.5% 0.5px,
+            93% 0,
+            100% 0,
+            100% 100%,
+            0 100%);
     filter: drop-shadow(0 5px 6px rgba(0, 0, 0, 0.18));
     transform: translateY(1px);
 }
@@ -7068,5 +7078,1698 @@ nav {
         width: 48px;
         height: 48px;
         flex-basis: 48px;
+    }
+}
+
+/* Ficha técnica del indicador */
+/* =========================================================================
+   ESTILOS DE IMPRESIÓN Y PDF PARA FICHA TÉCNICA
+   ========================================================================= */
+
+/* Configuración nativa del navegador para impresión */
+@media print {
+    @page {
+        margin: 0.3cm;
+        size: A4;
+    }
+
+    body:has(.ficha-page) {
+        background-color: white !important;
+        font-size: 8pt !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
+
+/* =========================================================================
+   1. REGLAS PARA IMPRESIÓN NATIVA (@media print)
+   ========================================================================= */
+@media print {
+
+    /* Ocultar elementos innecesarios */
+    body:has(.ficha-page) :is(#navbar, .footer, .textura-footer, .navbar,
+        .ocultar_impresion, .btn, #btn-subir, .breadcrumb, .menu-overlay,
+        .mobile-menu, .row.nav-moderna, .row.banner-container) {
+        display: none !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Mostrar encabezado compacto */
+    #imprimir #encabezado {
+        display: block !important;
+        visibility: visible !important;
+        width: 100% !important;
+        margin: 0 auto 10px auto !important;
+        text-align: center !important;
+    }
+
+    #imprimir #encabezado img {
+        max-height: 55px !important;
+        object-fit: contain;
+        margin: 0 auto !important;
+    }
+
+    /* Ajuste de contenedores */
+    #imprimir,
+    #imprimir .container {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background-color: white !important;
+    }
+
+    #imprimir {
+        margin-top: 0 !important;
+    }
+
+    #imprimir .mt-2,
+    #imprimir .mt-3,
+    #imprimir .mt-4 {
+        margin-top: 0.2rem !important;
+    }
+
+    #imprimir .mb-4,
+    #imprimir .mb-5 {
+        margin-bottom: 0.3rem !important;
+    }
+
+    #imprimir .pb-3 {
+        padding-bottom: 0.3rem !important;
+    }
+
+    #imprimir .g-3,
+    #imprimir .g-4 {
+        gap: 0.3rem !important;
+    }
+
+    #imprimir .border-bottom {
+        border-bottom-width: 1px !important;
+    }
+
+    /* Forzar que las filas utilicen flexbox en impresión */
+    #imprimir .row {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    /* Secciones a ancho completo */
+    #imprimir .col-lg-6 {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    #imprimir .col-md-8 {
+        flex: 0 0 66.666667% !important;
+        max-width: 66.666667% !important;
+    }
+
+    #imprimir .col-md-4 {
+        flex: 0 0 33.333333% !important;
+        max-width: 33.333333% !important;
+    }
+
+    .pdf-page-break .col-md-8 {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    .pdf-page-break .col-md-4 {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    #imprimir .col-md-6 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+    }
+
+    #imprimir .col-md-3 {
+        flex: 0 0 25% !important;
+        max-width: 25% !important;
+    }
+
+    #imprimir .col-12 {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Tarjetas compactas */
+    .card-ficha-moderna {
+        padding: 0.4rem 0.5rem !important;
+        margin-top: 0.15rem !important;
+        margin-bottom: 0.15rem !important;
+        border: 1px solid #e9ecef !important;
+        box-shadow: none !important;
+        background-color: #fff !important;
+        break-inside: avoid !important;
+    }
+
+    #imprimir .card-ficha-moderna .p-4 {
+        padding: 0.4rem 0.5rem !important;
+    }
+
+    #imprimir .h-100 {
+        height: auto !important;
+    }
+
+    /* Salto de página para la gráfica histórica */
+    .pdf-page-break {
+        page-break-before: auto !important;
+        break-before: auto !important;
+    }
+
+    /* Ajuste de tipografía */
+    #imprimir h1 {
+        font-size: 1.2rem !important;
+        margin-bottom: 2px !important;
+    }
+
+    .ficha-section-title {
+        font-size: 0.85rem !important;
+        margin-bottom: 0.2rem !important;
+        border-bottom: 1px solid #f1f1f1;
+        padding-bottom: 2px;
+    }
+
+    .ficha-label {
+        font-size: 0.62rem !important;
+        margin-bottom: 0 !important;
+    }
+
+    .ficha-value {
+        font-size: 0.75rem !important;
+    }
+
+    #imprimir .fw-bold {
+        font-weight: 600 !important;
+    }
+
+    #imprimir .fs-4 {
+        font-size: 0.9rem !important;
+    }
+
+    #imprimir .fs-5 {
+        font-size: 0.8rem !important;
+    }
+
+    /* Oculta el velocímetro, solo mostramos badge y % */
+    #imprimir #gauge-ficha,
+    #imprimir .grafico-gauge-ficha {
+        display: none !important;
+    }
+
+    #imprimir #grafica-historica {
+        height: 300px !important;
+        width: 100% !important;
+        margin: 0 auto !important;
+        overflow: visible !important;
+    }
+
+    #imprimir .grafico-historico-ficha {
+        height: 300px !important;
+        width: 100% !important;
+    }
+
+    /* Tablas */
+    #imprimir .table-responsive {
+        overflow: visible !important;
+        max-height: none !important;
+    }
+
+    #imprimir .table-historicos td,
+    #imprimir .table-historicos th {
+        padding: 0.15rem 0.3rem !important;
+        font-size: 0.7rem !important;
+    }
+
+    #imprimir .table-historicos th {
+        color: #fff !important;
+    }
+
+    /* Compactar sección de gestión de gobierno */
+    #imprimir .border-end-sm {
+        border-right: none !important;
+    }
+
+    #imprimir .g-4 {
+        gap: 0.15rem !important;
+    }
+
+    #imprimir .mt-35px {
+        margin-top: 0 !important;
+    }
+
+    #imprimir .py-4 {
+        padding-top: 0.3rem !important;
+        padding-bottom: 0.3rem !important;
+    }
+
+    #imprimir .fs-35rem {
+        font-size: 1.5rem !important;
+    }
+
+    #imprimir .badge {
+        font-size: 0.6rem !important;
+        padding: 0.2rem 0.5rem !important;
+    }
+
+    /* Oculta el popover en impresión */
+    #imprimir [data-bs-toggle="popover"] {
+        cursor: default !important;
+    }
+
+    /* Evolución histórica a ancho completo */
+    .pdf-page-break .border-end-md {
+        border-right: none !important;
+    }
+
+    .pdf-page-break .pe-md-4 {
+        padding-right: 0 !important;
+    }
+
+    .pdf-page-break .ps-md-4 {
+        padding-left: 0 !important;
+    }
+
+    .pdf-page-break .col-md-4,
+    .pdf-page-break .col-md-8 {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    .pdf-page-break .text-center {
+        overflow: visible !important;
+    }
+}
+
+/* =========================================================================
+   2. FICHA EN PANTALLA
+   ========================================================================= */
+
+/* El fondo aporta identidad sin competir con la información de las tarjetas. */
+.contenedor__ficha {
+    background-color: transparent;
+    background-image: none;
+    border-radius: 18px;
+    padding: 1.25rem 1.5rem !important;
+}
+
+.ficha-background {
+    min-height: 100vh;
+    padding-top: 0.1px;
+    background-color: #f7f4f0;
+    background-image: url('../img/fondo-pajaro.png');
+    background-position: center top;
+    background-repeat: no-repeat;
+    /* background-size: cover; */
+}
+
+.ficha-performance-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: start !important;
+}
+
+.ficha-performance-grid>[class*="col-md-"] {
+    width: auto;
+    max-width: none;
+    flex: none;
+}
+
+.ficha-performance-grid>.col-md-8 {
+    align-self: start;
+}
+
+.ficha-performance-grid>.col-md-2 {
+    grid-column: span 2;
+}
+
+.ficha-performance-grid>.col-md-6 {
+    grid-column: span 6;
+}
+
+.ficha-metrics {
+    align-items: start;
+}
+
+.ficha-metric {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.ficha-status-panel {
+    min-height: 0;
+    padding-top: 0;
+}
+
+.ficha-status-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: 1rem;
+    align-items: start;
+}
+
+.ficha-status-latest,
+.ficha-status-result {
+    min-width: 0;
+}
+
+.ficha-status-latest {
+    padding: 0 0.5rem;
+}
+
+.ficha-status-result {
+    padding: 0 0.5rem;
+}
+
+.ficha-status-result .grafico-gauge-ficha {
+    height: 92px;
+    margin: 0;
+}
+
+.ficha-status-result .ficha-status-progress {
+    margin-top: 0.25rem !important;
+}
+
+.ficha-status-result .py-4 {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+}
+
+.ficha-management-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.55rem;
+}
+
+.ficha-metric-card {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 10px;
+    background: rgba(250, 248, 246, 0.8);
+}
+
+.ficha-metric-card__icon {
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: #f1e5e5;
+    color: #9d2449;
+    font-size: 0.75rem;
+}
+
+.ficha-metric-card__value {
+    overflow: hidden;
+    font-family: 'Gilroy-Bold', sans-serif;
+    font-size: 1.15rem;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ficha-metric-card__value--text {
+    color: var(--ficha-ink);
+    font-family: 'Gilroy-SemiBold', sans-serif;
+    font-size: 0.9rem;
+}
+
+.ficha-performance-board {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr) minmax(180px, 1.2fr);
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    padding: 0.65rem;
+    border-radius: 12px;
+    margin-top: 0.25rem;
+    background: linear-gradient(110deg, rgba(248, 244, 241, 0.8), rgba(255, 255, 255, 0.7));
+}
+
+.ficha-performance-board__latest,
+.ficha-performance-board__status,
+.ficha-performance-board__gauge {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.ficha-performance-board__status,
+.ficha-performance-board__gauge {
+    padding-left: 0.65rem;
+    border-left: 1px solid #e8dfda;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.ficha-performance-board__value {
+    margin-top: 0.35rem;
+    font-family: 'Gilroy-Bold', sans-serif;
+    font-size: 1.55rem;
+    line-height: 1.1;
+}
+
+.ficha-performance-board__status .badge {
+    margin-top: 0.25rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.45px;
+    text-transform: uppercase;
+}
+
+.ficha-performance-board__gauge {
+    text-align: center;
+}
+
+.ficha-performance-board__gauge .grafico-gauge-ficha {
+    display: block;
+    width: 100%;
+    min-height: 72px;
+    height: 72px;
+    margin: 0;
+}
+
+.ficha-performance-board__percent {
+    margin-top: 0.15rem;
+    color: var(--ficha-ink);
+    font-family: 'Gilroy-Bold', sans-serif;
+    font-size: 1.25rem;
+}
+
+.ficha-performance-board__caption {
+    color: var(--ficha-muted);
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.ficha-performance-board__pending {
+    display: flex;
+    min-height: 88px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: var(--ficha-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.ficha-performance-board__pending i {
+    font-size: 1.2rem;
+    opacity: 0.55;
+}
+
+.contenedor__ficha>.d-flex {
+    margin-bottom: 1rem !important;
+    padding-bottom: 0.75rem !important;
+}
+
+.contenedor__ficha>.row:not(#encabezado) {
+    align-items: flex-start;
+}
+
+.contenedor__ficha .card-ficha-moderna {
+    height: auto !important;
+    margin-bottom: 0.75rem;
+    padding: 1rem !important;
+    background-color: rgba(255, 255, 255, 0.94);
+}
+
+.contenedor__ficha .ficha-section-title {
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.35rem;
+}
+
+.contenedor__ficha .row.g-3 {
+    --bs-gutter-y: 0.75rem;
+}
+
+.contenedor__ficha .row.g-4 {
+    --bs-gutter-y: 0.75rem;
+}
+
+.contenedor__ficha .mt-2 {
+    margin-top: 0.75rem !important;
+}
+
+.contenedor__ficha .mb-5 {
+    margin-bottom: 1rem !important;
+}
+
+/* Lenguaje visual de la ficha: editorial, claro y orientado a la lectura. */
+.ficha-page {
+    --ficha-ink: #2d2630;
+    --ficha-muted: #706b72;
+    --ficha-line: #e9e3df;
+    --ficha-surface: rgba(255, 255, 255, 0.94);
+    position: relative;
+    overflow: hidden;
+    color: var(--ficha-ink);
+}
+
+.ficha-page::before {
+    position: absolute;
+    top: -110px;
+    right: -90px;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: rgba(157, 36, 73, 0.07);
+    content: '';
+    pointer-events: none;
+}
+
+.ficha-hero,
+.ficha-page>.row,
+.ficha-actions {
+    position: relative;
+    z-index: 1;
+}
+
+.ficha-hero {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+    min-height: 190px;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem 1.6rem 1.35rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(57, 17, 32, 0.96), rgba(105, 26, 50, 0.92));
+    box-shadow: 0 14px 35px rgba(61, 17, 32, 0.18);
+}
+
+.ficha-hero::after {
+    position: absolute;
+    right: -55px;
+    bottom: -100px;
+    width: 260px;
+    height: 260px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 50%;
+    box-shadow: 0 0 0 22px rgba(255, 255, 255, 0.035), 0 0 0 44px rgba(255, 255, 255, 0.025);
+    content: '';
+}
+
+.ficha-hero__content {
+    position: relative;
+    z-index: 1;
+    max-width: 850px;
+}
+
+.ficha-kicker {
+    margin-bottom: 0.8rem;
+    color: #e8c99f;
+    font-family: 'Gilroy-SemiBold', sans-serif;
+    font-size: 0.74rem;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+}
+
+.ficha-hero h1 {
+    max-width: 820px;
+    color: #fff !important;
+    font-family: 'Gilroy-Bold', sans-serif;
+    font-size: clamp(1.65rem, 3vw, 2.65rem);
+    line-height: 1.12;
+}
+
+.ficha-hero__context {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem 1.25rem;
+    margin-top: 1.1rem;
+    color: rgba(255, 255, 255, 0.77);
+    font-size: 0.83rem;
+}
+
+.ficha-hero__context span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.ficha-hero__context i {
+    color: #e8c99f;
+    font-size: 0.75rem;
+}
+
+.ficha-hero__ods {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.55rem;
+    max-width: 170px;
+}
+
+.ficha-hero__ods img {
+    width: 48px;
+    height: 48px;
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    border-radius: 10px;
+    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.16);
+}
+
+.ficha-panel {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(219, 211, 207, 0.75) !important;
+    border-radius: 14px;
+    background: var(--ficha-surface) !important;
+    box-shadow: 0 8px 24px rgba(57, 37, 40, 0.06) !important;
+}
+
+.ficha-panel::before {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 4px;
+    background: var(--ficha-panel-accent, #9d2449);
+    content: '';
+}
+
+.ficha-panel--planning {
+    --ficha-panel-accent: #9d2449;
+}
+
+.ficha-panel--technical {
+    --ficha-panel-accent: #4e6680;
+}
+
+.ficha-panel--performance {
+    --ficha-panel-accent: #bd8755;
+}
+
+.ficha-panel--quality {
+    --ficha-panel-accent: #547c72;
+}
+
+.ficha-panel--history {
+    --ficha-panel-accent: #6f638a;
+}
+
+.ficha-panel .ficha-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: var(--ficha-ink) !important;
+    font-family: 'Gilroy-Bold', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.7px;
+}
+
+.ficha-section-icon {
+    display: inline-flex;
+    width: 30px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: rgba(157, 36, 73, 0.12);
+    color: var(--ficha-panel-accent);
+    font-size: 0.78rem;
+}
+
+.ficha-panel .ficha-label {
+    margin-bottom: 0.25rem;
+    color: var(--ficha-muted);
+    font-size: 0.7rem;
+    letter-spacing: 0.65px;
+    text-transform: uppercase;
+}
+
+.ficha-panel .ficha-value {
+    color: var(--ficha-ink);
+    font-size: 0.94rem;
+    line-height: 1.45;
+}
+
+.ficha-panel .ficha-value.text-muted {
+    color: #5d5960 !important;
+}
+
+.ficha-panel .badge {
+    letter-spacing: 0.25px;
+}
+
+.ficha-metrics {
+    margin-top: 0.1rem;
+    align-items: flex-start;
+}
+
+.ficha-metric {
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+}
+
+.ficha-metric .fs-4 {
+    font-family: 'Gilroy-Bold', sans-serif;
+    font-size: 1.45rem !important;
+    line-height: 1.15;
+}
+
+.ficha-metric .fs-5 {
+    margin-top: 0.25rem !important;
+    font-size: 0.95rem !important;
+}
+
+.ficha-status-panel {
+    min-height: 0;
+    padding: 0.5rem 0.75rem 0;
+}
+
+.ficha-status-panel>.badge {
+    padding: 0.48rem 0.85rem !important;
+    font-size: 0.72rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.ficha-status-panel .grafico-gauge-ficha {
+    height: 105px;
+}
+
+.ficha-status-panel .fs-4 {
+    font-family: 'Gilroy-Bold', sans-serif;
+    font-size: 1.3rem !important;
+}
+
+.ficha-panel--history .table-datos {
+    border-color: var(--ficha-line) !important;
+    box-shadow: none !important;
+}
+
+.ficha-panel--history .table-historicos th {
+    padding: 0.7rem 0.65rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.35px;
+    text-transform: uppercase;
+}
+
+.ficha-panel--history .table-historicos .sticky-top {
+    z-index: 1;
+}
+
+.ficha-panel--history .table-historicos td {
+    padding: 0.55rem 0.65rem;
+    border-color: #f0ece9;
+    font-size: 0.84rem;
+}
+
+.ficha-panel--history #grafica-historica {
+    min-height: 350px;
+    padding: 0.35rem;
+}
+
+.ficha-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    padding-top: 0.25rem;
+}
+
+.ficha-action {
+    border: 0;
+    border-radius: 999px;
+    padding: 0.75rem 1.25rem;
+    font-family: 'Gilroy-SemiBold', sans-serif;
+    font-size: 0.82rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ficha-action:hover {
+    transform: translateY(-2px);
+}
+
+.ficha-action--primary {
+    background: var(--ficha-accent, #9d2449);
+    box-shadow: 0 7px 17px rgba(157, 36, 73, 0.24);
+    color: #fff;
+}
+
+.ficha-action--primary:hover,
+.ficha-action--primary:focus {
+    background: #851f3f;
+    color: #fff;
+}
+
+.ficha-action--secondary {
+    border: 1px solid #d9c9c4;
+    background: rgba(255, 255, 255, 0.8);
+    color: #691a32;
+}
+
+.ficha-action--secondary:hover,
+.ficha-action--secondary:focus {
+    background: #fff;
+    color: #691a32;
+    box-shadow: 0 7px 17px rgba(57, 37, 40, 0.1);
+}
+
+.ficha-preview-link {
+    color: #691a32;
+    font-size: 0.78rem;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.ficha-preview-link:hover {
+    color: #3d1120;
+}
+
+@media (max-width: 767.98px) {
+    .contenedor__ficha {
+        padding: 1rem !important;
+    }
+
+    .contenedor__ficha>.d-flex {
+        align-items: flex-start !important;
+        gap: 0.75rem;
+    }
+
+    .contenedor__ficha>.d-flex h1 {
+        font-size: 1.35rem;
+    }
+
+    .contenedor__ficha>.d-flex img {
+        height: 32px !important;
+    }
+
+    .ficha-hero {
+        display: block;
+        min-height: 0;
+        padding: 1.25rem 1.15rem;
+    }
+
+    .ficha-performance-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ficha-performance-grid>.col-md-2,
+    .ficha-performance-grid>.col-md-6 {
+        grid-column: 1 / -1;
+    }
+
+    .ficha-status-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .ficha-management-metrics,
+    .ficha-performance-board {
+        grid-template-columns: 1fr;
+    }
+
+    .ficha-performance-board__status,
+    .ficha-performance-board__gauge {
+        padding-top: 0.75rem;
+        padding-left: 0;
+        border-top: 1px solid #e8dfda;
+        border-left: 0;
+    }
+
+    .ficha-hero__ods {
+        justify-content: flex-start;
+        max-width: none;
+        margin-top: 1.1rem;
+    }
+
+    .ficha-hero__context {
+        display: block;
+    }
+
+    .ficha-hero__context span {
+        margin-top: 0.45rem;
+    }
+
+    .ficha-status-panel {
+        min-height: 0;
+        border-top: 1px solid var(--ficha-line);
+        border-left: 0 !important;
+        margin-top: 1rem !important;
+        padding-top: 1.25rem;
+    }
+
+    .ficha-actions {
+        justify-content: stretch;
+        flex-wrap: wrap;
+    }
+
+    .ficha-action {
+        flex: 1 1 100%;
+        margin-left: 0 !important;
+    }
+}
+
+@media print {
+    .ficha-background {
+        background: white !important;
+    }
+
+    .contenedor__ficha {
+        background: white !important;
+        border-radius: 0;
+    }
+
+    .ficha-page::before,
+    .ficha-hero::after {
+        display: none !important;
+    }
+
+    .ficha-hero {
+        min-height: 0;
+        border: 1px solid #dee2e6;
+        background: white !important;
+        box-shadow: none;
+    }
+
+    .ficha-hero h1,
+    .ficha-hero__context {
+        color: #2b2b2b !important;
+    }
+
+    .ficha-kicker,
+    .ficha-hero__context i {
+        color: #691a32 !important;
+    }
+
+    .ficha-panel {
+        border-radius: 8px;
+        box-shadow: none !important;
+    }
+
+    .ficha-panel::before {
+        display: none;
+    }
+}
+
+/* =========================================================================
+   3. REGLAS PARA GENERACIÓN DE PDF (.generating-pdf)
+   ========================================================================= */
+
+/* Ocultar elementos innecesarios */
+.generating-pdf #navbar,
+.generating-pdf .footer,
+.generating-pdf .textura-footer,
+.generating-pdf .navbar,
+.generating-pdf .ocultar_impresion,
+.generating-pdf .btn,
+.generating-pdf #btn-subir,
+.generating-pdf .breadcrumb,
+.generating-pdf .menu-overlay,
+.generating-pdf .mobile-menu,
+.generating-pdf .nav-moderna,
+.generating-pdf .banner-container {
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Mostrar encabezado compacto */
+.generating-pdf #encabezado {
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+    margin: 0 auto 10px auto !important;
+    text-align: center !important;
+}
+
+.generating-pdf #encabezado img {
+    max-height: 55px !important;
+    object-fit: contain;
+    margin: 0 auto !important;
+}
+
+/* Ajuste de contenedores */
+.generating-pdf.container,
+.generating-pdf .container {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: white !important;
+}
+
+#imprimir.generating-pdf {
+    margin-top: 0 !important;
+}
+
+#imprimir.generating-pdf .mt-2,
+#imprimir.generating-pdf .mt-3,
+#imprimir.generating-pdf .mt-4 {
+    margin-top: 0.2rem !important;
+}
+
+#imprimir.generating-pdf .mb-4,
+#imprimir.generating-pdf .mb-5 {
+    margin-bottom: 0.3rem !important;
+}
+
+#imprimir.generating-pdf .pb-3 {
+    padding-bottom: 0.3rem !important;
+}
+
+#imprimir.generating-pdf .g-3,
+#imprimir.generating-pdf .g-4 {
+    gap: 0.3rem !important;
+}
+
+#imprimir.generating-pdf .border-bottom {
+    border-bottom-width: 1px !important;
+}
+
+/* Forzar que las filas utilicen flexbox */
+.generating-pdf .row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Secciones a ancho completo */
+.generating-pdf .col-lg-6 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+}
+
+.generating-pdf .col-md-8 {
+    flex: 0 0 66.666667% !important;
+    max-width: 66.666667% !important;
+}
+
+.generating-pdf .col-md-4 {
+    flex: 0 0 33.333333% !important;
+    max-width: 33.333333% !important;
+}
+
+.generating-pdf .pdf-page-break .col-md-8 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+}
+
+.generating-pdf .pdf-page-break .col-md-4 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+}
+
+.generating-pdf .col-md-6 {
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
+}
+
+.generating-pdf .col-md-3 {
+    flex: 0 0 25% !important;
+    max-width: 25% !important;
+}
+
+.generating-pdf .col-12 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+}
+
+/* Tarjetas compactas */
+.generating-pdf .card-ficha-moderna {
+    padding: 0.4rem 0.5rem !important;
+    margin-top: 0.15rem !important;
+    margin-bottom: 0.15rem !important;
+    border: 1px solid #e9ecef !important;
+    box-shadow: none !important;
+    background-color: #fff !important;
+    break-inside: avoid !important;
+}
+
+#imprimir.generating-pdf .card-ficha-moderna .p-4 {
+    padding: 0.4rem 0.5rem !important;
+}
+
+#imprimir.generating-pdf .h-100 {
+    height: auto !important;
+}
+
+/* Salto de página para la gráfica histórica */
+.generating-pdf .pdf-page-break {
+    page-break-before: auto !important;
+    break-before: auto !important;
+}
+
+/* Ajuste de tipografía */
+.generating-pdf h1 {
+    font-size: 1.2rem !important;
+    margin-bottom: 2px !important;
+}
+
+.generating-pdf .ficha-section-title {
+    font-size: 0.85rem !important;
+    margin-bottom: 0.2rem !important;
+    border-bottom: 1px solid #f1f1f1;
+    padding-bottom: 2px;
+}
+
+.generating-pdf .ficha-label {
+    font-size: 0.62rem !important;
+    margin-bottom: 0 !important;
+}
+
+.generating-pdf .ficha-value {
+    font-size: 0.75rem !important;
+}
+
+#imprimir.generating-pdf .fw-bold {
+    font-weight: 600 !important;
+}
+
+#imprimir.generating-pdf .fs-4 {
+    font-size: 0.9rem !important;
+}
+
+#imprimir.generating-pdf .fs-5 {
+    font-size: 0.8rem !important;
+}
+
+/* Oculta el velocímetro, solo mostramos badge y % */
+.generating-pdf #gauge-ficha,
+.generating-pdf .grafico-gauge-ficha {
+    display: none !important;
+}
+
+.generating-pdf #grafica-historica {
+    height: 300px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    overflow: visible !important;
+}
+
+.generating-pdf .grafico-historico-ficha {
+    height: 300px !important;
+    width: 100% !important;
+}
+
+/* Tablas */
+.generating-pdf .table-responsive {
+    overflow: visible !important;
+    max-height: none !important;
+}
+
+.generating-pdf .table-historicos td,
+.generating-pdf .table-historicos th {
+    padding: 0.15rem 0.3rem !important;
+    font-size: 0.7rem !important;
+}
+
+.generating-pdf .table-historicos th {
+    color: #fff !important;
+}
+
+/* Compactar sección de gestión de gobierno */
+#imprimir.generating-pdf .border-end-sm {
+    border-right: none !important;
+}
+
+#imprimir.generating-pdf .g-4 {
+    gap: 0.15rem !important;
+}
+
+#imprimir.generating-pdf .mt-35px {
+    margin-top: 0 !important;
+}
+
+#imprimir.generating-pdf .py-4 {
+    padding-top: 0.3rem !important;
+    padding-bottom: 0.3rem !important;
+}
+
+#imprimir.generating-pdf .fs-35rem {
+    font-size: 1.5rem !important;
+}
+
+#imprimir.generating-pdf .badge {
+    font-size: 0.6rem !important;
+    padding: 0.2rem 0.5rem !important;
+}
+
+/* Oculta el popover en impresión */
+.generating-pdf [data-bs-toggle="popover"] {
+    cursor: default !important;
+}
+
+/* Evolución histórica a ancho completo */
+.generating-pdf .pdf-page-break .border-end-md {
+    border-right: none !important;
+}
+
+.generating-pdf .pdf-page-break .pe-md-4 {
+    padding-right: 0 !important;
+}
+
+.generating-pdf .pdf-page-break .ps-md-4 {
+    padding-left: 0 !important;
+}
+
+.generating-pdf .pdf-page-break .col-md-4,
+.generating-pdf .pdf-page-break .col-md-8 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.generating-pdf .pdf-page-break .text-center {
+    overflow: visible !important;
+}
+
+/* La impresión nativa necesita un ancho legible dentro de la hoja A4. */
+@media print {
+    #imprimir .ficha-management-metrics {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        grid-auto-flow: row !important;
+    }
+
+    #imprimir .ficha-performance-board {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        grid-auto-flow: row !important;
+    }
+
+    #imprimir.ficha-page > .ficha-layout-two-col {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: stretch !important;
+    }
+
+    #imprimir.ficha-page > .ficha-layout-two-col > .col-lg-6 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+    }
+
+    #imprimir.ficha-page > .ficha-layout-two-col > .col-lg-6.mt-3 {
+        margin-top: 0 !important;
+    }
+
+    #imprimir {
+        width: 190mm !important;
+        max-width: 190mm !important;
+        margin-right: auto !important;
+        margin-left: auto !important;
+        box-sizing: border-box !important;
+    }
+
+    .ficha-background {
+        min-height: 0 !important;
+        padding: 0 !important;
+    }
+
+    #imprimir.ficha-page {
+        padding: 0.35rem !important;
+    }
+
+    #imprimir .ficha-hero {
+        min-height: 0 !important;
+        margin-bottom: 0.45rem !important;
+        padding: 0.55rem 0.7rem !important;
+        border-radius: 6px !important;
+    }
+
+    #imprimir .ficha-kicker {
+        margin-bottom: 0.25rem !important;
+        font-size: 0.55rem !important;
+    }
+
+    #imprimir .ficha-hero h1 {
+        font-size: 1rem !important;
+    }
+
+    #imprimir .ficha-hero__context {
+        gap: 0.2rem 0.7rem;
+        margin-top: 0.35rem !important;
+        font-size: 0.6rem !important;
+    }
+
+    #imprimir .ficha-panel {
+        margin-top: 0.3rem !important;
+        margin-bottom: 0.3rem !important;
+        padding: 0.45rem 0.55rem !important;
+        border-radius: 6px !important;
+    }
+
+    #imprimir .ficha-panel .ficha-section-title {
+        gap: 0.35rem;
+        margin-bottom: 0.35rem !important;
+        padding-bottom: 0.2rem !important;
+        font-size: 0.7rem !important;
+    }
+
+    #imprimir .ficha-section-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 5px;
+        font-size: 0.55rem;
+    }
+
+    #imprimir .ficha-panel .ficha-label {
+        margin-bottom: 0.05rem !important;
+        font-size: 0.5rem !important;
+    }
+
+    #imprimir .ficha-panel .ficha-value {
+        font-size: 0.67rem !important;
+        line-height: 1.25;
+    }
+
+    #imprimir .ficha-management-metrics {
+        gap: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+
+    #imprimir .ficha-metric-card {
+        gap: 0.25rem;
+        padding: 0.25rem 0.35rem;
+        border-radius: 5px;
+    }
+
+    #imprimir .ficha-metric-card__icon {
+        width: 18px;
+        height: 18px;
+        flex-basis: 18px;
+        font-size: 0.45rem;
+    }
+
+    #imprimir .ficha-metric-card__value {
+        font-size: 0.72rem;
+    }
+
+    #imprimir .ficha-metric-card__value--text {
+        font-size: 0.58rem;
+    }
+
+    #imprimir .ficha-performance-board {
+        gap: 0.25rem;
+        padding: 0.25rem;
+        border-radius: 5px;
+    }
+
+    #imprimir .ficha-performance-board__status,
+    #imprimir .ficha-performance-board__gauge {
+        padding-left: 0.3rem;
+    }
+
+    #imprimir .ficha-performance-board__value {
+        margin-top: 0.15rem;
+        font-size: 0.85rem;
+    }
+
+    #imprimir .ficha-performance-board__status .badge {
+        margin-top: 0.1rem;
+        padding: 0.18rem 0.35rem !important;
+        font-size: 0.45rem;
+    }
+
+    #imprimir .ficha-performance-board__gauge .grafico-gauge-ficha {
+        height: 42px;
+        min-height: 42px;
+    }
+
+    #imprimir .ficha-performance-board__percent {
+        font-size: 0.72rem;
+    }
+
+    #imprimir .ficha-performance-board__caption {
+        font-size: 0.45rem;
+    }
+
+    #imprimir .ficha-panel--history #grafica-historica {
+        min-height: 0 !important;
+        height: 185px !important;
+    }
+
+    #imprimir .ficha-panel--history .table-historicos th,
+    #imprimir .ficha-panel--history .table-historicos td {
+        padding: 0.18rem 0.3rem !important;
+        font-size: 0.58rem !important;
+    }
+
+    #imprimir .ficha-panel--history .table-datos {
+        max-height: 225px !important;
+    }
+
+    #imprimir .pdf-page-break {
+        page-break-before: auto !important;
+        break-before: auto !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+}
+
+.generating-pdf .ficha-page::before,
+.generating-pdf .ficha-hero::after {
+    display: none !important;
+}
+
+.generating-pdf .ficha-hero {
+    min-height: 0;
+    border: 1px solid #dee2e6;
+    background: #fff !important;
+    box-shadow: none;
+}
+
+.generating-pdf .ficha-hero h1,
+.generating-pdf .ficha-hero__context {
+    color: #2b2b2b !important;
+}
+
+.generating-pdf .ficha-kicker,
+.generating-pdf .ficha-hero__context i {
+    color: #691a32 !important;
+}
+
+.generating-pdf .ficha-panel {
+    border-radius: 8px;
+    box-shadow: none !important;
+}
+
+.generating-pdf .ficha-panel::before {
+    display: none;
+}
+
+/* =========================================================================
+   FICHA PDF - Vista de impresión independiente
+   ========================================================================= */
+@page {
+    size: A4;
+    margin: 8mm;
+}
+
+.ficha-pdf__document {
+    color: #2d2630;
+    font-family: 'Gilroy-Medium', Arial, sans-serif;
+}
+
+/* Tipografía exclusiva de la ficha web. */
+.ficha-page {
+    font-family: "Corra Montserra", sans-serif;
+}
+
+.ficha-page .ficha-hero h1,
+.ficha-page .ficha-metric-card__value,
+.ficha-page .ficha-performance-board__value,
+.ficha-page .ficha-performance-board__percent {
+    font-family: "Gilroy", sans-serif;
+    font-weight: 700;
+}
+
+.ficha-page .ficha-kicker,
+.ficha-page .ficha-section-title,
+.ficha-page .ficha-action {
+    font-family: "Gilroy", sans-serif;
+    font-weight: 600;
+}
+
+.ficha-page .ficha-label,
+.ficha-page .ficha-value,
+.ficha-page .ficha-hero__context,
+.ficha-page .ficha-performance-board__caption,
+.ficha-page .ficha-preview-link {
+    font-family: "Corra Montserra", sans-serif;
+    font-weight: 400;
+}
+
+.ficha-pdf__sheet {
+    max-width: 190mm;
+    margin: 0 auto;
+}
+
+.ficha-pdf__logos {
+    display: block;
+    width: 100%;
+    margin-bottom: 5mm;
+}
+.ficha-pdf__subtitle {
+    color: #484747;
+    font-family: 'Gilroy-Bold', Arial, sans-serif;
+    font-size: 12pt;
+    line-height: 1;
+}
+
+.ficha-pdf__title {
+    color: #691a32;
+    font-family: 'Gilroy-Bold', Arial, sans-serif;
+    font-size: 18pt;
+    line-height: 1.10;
+    margin: 0 0 2mm;
+}
+
+.ficha-pdf__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 3mm;
+}
+
+.ficha-pdf__panel {
+    border: 1px solid #e5deda;
+    border-radius: 1mm;
+    padding: 4mm;
+    break-inside: avoid;
+}
+
+.ficha-pdf__panel--full {
+    grid-column: 1 / -1;
+}
+
+.ficha-pdf__heading {
+    border-bottom: 1px solid #e8dfda;
+    color: #691a32;
+    font-family: 'Gilroy-Bold', Arial, sans-serif;
+    font-size: 10pt;
+    margin: 0 0 3mm;
+}
+
+.ficha-pdf__item { margin-bottom: 2.5mm; }
+.ficha-pdf__item:last-child { margin-bottom: 0; }
+
+.ficha-pdf__label {
+    color: #706b72;
+    font-size: 6.5pt;
+    letter-spacing: .3pt;
+    text-transform: uppercase;
+}
+
+.ficha-pdf__value {
+    font-size: 8.5pt;
+    line-height: 1.3;
+}
+
+.ficha-pdf__metrics,
+.ficha-pdf__status {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2mm;
+}
+
+.ficha-pdf__metric {
+    background: #faf8f6;
+    border-radius: 2mm;
+    padding: 2.5mm;
+}
+
+.ficha-pdf__metric .ficha-pdf__value {
+    color: #691a32;
+    font-family: 'Gilroy-Bold', Arial, sans-serif;
+    font-size: 11pt;
+}
+
+.ficha-pdf__status { margin-top: 2mm; }
+
+.ficha-pdf__status-item {
+    border-left: 1px solid #e8dfda;
+    padding-left: 3mm;
+}
+
+.ficha-pdf__status-item:first-child {
+    border-left: 0;
+    padding-left: 0;
+}
+
+.ficha-pdf__status-value {
+    font-family: 'Gilroy-Bold', Arial, sans-serif;
+    font-size: 13pt;
+}
+
+.ficha-pdf__badge {
+    border-radius: 999px;
+    color: #fff;
+    display: inline-block;
+    font-size: 7pt;
+    padding: 1.2mm 2.5mm;
+}
+
+.ficha-pdf__history {
+    display: grid;
+    grid-template-columns: 34% 66%;
+    gap: 4mm;
+    align-items: start;
+}
+
+.ficha-pdf__table {
+    border-collapse: collapse;
+    font-size: 7pt;
+    height: max-content;
+    table-layout: fixed;
+    width: 100%;
+}
+
+.ficha-pdf__table th:first-child,
+.ficha-pdf__table td:first-child {
+    width: 24%;
+    white-space: nowrap;
+}
+
+.ficha-pdf__table th:last-child,
+.ficha-pdf__table td:last-child {
+    width: 76%;
+}
+
+.ficha-pdf__table th {
+    background: #691a32;
+    color: #fff;
+    padding: 1.5mm;
+    text-align: left;
+}
+
+.ficha-pdf__table td {
+    border-bottom: 1px solid #eee8e4;
+    padding: 1.3mm 1.5mm;
+}
+
+.ficha-pdf__chart {
+    height: 75mm;
+    min-width: 0;
+}
+
+@media screen {
+    .ficha-pdf__document {
+        background: #fff;
+        padding: 1rem;
     }
 }

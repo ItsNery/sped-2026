@@ -12,102 +12,22 @@ function initFicha() {
     // =====================================================================
     // A. INICIALIZAR POPOVERS DE BOOTSTRAP (Botón de Info "?")
     // =====================================================================
-    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-    popoverTriggerList.map(function (popoverTriggerEl) {
-        return new bootstrap.Popover(popoverTriggerEl);
-    });
-
-    // =====================================================================
-    // B. BOTÓN DE IMPRESIÓN CON GENERACIÓN DE PDF (USANDO BLOB URL)
-    // =====================================================================
-    const btnImprimir = document.getElementById('btnImprimirFicha');
-    if (btnImprimir) {
-        console.log('btnImprimir element found, registering click listener.');
-        
-        // Botón de PDF Vectorial (impresión nativa del navegador)
-        const btnImprimirNativo = document.getElementById('btnImprimirNativo');
-        if (btnImprimirNativo) {
-            btnImprimirNativo.addEventListener('click', function () {
-                window.print();
-            });
-        }
-
-        btnImprimir.addEventListener('click', function () {
-            console.log('btnImprimir clicked!');
-            if (typeof html2pdf === 'undefined') {
-                console.warn('La librería html2pdf.js no está cargada. Usando impresión nativa.');
-                window.print();
-                return;
-            }
-
-            const element = document.getElementById('imprimir');
-            if (!element) {
-                console.error('Elemento #imprimir no encontrado!');
-                return;
-            }
-            
-            // Agregar clase temporal para aplicar estilos específicos de PDF
-            element.classList.add('generating-pdf');
-
-            // Obtener el nombre del indicador para el archivo PDF
-            let titleText = 'ficha-tecnica';
-            const h1Element = element.querySelector('h1');
-            if (h1Element) {
-                titleText = h1Element.innerText
-                    .trim()
-                    .toLowerCase()
-                    .normalize("NFD")
-                    .replace(/[\u0300-\u036f]/g, "") // Quitar acentos
-                    .replace(/[^a-z0-9]+/g, '-');   // Reemplazar espacios y caracteres raros con guion
-            }
-
-            const opt = {
-                margin:       [5, 5, 5, 5],
-                filename:     `ficha-tecnica-${titleText}.pdf`,
-                image:        { type: 'jpeg', quality: 0.95 },
-                html2canvas:  { 
-                    scale: 3, 
-                    useCORS: true,
-                    logging: false,
-                    scrollX: 0,
-                    scrollY: 0
-                },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak:    { mode: ['css', 'legacy'] }
-            };
-
-            console.log('Starting html2pdf generation with options:', opt);
-            // Generar el PDF como Blob y descargar mediante elemento <a> temporal
-            html2pdf().set(opt).from(element).toPdf().output('blob').then(function(blob) {
-                console.log('PDF generado exitosamente como Blob. Iniciando descarga...');
-                const blobURL = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = blobURL;
-                a.download = `ficha-tecnica-${titleText}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                
-                // Limpieza de memoria
-                setTimeout(function() {
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(blobURL);
-                    console.log('Descarga iniciada y recursos de Blob liberados.');
-                }, 150);
-
-                element.classList.remove('generating-pdf');
-            }).catch(function(err) {
-                console.error('Error al generar PDF:', err);
-                element.classList.remove('generating-pdf');
-            });
+    if (typeof bootstrap !== 'undefined') {
+        var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+        popoverTriggerList.map(function (popoverTriggerEl) {
+            return new bootstrap.Popover(popoverTriggerEl);
         });
     }
 
-    // =====================================================================
-    // C. GRÁFICA: VELOCÍMETRO (Gestión de Gobierno) - ECharts Gauge
-    // =====================================================================
-    if (!config.esDatoLineaBase && document.querySelector("#gauge-ficha")) {
-        var chartGauge = echarts.init(document.getElementById('gauge-ficha'));
+    try {
+        // =====================================================================
+        // B. GRÁFICA: VELOCÍMETRO (Gestión de Gobierno) - ECharts Gauge
+        // =====================================================================
+        if (!config.esDatoLineaBase && document.querySelector("#gauge-ficha")) {
+        var gaugeElement = document.getElementById('gauge-ficha');
+        var chartGauge = echarts.init(gaugeElement);
         chartGauge.setOption({
+            animation: config.pdfMode ? false : true,
             series: [{
                 type: 'gauge',
                 startAngle: 180,
@@ -132,12 +52,18 @@ function initFicha() {
             }]
         });
         chartGauge.resize();
-    }
+        requestAnimationFrame(function () {
+            chartGauge.resize();
+        });
+        window.addEventListener('resize', function () {
+            chartGauge.resize();
+        });
+        }
 
-    // =====================================================================
-    // D. GRÁFICA: EVOLUCIÓN HISTÓRICA (Líneas) - ECharts
-    // =====================================================================
-    if (document.querySelector("#grafica-historica")) {
+        // =====================================================================
+        // C. GRÁFICA: EVOLUCIÓN HISTÓRICA (Líneas) - ECharts
+        // =====================================================================
+        if (document.querySelector("#grafica-historica")) {
         const decimalesIndicador = config.idIndicador == 100 ? 6 : 2;
 
         // Función auxiliar para formatear números en la gráfica
@@ -151,6 +77,7 @@ function initFicha() {
 
         var chartHistorico = echarts.init(document.getElementById('grafica-historica'));
         chartHistorico.setOption({
+            animation: config.pdfMode ? false : true,
             tooltip: {
                 trigger: 'axis',
                 formatter: function(params) {
@@ -185,6 +112,8 @@ function initFicha() {
                     type: 'line',
                     data: config.datosLineaBasePunto,
                     lineStyle: { type: 'dashed', width: 2 },
+                    showSymbol: true,
+                    symbol: 'circle',
                     symbolSize: 6,
                     itemStyle: { color: '#00E396' },
                     connectNulls: true
@@ -194,6 +123,8 @@ function initFicha() {
                     type: 'line',
                     data: config.datosParaGraficaPrincipal,
                     lineStyle: { width: 4, color: config.colorIndicador },
+                    showSymbol: true,
+                    symbol: 'circle',
                     symbolSize: 4,
                     itemStyle: { color: config.colorIndicador },
                     smooth: true,
@@ -204,6 +135,8 @@ function initFicha() {
                     type: 'line',
                     data: config.datosMetaPunto,
                     lineStyle: { type: 'dashed', width: 2 },
+                    showSymbol: true,
+                    symbol: 'circle',
                     symbolSize: 7,
                     itemStyle: { color: '#FF0000' },
                     connectNulls: true,
@@ -217,6 +150,34 @@ function initFicha() {
             ]
         });
         chartHistorico.resize();
+        }
+    } catch (error) {
+        console.error('No fue posible inicializar las gráficas de la ficha:', error);
+    } finally {
+        const markPdfReady = function () {
+            ['gauge-ficha', 'grafica-historica'].forEach(function (id) {
+                const element = document.getElementById(id);
+                if (element && typeof echarts !== 'undefined') {
+                    const chart = echarts.getInstanceByDom(element);
+                    if (chart) chart.resize();
+                }
+            });
+
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                    window.pdfReady = true;
+                });
+            });
+        };
+
+        if (document.fonts && document.fonts.ready) {
+            Promise.race([
+                document.fonts.ready,
+                new Promise(function (resolve) { setTimeout(resolve, 500); })
+            ]).then(markPdfReady);
+        } else {
+            markPdfReady();
+        }
     }
 }
 
