@@ -26,7 +26,6 @@
     Seguimiento a la Planeación y Evaluación del Desarrollo
     del Estado de Puebla.')
 @section('css')
-    <link href="{{ asset('css/datos_abiertos.css') }}" rel="stylesheet">
 @endsection
 @section('content')
     <div class="datos-abiertos">
@@ -81,6 +80,7 @@
                                     Indicadores municipales
                                 </p>
                                 <table class="table table-bordered data-table">
+                                    <caption class="visually-hidden">Descargas de indicadores municipales</caption>
                                     <thead>
                                         <tr>
                                             <th>Nombre del Conjunto</th>

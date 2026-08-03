@@ -4,7 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Indicador;
-use Illuminate\Http\Request;
+use App\Http\Requests\Api\IndicadorIndexRequest;
+use App\Http\Resources\IndicadorResource;
 use Illuminate\Support\Facades\Log;
 
 class IndicadorApiController extends Controller
@@ -12,43 +13,46 @@ class IndicadorApiController extends Controller
     /**
      * Muestra un listado de los indicadores con sus relaciones (ODS, Institución y Datos Anuales validados).
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index(Request $request)
+    public function index(IndicadorIndexRequest $request)
     {
         Log::info('IndicadorApiController@index: Consulta iniciada.', $request->only(['institucion_id', 'ods_id', 'buscar', 'programa_derivado']));
 
         try {
-            // Consulta base cargando relaciones con restricciones en datosAnuales
-            $query = Indicador::with([
-                'institucion:id,nombre,titular',
-                'ods:id,nombre',
-                'datosAnuales' => function ($q) {
-                    $q->where('validado', 1)->orderBy('anio', 'asc');
-                }
-            ]);
+            $include = array_values(array_intersect(
+                ['institucion', 'ods', 'datos_anuales'],
+                array_filter(array_map('trim', explode(',', (string) $request->input('include', 'institucion,ods,datos_anuales'))))
+            ));
+            $relations = [];
+            if (in_array('institucion', $include, true)) {
+                $relations[] = 'institucion:id,nombre,titular';
+            }
+            if (in_array('ods', $include, true)) {
+                $relations[] = 'ods:id,nombre';
+            }
+            if (in_array('datos_anuales', $include, true)) {
+                $relations['datosAnuales'] = fn ($q) => $q->where('validado', 1)->orderBy('anio');
+            }
+            $query = Indicador::with($relations);
 
-            // Filtro por institución responsable
-            if ($request->has('institucion_id') && !empty($request->institucion_id)) {
-                $query->where('id_institucion', $request->institucion_id);
+            if ($request->filled('institucion_id')) {
+                $query->where('id_institucion', $request->integer('institucion_id'));
             }
 
-            // Filtro por ODS relacionado
-            if ($request->has('ods_id') && !empty($request->ods_id)) {
+            if ($request->filled('ods_id')) {
                 $query->whereHas('ods', function ($q) use ($request) {
-                    $q->where('ods.id', $request->ods_id);
+                    $q->where('ods.id', $request->integer('ods_id'));
                 });
             }
 
-            // Filtro por programa derivado
-            if ($request->has('programa_derivado') && !empty($request->programa_derivado)) {
-                $query->where('programa_derivado', $request->programa_derivado);
+            if ($request->filled('programa_derivado')) {
+                $query->where('programa_derivado', $request->string('programa_derivado')->toString());
             }
 
-            // Filtro de búsqueda (en nombre o descripción)
-            if ($request->has('buscar') && !empty($request->buscar)) {
-                $buscar = $request->buscar;
+            if ($request->filled('buscar')) {
+                $buscar = $request->string('buscar')->toString();
                 $query->where(function ($q) use ($buscar) {
                     $q->where('nombre', 'like', "%{$buscar}%")
                       ->orWhere('descripcion', 'like', "%{$buscar}%")
@@ -56,76 +60,23 @@ class IndicadorApiController extends Controller
                 });
             }
 
-            // Paginación de los resultados
-            $perPage = (int) $request->input('per_page', 15);
-            if ($perPage < 1 || $perPage > 100) {
-                $perPage = 15;
-            }
+            $sort = $request->input('sort', 'id');
+            $direction = $request->input('direction', 'asc');
+            $indicadores = $query->orderBy($sort, $direction)->paginate((int) $request->input('per_page', 15));
 
-            $indicadores = $query->paginate($perPage);
+            $indicadoresFormateados = $indicadores->getCollection()
+                ->map(fn ($indicador) => (new IndicadorResource($indicador))->resolve($request))
+                ->values();
 
-            // Mapeo para formatear la respuesta JSON limpia
-            $indicadoresFormateados = $indicadores->getCollection()->map(function ($indicador) {
-                // Cálculo de semaforización y avance en tiempo real usando datos validados
-                $semaforo = $indicador->calcularSemaforizacion(true);
-
-                return [
-                    'id' => $indicador->id,
-                    'nombre' => $indicador->nombre,
-                    'slug' => $indicador->slug,
-                    'descripcion' => $indicador->descripcion,
-                    'programa_derivado' => $indicador->programa_derivado,
-                    'programa' => $indicador->programa,
-                    'tematica' => $indicador->tematica,
-                    'linea_base' => $indicador->linea_base,
-                    'dato_linea_base' => $indicador->dato_linea_base,
-                    'meta_2024' => $indicador->meta_2024,
-                    'unidad_medida' => $indicador->unidad_medida,
-                    'fuente' => $indicador->fuente,
-                    'liga' => $indicador->liga,
-                    'periodicidad' => $indicador->periodicidad,
-                    'cobertura' => $indicador->cobertura,
-                    'tendencia' => $indicador->tendencia,
-                    'formula' => $indicador->formula,
-                    'fecha_actualizacion' => $indicador->fecha_actualizacion,
-                    'indicador_validado' => (bool) $indicador->indicador_validado,
-                    'institucion' => $indicador->institucion ? [
-                        'id' => $indicador->institucion->id,
-                        'nombre' => $indicador->institucion->nombre,
-                        'titular' => $indicador->institucion->titular,
-                    ] : null,
-                    'ods' => $indicador->ods->map(function ($ods) {
-                        return [
-                            'id' => $ods->id,
-                            'nombre' => $ods->nombre,
-                        ];
-                    })->values()->toArray(),
-                    'datos_anuales' => $indicador->datosAnuales->map(function ($da) {
-                        return [
-                            'id' => $da->id,
-                            'anio' => $da->anio,
-                            'valor_dato' => $da->valor_dato,
-                            'resultados' => $da->resultados,
-                            'observaciones' => $da->observaciones,
-                            'fecha_actualizacion' => $da->fecha_actualizacion ? $da->fecha_actualizacion->format('Y-m-d') : null,
-                        ];
-                    })->values()->toArray(),
-                    'avance_real_time' => $semaforo['avance'],
-                    'semaforo_real_time' => $semaforo['semaforizacion'],
-                    'anio_ultimo_dato_validado' => $semaforo['anio_ultimo_dato'],
-                    'ultimo_dato_validado' => $semaforo['ultimo_dato'],
-                ];
-            });
-
-            // Retornar paginado
             return response()->json([
                 'success' => true,
                 'total' => $indicadores->total(),
                 'per_page' => $indicadores->perPage(),
                 'current_page' => $indicadores->currentPage(),
                 'last_page' => $indicadores->lastPage(),
-                'data' => $indicadoresFormateados
-            ], 200);
+                'data' => $indicadoresFormateados,
+                'includes' => $include,
+            ], 200, ['Cache-Control' => 'public, max-age=60']);
 
         } catch (\Exception $e) {
             Log::error('IndicadorApiController@index: Error al consultar indicadores.', [
@@ -174,7 +125,6 @@ class IndicadorApiController extends Controller
                 ], 404);
             }
 
-            // Cálculo en tiempo real usando datos validados
             $semaforo = $indicador->calcularSemaforizacion(true);
 
             $detalle = [

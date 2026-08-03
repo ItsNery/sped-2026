@@ -150,7 +150,9 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
     // --- Dashboards Generales ---
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/panel-avance-general', [DashboardGeneralController::class, 'adminIndex'])->name('admin.avance-general');
+    Route::get('/panel-avance-general', [DashboardGeneralController::class, 'adminIndex'])
+        ->middleware('permission:ver-panel-avance-general')
+        ->name('admin.avance-general');
     Route::get('/usuarios/{id}/indicadores', [DashboardController::class, 'mostrarIndicadores'])
         ->name('usuarios.indicadores');
 
@@ -215,7 +217,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     // --- APIs Internas y Logs ---
     Route::get('/niveles/{tipoId}', [CatalogoController::class, 'getNiveles']);
     Route::get('/dimensiones/{nivelId}', [CatalogoController::class, 'getDimensiones']);
-    Route::resource('/panel-logs', LogCambioController::class);
+    Route::resource('/panel-logs', LogCambioController::class)->middleware('permission:ver-logs');
     Route::get('/api/programas-derivados', [IndicadorController::class, 'getProgramasDerivados'])->name('api.programas_derivados');
 });
 

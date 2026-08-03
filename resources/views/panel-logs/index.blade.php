@@ -23,6 +23,8 @@
                             <th>Tabla</th>
                             <th>Campo</th>
                             <th>Acción</th>
+                            <th>Valor anterior</th>
+                            <th>Valor nuevo</th>
 
                         </tr>
                     </thead>
@@ -64,6 +66,16 @@
                     {
                         data: 'accion',
                         name: 'accion'
+                    },
+                    {
+                        data: 'valor_anterior',
+                        name: 'valor_anterior',
+                        defaultContent: ''
+                    },
+                    {
+                        data: 'valor_nuevo',
+                        name: 'valor_nuevo',
+                        defaultContent: ''
                     }
                 ],
                 pagingType: "simple_numbers",

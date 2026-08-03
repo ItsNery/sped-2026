@@ -9,10 +9,15 @@ use App\Models\CatProgramaDerivadoInstitucional;
 use App\Models\CatProgramaDerivadoRegional;
 use App\Models\CatProgramaDerivadoSectorial;
 use App\Models\Indicador;
+use App\Services\PedMetricsService;
 use Illuminate\Http\Request;
 
 class DashboardGeneralController extends Controller
 {
+    public function __construct(private PedMetricsService $pedMetrics)
+    {
+    }
+
     /**
      * Muestra el tablero de avance general público.
      */
@@ -62,24 +67,33 @@ class DashboardGeneralController extends Controller
             })->orWhereHas('programasInstitucionales', function ($q) use ($planId) {
                 $q->where('plan_estatal', $planId);
             });
-        })->get();
+        })->with(['datosAnuales' => function ($query) use ($soloValidados) {
+            if ($soloValidados) {
+                $query->where('validado', true);
+            }
+            $query->orderByDesc('anio');
+        }])->get();
 
-        $avancePlan = $this->calcularPromedioAvance($indicadoresPlan, $soloValidados);
-        $totalIndicadores = $indicadoresPlan->count();
+        $metricasPlan = $this->pedMetrics->summarizeCached($indicadoresPlan, $soloValidados);
+        $composicionPlan = $this->pedMetrics->summarizeCompositionCached($indicadoresPlan);
+        $avancePlan = $metricasPlan['avance_promedio'];
+        $totalIndicadores = $metricasPlan['total_registrados'];
 
         // 2. Avance por Eje
-        $ejes = CatEje::with('indicadores')->where('plan_id', $planId)->orderBy('numero')->get();
+        $ejes = CatEje::with('indicadores.datosAnuales')->where('plan_id', $planId)->orderBy('numero')->get();
         $ejesData = $ejes->map(function ($eje) use ($soloValidados) {
             $indicadores = $eje->indicadores;
-            $avance = $this->calcularPromedioAvance($indicadores, $soloValidados);
+            $metricas = $this->pedMetrics->summarizeCached($indicadores, $soloValidados);
             return [
                 'id' => $eje->id,
                 'nombre' => $eje->nombre ?? 'No se encontró',
                 'numero' => $eje->numero ?? 'ND',
                 'color' => $eje->color ?? '#CCCCCC',
-                'semaforo_color' => $this->getSemaforoColor($avance),
-                'avance' => $avance,
-                'total_indicadores' => $indicadores->count()
+                'semaforo_color' => $this->getSemaforoColor($metricas['avance_promedio']),
+                'avance' => $metricas['avance_promedio'],
+                'total_indicadores' => $metricas['total_registrados'],
+                'indicadores_evaluables' => $metricas['total_evaluables'],
+                'cobertura_evaluacion' => $metricas['cobertura_evaluacion'],
             ];
         });
 
@@ -100,33 +114,14 @@ class DashboardGeneralController extends Controller
             'avancePlan',
             'colorPlan',
             'totalIndicadores',
+            'metricasPlan',
+            'composicionPlan',
             'ejesData',
             'programasData',
             'programasDerivadosAgrupados',
             'gruposInstitucionales',
             'soloValidados'
         ));
-    }
-
-    /**
-     * Calcula el promedio de avance de una colección de indicadores.
-     */
-    private function calcularPromedioAvance($indicadores, $soloValidados)
-    {
-        if ($indicadores->isEmpty()) return 0;
-
-        $sumAvance = 0;
-        $count = 0;
-
-        foreach ($indicadores as $indicador) {
-            $res = $indicador->calcularSemaforizacion($soloValidados);
-            if ($res['avance'] !== null) {
-                $sumAvance += $res['avance'];
-                $count++;
-            }
-        }
-
-        return $count > 0 ? round($sumAvance / $count, 2) : 0;
     }
 
     /**
@@ -144,10 +139,10 @@ class DashboardGeneralController extends Controller
         $resultados = [];
 
         foreach ($tipos as $tipo) {
-            $programas = $tipo['class']::where('plan_estatal', $planId)->get();
+            $programas = $tipo['class']::with('indicadores.datosAnuales')->where('plan_estatal', $planId)->get();
             foreach ($programas as $prog) {
                 $indicadores = $prog->indicadores;
-                $avance = $this->calcularPromedioAvance($indicadores, $soloValidados);
+                $metricas = $this->pedMetrics->summarizeCached($indicadores, $soloValidados);
 
                 $resultados[] = [
                     'id' => $prog->id,
@@ -155,10 +150,12 @@ class DashboardGeneralController extends Controller
                     'tipo' => $tipo['nombre'],
                     'tipo_slug' => $tipo['slug'],
                     'tipo_order' => $tipo['order'],
-                    'avance' => $avance,
+                    'avance' => $metricas['avance_promedio'],
                     'color' => $prog->color,
-                    'semaforo_color' => $this->getSemaforoColor($avance),
-                    'total_indicadores' => $indicadores->count(),
+                    'semaforo_color' => $this->getSemaforoColor($metricas['avance_promedio']),
+                    'total_indicadores' => $metricas['total_registrados'],
+                    'indicadores_evaluables' => $metricas['total_evaluables'],
+                    'cobertura_evaluacion' => $metricas['cobertura_evaluacion'],
                     'grupo' => $prog->grupo ?? null,
                 ];
             }

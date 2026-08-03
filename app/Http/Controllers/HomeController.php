@@ -17,6 +17,7 @@ use App\Models\CatProgramaDerivadoSectorial;
 use App\Models\CatProgramaDerivadoInstitucional;
 use App\Models\CatProgramaDerivadoEspecial;
 use App\Models\CatProgramaDerivadoRegional;
+use App\Services\PedMetricsService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Spatie\Browsershot\Browsershot;
@@ -29,10 +30,14 @@ use Spatie\Browsershot\Browsershot;
  */
 class HomeController extends Controller
 {
+    public function __construct(private PedMetricsService $pedMetrics)
+    {
+    }
+
     /**
      * Muestra la ficha técnica detallada de un indicador específico.
      *
-     * @param  \App\Models\Indicador  $indicador Modelo inyectado (por Route Model Binding usando el slug).
+     * @param  Indicador  $indicador
      * @return \Illuminate\View\View
      */
     public function show(Indicador $indicador)
@@ -91,7 +96,7 @@ class HomeController extends Controller
         $colorFinal = null;
         $colorPorDefectoGeneral = '#691A32';
 
-        // A. INTENTO 1: Obtener color directamente de la relación polimórfica (La forma elegante)
+        // A. INTENTO 1: Obtener color directamente de la relación polimórfica
         if ($indicador->indicadorable && isset($indicador->indicadorable->color)) {
             $colorFinal = $indicador->indicadorable->color;
         }
@@ -129,7 +134,7 @@ class HomeController extends Controller
             'semaforizacion' => $chart['semaforizacion'],
             'colorSemaforo' => $chart['colorSemaforo'],
             'esDatoLineaBase' => $chart['esDatoLineaBase'],
-            'pdfAsset' => fn (string $path): string => $this->inlinePublicAsset($path),
+            'pdfAsset' => fn(string $path): string => $this->inlinePublicAsset($path),
             'pdfCss' => $this->inlineFichaPdfCss(),
             'pdfEcharts' => file_get_contents(public_path('js/echarts.min.js')),
             'pdfFichaJs' => file_get_contents(public_path('js/ficha-tecnica.js')),
@@ -148,7 +153,7 @@ class HomeController extends Controller
         ];
         $colorSemaforo = $colors[mb_strtolower($semaforizacion)] ?? '#6c757d';
         $ultimoDatoValidado = $indicador->datos_anuales_validados
-            ->filter(fn ($dato) => trim((string) $dato->valor_dato) !== '')
+            ->filter(fn($dato) => trim((string) $dato->valor_dato) !== '')
             ->sortByDesc('anio')
             ->first();
         $esDatoLineaBase = !$ultimoDatoValidado
@@ -294,20 +299,16 @@ class HomeController extends Controller
      */
     public function ped($num)
     {
-        // 1. Realiza la consulta específica para obtener los indicadores
         $indicadoresCollection = $this->consultarIndicadoresPed($num);
 
         if ($indicadoresCollection->isEmpty()) {
             Log::warning("HomeController@ped: No se encontraron indicadores para el eje/num: {$num} desde consultarIndicadoresPed.");
         }
 
-        // 2. Procesar cada indicador para agregar el dato más reciente y avance validado
         $avanceEje = $this->prepararIndicadoresParaVista($indicadoresCollection);
 
-        // 3. Agrupar la colección de indicadores por el campo 'tematica'
         $indicadoresAgrupados = $indicadoresCollection->groupBy('tematica');
 
-        // 4. Devuelve la vista con los datos agrupados.
         return view('eje' . $num . '-ped', [
             'indicadoresAgrupados' => $indicadoresAgrupados,
             'avanceEje' => $avanceEje
@@ -318,7 +319,7 @@ class HomeController extends Controller
      * Consulta específica para obtener los indicadores del PED según su eje.
      *
      * @param  int|string $num Número del eje.
-     * @return Collection<\App\Models\Indicador> Colección de indicadores.
+     * @return Collection<Indicador> Colección de indicadores.
      */
     private function consultarIndicadoresPed($num)
     {
@@ -364,7 +365,7 @@ class HomeController extends Controller
      * Obtiene el dato anual numérico validado más reciente de una colección.
      *
      * @param  Collection<\App\Models\DatoAnual>|null $datosAnualesCollection
-     * @return array{anio: int|null, valor: float|string|null} Arreglo con el año y el valor.
+     * @return array{anio: int|null, valor: float|string|null}
      */
     private function obtenerDatoReciente($datosAnualesCollection)
     {
@@ -422,7 +423,7 @@ class HomeController extends Controller
      * Calcula los atributos dinámicos (semaforización, avance) para una colección de indicadores
      * y retorna el promedio de avance global del grupo.
      *
-     * @param  Collection<\App\Models\Indicador> $indicadoresCollection
+     * @param  Collection<Indicador> $indicadoresCollection
      * @return float Porcentaje promedio de avance del grupo de indicadores.
      */
     private function prepararIndicadoresParaVista($indicadoresCollection)
@@ -521,7 +522,6 @@ class HomeController extends Controller
 
         if (!$programa) abort(404, 'Programa no encontrado');
 
-        // 2. Datos estéticos
         $color = $programa->color ?? '#691A32';
         $descripcion = $programa->descripcion ?? 'Sin descripción';
         $imagen = $programa->imagen ?? 'img/pleca-pajaro-2.png';
@@ -609,7 +609,6 @@ class HomeController extends Controller
 
         $soloValidados = true; // Vista pública siempre usa validados
 
-        // 1. Todos los indicadores del PED para calcular avance general
         $indicadoresPlan = Indicador::where(function ($query) use ($planId) {
             $query->whereHasMorph('indicadorable', [CatEje::class], function ($q) use ($planId) {
                 $q->where('plan_id', $planId);
@@ -622,36 +621,41 @@ class HomeController extends Controller
             })->orWhereHas('programasInstitucionales', function ($q) use ($planId) {
                 $q->where('plan_estatal', $planId);
             });
-        })->get();
+        })->with(['datosAnuales' => function ($query) use ($soloValidados) {
+            if ($soloValidados) {
+                $query->where('validado', true);
+            }
+            $query->orderByDesc('anio');
+        }])->get();
 
         $totalIndicadores = $indicadoresPlan->count();
-        $avancePlan = $this->calcularPromedioAvanceInicio($indicadoresPlan, $soloValidados);
+        $metricasPlan = $this->pedMetrics->summarizeCached($indicadoresPlan, $soloValidados);
+        $composicionPlan = $this->pedMetrics->summarizeCompositionCached($indicadoresPlan);
+        $avancePlan = $metricasPlan['avance_promedio'];
         $colorPlan = $this->getSemaforoColorInicio($avancePlan);
 
-        // 2. Distribución por rangos de semáforo
-        $distribucionGeneral = $this->calcularDistribucionRangos($indicadoresPlan, $soloValidados);
+        $distribucionGeneral = $metricasPlan['distribucion'];
 
-        // 3. Avance por Ejes
-        $ejes = CatEje::with('indicadores')->where('plan_id', $planId)->orderBy('numero')->get();
+        $ejes = CatEje::with('indicadores.datosAnuales')->where('plan_id', $planId)->orderBy('numero')->get();
         $ejesData = $ejes->map(function ($eje) use ($soloValidados) {
             $indicadores = $eje->indicadores;
-            $avance = $this->calcularPromedioAvanceInicio($indicadores, $soloValidados);
+            $metricas = $this->pedMetrics->summarizeCached($indicadores, $soloValidados);
             return [
                 'id' => $eje->id,
                 'nombre' => $eje->nombre ?? 'No se encontró',
                 'numero' => $eje->numero ?? 'ND',
                 'color' => $eje->color ?? '#CCCCCC',
-                'semaforo_color' => $this->getSemaforoColorInicio($avance),
-                'avance' => $avance,
-                'total_indicadores' => $indicadores->count(),
-                'distribucion' => $this->calcularDistribucionRangos($indicadores, $soloValidados),
+                'semaforo_color' => $this->getSemaforoColorInicio($metricas['avance_promedio']),
+                'avance' => $metricas['avance_promedio'],
+                'total_indicadores' => $metricas['total_registrados'],
+                'indicadores_evaluables' => $metricas['total_evaluables'],
+                'cobertura_evaluacion' => $metricas['cobertura_evaluacion'],
+                'distribucion' => $metricas['distribucion'],
             ];
         });
 
-        // 4. Avance por Programas Derivados
         $programasData = $this->getProgramasAvanceInicio($planId, $soloValidados);
 
-        // 5. Grupos de Programas Institucionales para filtrado en la vista
         $gruposInstitucionales = CatProgramaDerivadoInstitucional::select('grupo')
             ->whereNotNull('grupo')
             ->where('grupo', '!=', '')
@@ -661,6 +665,8 @@ class HomeController extends Controller
         return view('inicio', compact(
             'plan',
             'avancePlan',
+            'metricasPlan',
+            'composicionPlan',
             'colorPlan',
             'totalIndicadores',
             'distribucionGeneral',
@@ -668,54 +674,6 @@ class HomeController extends Controller
             'programasData',
             'gruposInstitucionales'
         ));
-    }
-
-    /**
-     * Calcula la distribución de indicadores por rangos de semáforo.
-     */
-    private function calcularDistribucionRangos($indicadores, $soloValidados)
-    {
-        $rangos = ['rojo' => 0, 'amarillo' => 0, 'verde' => 0, 'azul' => 0, 'sin_datos' => 0];
-
-        foreach ($indicadores as $indicador) {
-            $res = $indicador->calcularSemaforizacion($soloValidados);
-            $avance = $res['avance'];
-
-            if ($avance === null || $avance == 0) {
-                $rangos['sin_datos']++;
-            } elseif ($avance >= 110) {
-                $rangos['azul']++;
-            } elseif ($avance >= 91) {
-                $rangos['verde']++;
-            } elseif ($avance >= 71) {
-                $rangos['amarillo']++;
-            } else {
-                $rangos['rojo']++;
-            }
-        }
-
-        return $rangos;
-    }
-
-    /**
-     * Calcula el promedio de avance (replica lógica de DashboardGeneralController).
-     */
-    private function calcularPromedioAvanceInicio($indicadores, $soloValidados)
-    {
-        if ($indicadores->isEmpty()) return 0;
-
-        $sumAvance = 0;
-        $count = 0;
-
-        foreach ($indicadores as $indicador) {
-            $res = $indicador->calcularSemaforizacion($soloValidados);
-            if ($res['avance'] !== null) {
-                $sumAvance += $res['avance'];
-                $count++;
-            }
-        }
-
-        return $count > 0 ? round($sumAvance / $count, 2) : 0;
     }
 
     /**
@@ -732,20 +690,22 @@ class HomeController extends Controller
 
         $resultados = [];
         foreach ($tipos as $tipo) {
-            $programas = $tipo['class']::where('plan_estatal', $planId)->get();
+            $programas = $tipo['class']::with('indicadores.datosAnuales')->where('plan_estatal', $planId)->get();
             foreach ($programas as $prog) {
                 $indicadores = $prog->indicadores;
-                $avance = $this->calcularPromedioAvanceInicio($indicadores, $soloValidados);
+                $metricas = $this->pedMetrics->summarizeCached($indicadores, $soloValidados);
                 $resultados[] = [
                     'id' => $prog->id,
                     'nombre' => $prog->nombre,
                     'tipo' => $tipo['nombre'],
                     'tipo_slug' => $tipo['slug'],
                     'tipo_order' => $tipo['order'],
-                    'avance' => $avance,
+                    'avance' => $metricas['avance_promedio'],
                     'color' => $prog->color,
-                    'semaforo_color' => $this->getSemaforoColorInicio($avance),
-                    'total_indicadores' => $indicadores->count(),
+                    'semaforo_color' => $this->getSemaforoColorInicio($metricas['avance_promedio']),
+                    'total_indicadores' => $metricas['total_registrados'],
+                    'indicadores_evaluables' => $metricas['total_evaluables'],
+                    'cobertura_evaluacion' => $metricas['cobertura_evaluacion'],
                     'grupo' => $tipo['nombre'] === 'Institucionales' ? ($prog->grupo ?? null) : null,
                 ];
             }
@@ -769,7 +729,7 @@ class HomeController extends Controller
     /**
      * Helper específico para obtener el dato reciente del carrusel.
      *
-     * @param  \App\Models\Indicador $indicador
+     * @param  Indicador $indicador
      * @return array{anio: int|string|null, valor: float|string|null}
      */
     private function obtenerDatoRecienteCarrusel(Indicador $indicador)
@@ -979,13 +939,11 @@ class HomeController extends Controller
             $colorFinal = $obtenerColorBase('programa', $indicador->programa);
         }
         $indicador->color = $colorFinal ?? $colorPorDefectoGeneral;
-        // --- FIN DE LA LÓGICA DEL COLOR ---
-        // Obtener el dato más reciente (solo validados)
         $datoReciente = $this->obtenerDatoReciente($indicador->datos_anuales_validados);
+        
         $indicador->setAttribute('dato_reciente', $datoReciente['valor']);
         $indicador->setAttribute('anio_reciente', $datoReciente['anio']);
 
-        // Pasar los datos a la vista
         return view('generar-ficha', compact('indicador'));
     }
 

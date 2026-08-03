@@ -30,7 +30,7 @@
                     <a href="{{ route('admin.avance-general') }}" class="text-decoration-none h-100">
                         <div class="card card-modern h-100 p-3" style="border-top: 5px solid {{ $colorAvanceGlobal }}">
                             <div class="card-body text-center">
-                                <span class="kpi-title">Avance Global Promedio</span>
+                                <span class="kpi-title">Avance promedio evaluable</span>
                                 <div class="kpi-value" style="color: {{ $colorAvanceGlobal }}">
                                     {{ $avanceGlobalPromedio }}%
                                 </div>
@@ -39,6 +39,10 @@
                                         style="width: {{ $avanceGlobalPromedio }}%; background-color: {{ $colorAvanceGlobal }};"
                                         aria-valuenow="{{ $avanceGlobalPromedio }}" aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
+                                <small class="text-muted d-block mt-2">
+                                    {{ $metricasGlobal['total_evaluables'] }} de {{ $metricasGlobal['total_registrados'] }} evaluables
+                                    ({{ number_format($metricasGlobal['cobertura_evaluacion'], 2) }}% de cobertura)
+                                </small>
                             </div>
                         </div>
                     </a>
@@ -81,7 +85,9 @@
                         <span class="text-muted mb-3">
                             Gráfico de la distribución de la semaforización de los indicadores.
                         </span>
-                        <div id="chart-semaforizacion" style="height: 350px; width: 100%;"></div>
+                        <div id="chart-semaforizacion" role="img" aria-label="Distribución de indicadores por semáforo"
+                            style="height: 350px; width: 100%;"></div>
+                        <p class="visually-hidden">La gráfica muestra la distribución de indicadores por estado de avance.</p>
                     </div>
                 </div>
                 <div class="col-lg-6">
@@ -90,7 +96,9 @@
                         <span class="text-muted mb-3">
                             Gráfico de la distribución de la tendencia de los indicadores.
                         </span>
-                        <div id="chart-tendencia" style="height: 350px; width: 100%;"></div>
+                        <div id="chart-tendencia" role="img" aria-label="Distribución de indicadores por tendencia"
+                            style="height: 350px; width: 100%;"></div>
+                        <p class="visually-hidden">La gráfica muestra la distribución de indicadores según su tendencia.</p>
                     </div>
                 </div>
             </div>

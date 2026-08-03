@@ -131,11 +131,14 @@
     @endauth
     <main>
         @include('layouts.header')
-        <div id="customSearchModal" class="custom-modal-search">
+        <a class="visually-hidden-focusable" href="#contenido-principal">Saltar al contenido principal</a>
+        <div id="customSearchModal" class="custom-modal-search" role="dialog" aria-modal="true"
+            aria-labelledby="customSearchModalTitle" aria-hidden="true" tabindex="-1">
             <div class="custom-modal-content">
                 <div class="custom-modal-header">
-                    <span class="custom-close" onclick="closeSearchModal()">&times;</span>
-                    <h5 class="custom-modal-title">Buscar con Google</h5>
+                    <button type="button" class="custom-close" aria-label="Cerrar búsqueda"
+                        onclick="closeSearchModal()">&times;</button>
+                    <h5 id="customSearchModalTitle" class="custom-modal-title">Buscar con Google</h5>
                 </div>
                 <div class="custom-modal-body">
                     <script async src="https://cse.google.com/cse.js?cx=031f16cfb8b5845ab"></script>
@@ -143,7 +146,9 @@
                 </div>
             </div>
         </div>
-        @yield('content')
+        <div id="contenido-principal" tabindex="-1">
+            @yield('content')
+        </div>
         @include('layouts.footer')
     </main>
     @yield('jss-final')
@@ -151,13 +156,27 @@
         window.addEventListener("load", function() {
             let modal = document.getElementById("customSearchModal");
 
-            window.openSearchModal = function() {
+            let lastFocusedElement = null;
+
+            window.openSearchModal = function(event) {
+                event?.preventDefault();
+                lastFocusedElement = document.activeElement;
                 modal.classList.add("show");
+                modal.setAttribute('aria-hidden', 'false');
+                modal.querySelector('.custom-close').focus();
             };
 
             window.closeSearchModal = function() {
                 modal.classList.remove("show");
+                modal.setAttribute('aria-hidden', 'true');
+                lastFocusedElement?.focus();
             };
+
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && modal.classList.contains('show')) {
+                    closeSearchModal();
+                }
+            });
 
             window.onclick = function(event) {
                 if (event.target === modal) {

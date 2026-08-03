@@ -4,7 +4,6 @@
 @section('meta-description', 'Página pública de documentación, consola de pruebas interactiva y consulta en tiempo real de la API de indicadores del SPED del Estado de Puebla.')
 
 @section('css')
-    <link href="{{ asset('css/api_docs.css') }}" rel="stylesheet">
 @endsection
 
 @section('content')
@@ -232,7 +231,7 @@
 
                                     <div class="mb-3 d-flex align-items-center gap-3">
                                         <span class="api-docs__method-badge api-docs__method-badge--get">GET</span>
-                                        <div class="api-docs__url-string flex-grow-1 api-url-text" data-path="/api/indicadores">Cargando...
+                                         <div class="api-docs__url-string flex-grow-1 api-url-text" data-path="/api/v1/indicadores">Cargando...
                                         </div>
                                     </div>
 
@@ -303,7 +302,7 @@
 
                                     <div class="mb-3 d-flex align-items-center gap-3">
                                         <span class="api-docs__method-badge api-docs__method-badge--get">GET</span>
-                                        <div class="api-docs__url-string flex-grow-1 api-url-text" data-path="/api/indicadores/{id_or_slug}">
+                                         <div class="api-docs__url-string flex-grow-1 api-url-text" data-path="/api/v1/indicadores/{id_or_slug}">
                                             Cargando...</div>
                                     </div>
 
@@ -337,7 +336,7 @@
                                     <h3>Ejemplos de Integración</h3>
                                 </div>
                                 <div class="api-docs__card-body">
-                                    <ul class="nav nav-tabs mb-3" id="snippet-tabs">
+                                    <ul class="nav nav-tabs mb-3 api-docs__snippet-tabs" id="snippet-tabs">
                                         <li class="nav-item">
                                             <button class="nav-link active" data-snippet-tab="snip-js">JavaScript
                                                 (Fetch)</button>
@@ -347,10 +346,10 @@
                                         </li>
                                     </ul>
 
-                                    <div id="snip-js" class="snippet-content">
+                                    <div id="snip-js" class="api-docs__snippet-content">
                                         <div class="api-docs__code-wrapper">
                                             <pre class="api-docs__code-block"><code>// Ejemplo de consulta de indicadores con filtros desde JS
-const url = new URL(window.location.origin + '/api/indicadores');
+const url = new URL(window.location.origin + '/api/v1/indicadores');
 url.searchParams.append('buscar', 'pobreza');
 url.searchParams.append('institucion_id', '2');
 
@@ -368,12 +367,12 @@ fetch(url, {
                                         </div>
                                     </div>
 
-                                    <div id="snip-php" class="snippet-content d-none">
+                                    <div id="snip-php" class="api-docs__snippet-content d-none">
                                         <div class="api-docs__code-wrapper">
                                             <pre class="api-docs__code-block"><code>&lt;?php
 // Ejemplo de consumo en PHP usando cURL
 $ch = curl_init();
-$url = "http://localhost/api/indicadores?buscar=" . urlencode("pobreza");
+$url = "http://localhost/api/v1/indicadores?buscar=" . urlencode("pobreza");
 
 curl_setopt($ch, CURLOPT_URL, $url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

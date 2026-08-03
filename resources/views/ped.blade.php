@@ -51,14 +51,78 @@
                         <div class="ped-dashboard__summary-gauge-value">{{ number_format($avancePlan, 2) }}%</div>
                     </div>
                     <div>
-                        <div class="ped-dashboard__summary-number">{{ $totalIndicadores }}</div>
+                        <div class="ped-dashboard__summary-number">{{ $metricasPlan['total_registrados'] }}</div>
                         <div class="ped-dashboard__summary-caption">Indicadores registrados</div>
                         <p class="ped-dashboard__summary-copy">
-                            Cumplimiento promedio de las metas evaluables del Plan Estatal de Desarrollo.
+                            {{ $metricasPlan['total_evaluables'] }} evaluables ·
+                            {{ number_format($metricasPlan['cobertura_evaluacion'], 2) }}% de cobertura.
                         </p>
                     </div>
                 </div>
             </div>
+
+            <section class="ped-dashboard__composition" aria-labelledby="ped-composition-title">
+                <div class="ped-dashboard__section-heading ped-dashboard__section-heading--compact">
+                    <div>
+                        <h2 id="ped-composition-title" class="ped-dashboard__section-title">Estructura del seguimiento</h2>
+                        <p class="ped-dashboard__section-subtitle">¿Qué estamos siguiendo dentro del Plan Estatal de Desarrollo?</p>
+                    </div>
+                    <span class="ped-dashboard__composition-total">{{ $composicionPlan['total'] }} indicadores</span>
+                </div>
+
+                <div class="ped-dashboard__composition-grid">
+                    @foreach($composicionPlan['por_tipo'] as $tipo => $total)
+                        <div class="ped-dashboard__composition-item">
+                            <strong>{{ $total }}</strong>
+                            <span>{{ $tipo }}</span>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="ped-dashboard__composition-footer">
+                    <span><i class="fas fa-check-circle me-1"></i>{{ $composicionPlan['validados'] }} validados</span>
+                    <span><i class="fas fa-clock me-1"></i>{{ $composicionPlan['pendientes'] }} pendientes</span>
+                    <span><i class="fas fa-building me-1"></i>{{ $composicionPlan['instituciones'] }} instituciones responsables</span>
+                </div>
+            </section>
+
+            <section class="ped-dashboard__methodology" id="metodologia" aria-labelledby="ped-methodology-title">
+                <div class="ped-dashboard__section-heading ped-dashboard__section-heading--compact">
+                    <div>
+                        <h2 id="ped-methodology-title" class="ped-dashboard__section-title">Cómo leer este seguimiento</h2>
+                        <p class="ped-dashboard__section-subtitle">Criterios para interpretar correctamente las cifras del tablero.</p>
+                    </div>
+                    <span class="ped-dashboard__methodology-tag"><i class="fas fa-info-circle me-1"></i>Metodología</span>
+                </div>
+
+                <div class="ped-dashboard__methodology-grid">
+                    <article class="ped-dashboard__methodology-item">
+                        <i class="fas fa-chart-line"></i>
+                        <div>
+                            <h3>Avance promedio</h3>
+                            <p>Es el promedio simple del cumplimiento de los indicadores que tienen datos validados y condiciones suficientes para compararse contra su meta.</p>
+                        </div>
+                    </article>
+                    <article class="ped-dashboard__methodology-item">
+                        <i class="fas fa-filter"></i>
+                        <div>
+                            <h3>Indicadores evaluables</h3>
+                            <p>Los indicadores sin datos validados, sin meta o con información insuficiente se reportan por separado y no alteran el promedio.</p>
+                        </div>
+                    </article>
+                    <article class="ped-dashboard__methodology-item">
+                        <i class="fas fa-traffic-light"></i>
+                        <div>
+                            <h3>Semáforo de cumplimiento</h3>
+                            <p>Menos de 71% indica rezago; de 71% a 90.9% está en proceso; de 91% a 109.9% es aceptable; y 110% o más supera la meta.</p>
+                        </div>
+                    </article>
+                </div>
+
+                <p class="ped-dashboard__methodology-note">
+                    La vista pública utiliza información validada. Los porcentajes reflejan el último dato disponible de cada indicador y pueden corresponder a distintos años de referencia.
+                </p>
+            </section>
 
             <div class="ped-dashboard__tabs" role="tablist" aria-label="Contenido del Plan Estatal de Desarrollo">
                 <button class="ped-dashboard__tab active" id="pills-home-tab" data-bs-toggle="pill"
@@ -93,7 +157,9 @@
                                 <h3 class="ped-dashboard__card-title">{{ $eje['nombre'] }}</h3>
                                 <div id="gauge-eje-{{ $eje['id'] }}" class="ped-dashboard__card-gauge"></div>
                                 <div class="ped-dashboard__card-footer">
-                                    <span class="ped-dashboard__card-footer-label">Avance promedio</span>
+                                    <span class="ped-dashboard__card-footer-label">
+                                        Avance promedio · {{ $eje['indicadores_evaluables'] }}/{{ $eje['total_indicadores'] }} evaluables
+                                    </span>
                                     <strong class="ped-dashboard__card-value">{{ number_format($eje['avance'], 2) }}%</strong>
                                 </div>
                             </article>
@@ -175,7 +241,9 @@
                                                 <h3 class="ped-dashboard__card-title">{{ $programa['nombre'] }}</h3>
                                                 <div id="gauge-prog-{{ $programa['tipo_slug'] }}-{{ $programa['id'] }}" class="ped-dashboard__card-gauge"></div>
                                                 <div class="ped-dashboard__card-footer">
-                                                    <span class="ped-dashboard__card-footer-label">Avance promedio</span>
+                                    <span class="ped-dashboard__card-footer-label">
+                                        Avance promedio · {{ $programa['indicadores_evaluables'] }}/{{ $programa['total_indicadores'] }} evaluables
+                                    </span>
                                                     <strong class="ped-dashboard__card-value">{{ number_format($programa['avance'], 2) }}%</strong>
                                                 </div>
                                             </article>

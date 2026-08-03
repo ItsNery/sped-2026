@@ -105,7 +105,7 @@ function switchTab(tabId, buttonElement) {
  * Switch active code snippet tab
  */
 function switchSnippet(snippetId, buttonElement) {
-    document.querySelectorAll(".snippet-content").forEach(block => {
+    document.querySelectorAll(".api-docs__snippet-content").forEach(block => {
         block.classList.add("d-none");
     });
     

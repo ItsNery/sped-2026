@@ -185,7 +185,7 @@
                     </a>
 
                     {{-- UTILIDADES (Buscador y Login) --}}
-                    <a class="text-white mb-2" href="#" onclick="openSearchModal();">
+                    <a class="text-white mb-2" href="#customSearchModal" onclick="openSearchModal(event);">
                         <i class="fas fa-search mr-2" aria-hidden="true"></i> Buscar
                     </a>
                     <a class="text-white mb-2" href="{{ route('login') }}" title="Iniciar sesión" rel="noopener" target="_self">

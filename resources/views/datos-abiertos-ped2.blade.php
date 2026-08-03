@@ -26,7 +26,6 @@
     Seguimiento a la Planeación y Evaluación del Desarrollo
     del Estado de Puebla.')
 @section('css')
-    <link href="{{ asset('css/datos_abiertos.css') }}" rel="stylesheet">
 @endsection
 @section('content')
     <div class="datos-abiertos">

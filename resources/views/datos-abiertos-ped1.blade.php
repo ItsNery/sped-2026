@@ -21,7 +21,6 @@
     Seguimiento a la Planeación y Evaluación del Desarrollo
     del Estado de Puebla.')
 @section('css')
-    <link href="{{ asset('css/datos_abiertos.css') }}" rel="stylesheet">
 @endsection
 @section('jss-inicial')
 @endsection
@@ -436,7 +435,7 @@
                                                 {{-- No necesitas 'nombre_archivo' para una respuesta JSON en el navegador --}}
 
                                                 <button type="submit"
-                                                    title="Ver Datos Completos de los Indicadores del Eje 6 del PED en JSON"
+                                                     title="Ver Datos Completos de los Indicadores del Eje Transversal del PED en JSON"
                                                     class="btn btn-link p-0">
                                                     <img src="{{ asset('img/js.png') }}" alt="Icono de JSON">
                                                     {{-- Necesitarás un icono JSON --}}
@@ -449,7 +448,7 @@
                                                 <input type="hidden" name="nombre_archivo" value="BD_Eje6_PED_Completa">
 
                                                 <button type="submit"
-                                                    title="Descargar BD Completa de los Indicadores del Eje 6 del PED en CSV"
+                                                     title="Descargar BD Completa de los Indicadores del Eje Transversal del PED en CSV"
                                                     class="btn btn-link p-0">
                                                     <img src="{{ asset('img/csv.png') }}" alt="Icono de CSV">
                                                     {{-- Necesitarás un icono CSV --}}
@@ -462,7 +461,7 @@
                                                 <input type="hidden" name="nombre_archivo" value="BD_Eje6_PED_Completa">
 
                                                 <button type="submit"
-                                                    title="Descargar BD Completa de los Indicadores del Eje 6 del PED"
+                                                     title="Descargar BD Completa de los Indicadores del Eje Transversal del PED"
                                                     class="btn btn-link p-0"
                                                     style="border:none; background:none; cursor:pointer;">
                                                     <img src="{{ asset('img/xls.png') }}" alt="Icono de XLS"

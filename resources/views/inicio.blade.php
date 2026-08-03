@@ -106,44 +106,66 @@
                             {{-- Textos principales --}}
                             <div class="text-center text-sm-start">
                                 <h3 class="inicio-dashboard__stats-title">
-                                    <strong>{{ $totalIndicadores }}</strong> Indicadores
+                                    <strong>{{ $metricasPlan['total_registrados'] }}</strong> Indicadores registrados
                                 </h3>
                                 <p class="inicio-dashboard__stats-subtitle">
-                                    Avance de cumplimiento de metas
+                                    Avance promedio de indicadores evaluables
                                 </p>
                                 <h4 class="inicio-dashboard__stats-percentage" style="color: {{ $colorPlan }};">
-                                    {{ number_format($avancePlan, 2) }}% Cumplimiento Promedio
+                                    {{ number_format($avancePlan, 2) }}% Avance Promedio
                                 </h4>
+                                <p class="mb-0 text-muted small">
+                                    {{ $metricasPlan['total_evaluables'] }} evaluables ·
+                                    {{ number_format($metricasPlan['cobertura_evaluacion'], 2) }}% de cobertura
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="inicio-dashboard__composition" aria-labelledby="inicio-composition-title">
+                            <div class="inicio-dashboard__composition-heading">
+                                <span id="inicio-composition-title">Estructura del seguimiento</span>
+                                <small>{{ $composicionPlan['total'] }} indicadores</small>
+                            </div>
+                            <div class="inicio-dashboard__composition-split">
+                                <div class="inicio-dashboard__composition-item">
+                                    <strong>{{ $composicionPlan['estrategicos'] }}</strong>
+                                    <span>Estratégicos</span>
+                                </div>
+                                <div class="inicio-dashboard__composition-item">
+                                    <strong>{{ $composicionPlan['derivados'] }}</strong>
+                                    <span>De programas derivados</span>
+                                </div>
                             </div>
                         </div>
 
                         {{-- Párrafo explicativo debajo --}}
                         <p class="inicio-dashboard__stats-desc">
-                            Los avances son determinados por los cumplimientos de meta de cada indicador que refleja actualizaciones en el año de referencia. Para más detalles del desglose por rango de semáforo de cumplimiento, consulta la barra horizontal:
+                            El avance promedio se calcula con indicadores que cuentan con datos validados y condiciones suficientes para compararse contra una meta. Los indicadores no evaluables se muestran por separado en el desglose.
+                            <a href="{{ url('/ped#metodologia') }}" class="inicio-dashboard__methodology-link">¿Cómo se calcula?</a>
                         </p>
 
                         {{-- Distribución de Semáforo: Barra Segmentada Horizontal y Leyenda --}}
                         <div class="inicio-dashboard__semaforo-bar mt-4">
                             @php
-                                $totalEvaluables =
+                                $totalRegistrados =
                                     $distribucionGeneral['rojo'] +
                                     $distribucionGeneral['amarillo'] +
                                     $distribucionGeneral['verde'] +
                                     $distribucionGeneral['azul'] +
                                     $distribucionGeneral['sin_datos'];
                                 $pctRojo =
-                                    $totalEvaluables > 0 ? ($distribucionGeneral['rojo'] / $totalEvaluables) * 100 : 0;
+                                    $totalRegistrados > 0 ? ($distribucionGeneral['rojo'] / $totalRegistrados) * 100 : 0;
                                 $pctAmarillo =
-                                    $totalEvaluables > 0
-                                        ? ($distribucionGeneral['amarillo'] / $totalEvaluables) * 100
+                                    $totalRegistrados > 0
+                                        ? ($distribucionGeneral['amarillo'] / $totalRegistrados) * 100
                                         : 0;
                                 $pctVerde =
-                                    $totalEvaluables > 0 ? ($distribucionGeneral['verde'] / $totalEvaluables) * 100 : 0;
+                                    $totalRegistrados > 0 ? ($distribucionGeneral['verde'] / $totalRegistrados) * 100 : 0;
                                 $pctAzul =
-                                    $totalEvaluables > 0 ? ($distribucionGeneral['azul'] / $totalEvaluables) * 100 : 0;
+                                    $totalRegistrados > 0 ? ($distribucionGeneral['azul'] / $totalRegistrados) * 100 : 0;
                                 $pctGris =
-                                    $totalEvaluables > 0
-                                        ? ($distribucionGeneral['sin_datos'] / $totalEvaluables) * 100
+                                    $totalRegistrados > 0
+                                        ? ($distribucionGeneral['sin_datos'] / $totalRegistrados) * 100
                                         : 0;
                             @endphp
                             <div class="progress rounded-pill shadow-sm"
@@ -244,8 +266,9 @@
                                             {{ $eje['total_indicadores'] }} indicadores
                                         </span>
                                         <span class="inicio-ejes__avance-text">
-                                            Avance promedio: <strong
-                                                style="color: {{ $eje['semaforo_color'] }};">{{ number_format($eje['avance'], 2) }}%</strong>
+                                             Avance promedio: <strong
+                                                 style="color: {{ $eje['semaforo_color'] }};">{{ number_format($eje['avance'], 2) }}%</strong>
+                                            <span class="ms-2">{{ $eje['indicadores_evaluables'] }}/{{ $eje['total_indicadores'] }} evaluables</span>
                                         </span>
                                     </div>
                                 </div>
@@ -370,10 +393,10 @@
                                                     </div>
                                                     <div class="inicio-programa-card__avance"
                                                         style="color: {{ $programa['semaforo_color'] }};">
-                                                        {{ number_format($programa['avance'], 2) }}%
+                                                         {{ number_format($programa['avance'], 2) }}%
                                                     </div>
                                                     <div class="inicio-programa-card__count">
-                                                        {{ $programa['total_indicadores'] }} indicadores
+                                                        {{ $programa['indicadores_evaluables'] }}/{{ $programa['total_indicadores'] }} evaluables
                                                     </div>
                                                 </div>
                                             </a>

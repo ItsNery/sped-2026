@@ -15,12 +15,17 @@
             <div class="col-md-8">
                 <div class="card main-card shadow">
                     <div class="card-body text-center py-5">
-                        <h3 class="fw-bold mb-4">Avance General</h3>
+                        <h3 class="fw-bold mb-4">Avance promedio evaluable</h3>
                         <div class="gauge-container">
                             <div id="mainGauge" style="height: 100%; width: 100%;"></div>
                             <div class="gauge-value" style="color: {{ $colorPlan }}">{{ number_format($avancePlan, 2) }}%</div>
                         </div>
-                        <p class="text-muted mt-3">Promedio general ponderado de todos los indicadores del Plan Estatal.</p>
+                        <p class="text-muted mt-3 mb-1">
+                            {{ $metricasPlan['total_evaluables'] }} de {{ $metricasPlan['total_registrados'] }} indicadores evaluables.
+                        </p>
+                        <p class="text-muted mb-0">
+                            Cobertura de evaluación: {{ number_format($metricasPlan['cobertura_evaluacion'], 2) }}%
+                        </p>
                     </div>
                 </div>
             </div>
@@ -41,7 +46,9 @@
                         <span class="h4 fw-bold" style="color: {{ $eje['semaforo_color'] ?? '#333' }}">{{ number_format($eje['avance'], 2) }}%</span>
                     </div>
                     <div class="mt-3 text-center">
-                        <small class="text-muted">{{ $eje['total_indicadores'] }} indicadores</small>
+                        <small class="text-muted">
+                            {{ $eje['indicadores_evaluables'] }} de {{ $eje['total_indicadores'] }} evaluables
+                        </small>
                     </div>
                 </div>
             </div>
@@ -87,7 +94,9 @@
                                     <span class="h5 fw-bold" style="color: {{ $prog['semaforo_color'] }}">{{ number_format($prog['avance'], 1) }}%</span>
                                 </div>
                                 <div class="mt-2">
-                                    <small class="text-muted">{{ $prog['total_indicadores'] }} indicadores</small>
+                                    <small class="text-muted">
+                                        {{ $prog['indicadores_evaluables'] }} de {{ $prog['total_indicadores'] }} evaluables
+                                    </small>
                                 </div>
                             </div>
                         </div>

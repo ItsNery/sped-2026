@@ -1,25 +1,25 @@
 @extends('layouts.plantilla')
 @section('title', 'Eje Transversal del Plan Estatal de Desarrollo 2024-2030')
 @section('meta-description',
-'Sección dedicada al Eje 5 del Plan Estatal de Desarrollo 2024-2030 dentro del Sistema
+'Sección dedicada al Eje Transversal del Plan Estatal de Desarrollo 2024-2030 dentro del Sistema
 de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
 del Estado de Puebla')
 @section('canonical-url', url()->current())
 @section('og-title',
-'Eje 5 del Plan Estatal de Desarrollo 2024-2030 - Sistema de Información para el
+'Eje Transversal del Plan Estatal de Desarrollo 2024-2030 - Sistema de Información para el
 Seguimiento a la Planeación y Evaluación del Desarrollo
 del Estado de Puebla')
 @section('og-description',
-'Sección dedicada al Eje 5 del Plan Estatal de Desarrollo 2024-2030 dentro del Sistema
+'Sección dedicada al Eje Transversal del Plan Estatal de Desarrollo 2024-2030 dentro del Sistema
 de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
 del Estado de Puebla')
 @section('og:url', url()->current())
 @section('twitter-title',
-'Eje 5 del Plan Estatal de Desarrollo 2024-2030 - Sistema de Información para el
+'Eje Transversal del Plan Estatal de Desarrollo 2024-2030 - Sistema de Información para el
 Seguimiento a la Planeación y Evaluación del Desarrollo
 del Estado de Puebla')
 @section('twitter-description',
-'Sección dedicada al Eje 5 del Plan Estatal de Desarrollo 2024-2030 dentro del Sistema
+'Sección dedicada al Eje Transversal del Plan Estatal de Desarrollo 2024-2030 dentro del Sistema
 de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
 del Estado de Puebla')
 @section('css')

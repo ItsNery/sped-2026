@@ -18,7 +18,15 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Rutas públicas de consulta de indicadores en tiempo real
+// API pública versionada. El grupo api aplica throttle:api por defecto.
+Route::prefix('v1')->group(function () {
+    Route::get('/indicadores', [\App\Http\Controllers\Api\IndicadorApiController::class, 'index'])
+        ->name('api.v1.indicadores.index');
+    Route::get('/indicadores/{id_or_slug}', [\App\Http\Controllers\Api\IndicadorApiController::class, 'show'])
+        ->name('api.v1.indicadores.show');
+});
+
+// Compatibilidad con consumidores existentes.
 Route::get('/indicadores', [\App\Http\Controllers\Api\IndicadorApiController::class, 'index']);
 Route::get('/indicadores/{id_or_slug}', [\App\Http\Controllers\Api\IndicadorApiController::class, 'show']);
 

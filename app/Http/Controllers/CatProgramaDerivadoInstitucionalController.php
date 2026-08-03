@@ -35,7 +35,7 @@ class CatProgramaDerivadoInstitucionalController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
@@ -46,7 +46,7 @@ class CatProgramaDerivadoInstitucionalController extends Controller
             'siglas' => 'nullable|string|max:20',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'descripcion' => 'required|string',
-            'color' => 'required|string|max:7', // Hex color #RRGGBB
+            'color' => 'required|string|max:7',
             'plan_estatal' => 'required|exists:cat_planes_estatales_desarrollo,id',
             'documento' => 'required|url',
         ]);
@@ -94,7 +94,7 @@ class CatProgramaDerivadoInstitucionalController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */

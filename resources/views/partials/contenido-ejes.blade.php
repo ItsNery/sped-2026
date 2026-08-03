@@ -7,31 +7,32 @@
 ])
 
 @php
-$totalIndicadoresGeneral = 0;
-if (isset($indicadoresAgrupados) && $indicadoresAgrupados->count() > 0) {
-    foreach ($indicadoresAgrupados as $grupoDeIndicadores) {
-        $totalIndicadoresGeneral += $grupoDeIndicadores->count();
+    $etiquetaEje = (int) $numEje === 6 ? 'Eje Transversal' : 'Eje ' . $numEje;
+    $totalIndicadoresGeneral = 0;
+    if (isset($indicadoresAgrupados) && $indicadoresAgrupados->count() > 0) {
+        foreach ($indicadoresAgrupados as $grupoDeIndicadores) {
+            $totalIndicadoresGeneral += $grupoDeIndicadores->count();
+        }
     }
-}
 
-$avanceGeneral = min((float) ($avanceEje ?? 0), 100);
-$colorGaugeGeneral = '#adb5bd';
-if (($avanceEje ?? 0) >= 110) {
-    $colorGaugeGeneral = '#0d6efd';
-} elseif (($avanceEje ?? 0) >= 91) {
-    $colorGaugeGeneral = '#198754';
-} elseif (($avanceEje ?? 0) >= 71) {
-    $colorGaugeGeneral = '#ffc107';
-} elseif (($avanceEje ?? 0) > 0) {
-    $colorGaugeGeneral = '#dc3545';
-}
+    $avanceGeneral = min((float) ($avanceEje ?? 0), 100);
+    $colorGaugeGeneral = '#adb5bd';
+    if (($avanceEje ?? 0) >= 110) {
+        $colorGaugeGeneral = '#0d6efd';
+    } elseif (($avanceEje ?? 0) >= 91) {
+        $colorGaugeGeneral = '#198754';
+    } elseif (($avanceEje ?? 0) >= 71) {
+        $colorGaugeGeneral = '#ffc107';
+    } elseif (($avanceEje ?? 0) > 0) {
+        $colorGaugeGeneral = '#dc3545';
+    }
 @endphp
 
 <main class="eje-dashboard" style="--eje-color: var(--color-eje{{ $numEje }});">
     <section class="eje-dashboard__intro">
         <div class="eje-dashboard__container">
             <span class="eje-dashboard__eyebrow">Seguimiento del PED 2024-2030</span>
-            <h1 class="eje-dashboard__title">Eje {{ $numEje }}</h1>
+            <h1 class="eje-dashboard__title">{{ $etiquetaEje }}</h1>
             <p class="eje-dashboard__intro-text">
                 Consulta el avance de los indicadores y el enfoque estratégico de este eje de desarrollo.
             </p>
@@ -41,7 +42,6 @@ if (($avanceEje ?? 0) >= 110) {
     <section class="eje-dashboard__container">
         <div class="eje-dashboard__summary">
             <div class="eje-dashboard__summary-copy">
-                <span class="eje-dashboard__summary-badge">Eje {{ $numEje }}</span>
                 <h2 class="eje-dashboard__summary-title">Enfoque estratégico</h2>
                 <p class="eje-dashboard__summary-description">{{ $textoEnfoque }}</p>
             </div>

@@ -44,7 +44,7 @@ class CatProgramaDerivadoEspecialController extends Controller
             'nombre' => 'required|string|max:255',
             'imagen' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'descripcion' => 'required|string',
-            'color' => 'required|string|max:7', // Hex color #RRGGBB
+            'color' => 'required|string|max:7',
             'plan_estatal' => 'required|exists:cat_planes_estatales_desarrollo,id',
             'documento' => 'required|url',
         ]);
@@ -93,7 +93,6 @@ class CatProgramaDerivadoEspecialController extends Controller
         $input = $request->all();
 
         if ($image = $request->file('imagen')) {
-            // Delete old image if exists
             if ($programa->imagen && file_exists(public_path($programa->imagen))) {
                 unlink(public_path($programa->imagen));
             }

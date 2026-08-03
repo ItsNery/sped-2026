@@ -94,7 +94,7 @@
             </li> --}}
             {{-- Fin de comentario --}}
             <li class="nav-item" id="buscador">
-                <a class="nav-link" href="#" onclick="openSearchModal();">
+                <a class="nav-link" href="#customSearchModal" onclick="openSearchModal(event);">
                     <i class="fas fa-search" aria-hidden="true"></i> Buscar
                 </a>
             </li>
