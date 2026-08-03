@@ -32,11 +32,11 @@ jobs:
           TEMP_BACKUP="/tmp/${BACKUP_NAME}"
 
           test -f .env
-          command -v mysqldump >/dev/null 2>&1
+          DUMP_BIN="$(command -v mariadb-dump || command -v mysqldump)"
           test -n "$DB_DATABASE"
           test -n "$DB_USERNAME"
 
-          MYSQL_PWD="$DB_PASSWORD" mysqldump \
+          MYSQL_PWD="$DB_PASSWORD" "$DUMP_BIN" \
             --host="${DB_HOST:-127.0.0.1}" \
             --port="${DB_PORT:-3306}" \
             --user="$DB_USERNAME" \
@@ -103,11 +103,11 @@ jobs:
           TEMP_BACKUP="/tmp/${BACKUP_NAME}"
 
           test -f .env
-          command -v mysqldump >/dev/null 2>&1
+          DUMP_BIN="$(command -v mariadb-dump || command -v mysqldump)"
           test -n "$DB_DATABASE"
           test -n "$DB_USERNAME"
 
-          MYSQL_PWD="$DB_PASSWORD" mysqldump \
+          MYSQL_PWD="$DB_PASSWORD" "$DUMP_BIN" \
             --host="${DB_HOST:-127.0.0.1}" \
             --port="${DB_PORT:-3306}" \
             --user="$DB_USERNAME" \

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\old;
 
 use App\Models\IndicadorMunicipal;
 use App\Models\Odses;
@@ -10,7 +10,7 @@ use App\Models\PeriodicidadIndicadorMunicipal;
 use App\Models\CatTipo;
 use App\Models\ResultadoIndicadorMunicipal;
 
-class IndicadorMunicipalController extends Controller
+class RespaldoIndicadorMunicipalController extends Controller
 {
     public function __construct()
     {
