@@ -64,6 +64,7 @@ jobs:
           sudo chown -R user_planeacion:www-data storage bootstrap/cache
           sudo chmod -R 775 storage bootstrap/cache
 
+          rm -f bootstrap/cache/*.php
           composer install --no-dev --optimize-autoloader
 
           php artisan migrate --force
@@ -137,6 +138,7 @@ jobs:
           sudo chmod -R 775 storage bootstrap/cache
           sudo chmod -R g+s storage bootstrap/cache
 
+          rm -f bootstrap/cache/*.php
           composer install --no-dev --optimize-autoloader
 
           php artisan migrate --force

@@ -62,6 +62,7 @@
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     <link href="{{ asset('css/estilos.css') }}" rel="stylesheet">
     <script src="{{ asset('js/echarts.min.js') }}"></script>
+    <script src="{{asset('./js/sienna-accessibility.umd.js')}}" async></script>
 
     @yield('jss-inicial')
     @yield('css')
@@ -149,6 +150,14 @@
         <div id="contenido-principal" tabindex="-1">
             @yield('content')
         </div>
+        <a class="btn-option scroll-top" href="#contenido-principal"
+            aria-label="Volver al inicio de la página">
+            <svg class="scroll-top__progress" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="scroll-top__track" cx="22" cy="22" r="18"></circle>
+                <circle class="scroll-top__value" cx="22" cy="22" r="18"></circle>
+            </svg>
+            <span class="fas fa-angle-up scroll-top__icon" aria-hidden="true"></span>
+        </a>
         @include('layouts.footer')
     </main>
     @yield('jss-final')

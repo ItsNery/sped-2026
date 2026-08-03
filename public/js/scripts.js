@@ -122,6 +122,45 @@ document.addEventListener("DOMContentLoaded", function () {
         );
     }
 
+    const scrollTopButton = document.querySelector(".scroll-top");
+
+    if (scrollTopButton) {
+        const progressCircle = scrollTopButton.querySelector(".scroll-top__value");
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+        const circumference = 2 * Math.PI * 18;
+
+        if (progressCircle) {
+            progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
+        }
+
+        const updateScrollTopButton = () => {
+            const scrollTop = window.scrollY;
+            const scrollableHeight = Math.max(
+                document.documentElement.scrollHeight - window.innerHeight,
+                0
+            );
+            const progress = scrollableHeight > 0
+                ? Math.min(scrollTop / scrollableHeight, 1)
+                : 0;
+
+            scrollTopButton.classList.toggle("is-visible", scrollTop > 300);
+
+            if (progressCircle) {
+                progressCircle.style.strokeDashoffset = circumference * (1 - progress);
+            }
+        };
+
+        window.addEventListener("scroll", updateScrollTopButton, { passive: true });
+        scrollTopButton.addEventListener("click", (event) => {
+            event.preventDefault();
+            window.scrollTo({
+                top: 0,
+                behavior: reducedMotion.matches ? "auto" : "smooth",
+            });
+        });
+        updateScrollTopButton();
+    }
+
     // // --- NUEVA LÓGICA: Mostrar menú automáticamente en la primera visita a la homepage ---
     // const isHomepage = window.location.pathname === '/';
     // const menuAutoOpenedKey = 'menuHasBeenAutoOpened_v1'; // Puedes cambiar '_v1' si alguna vez quieres resetear esto para todos los usuarios
