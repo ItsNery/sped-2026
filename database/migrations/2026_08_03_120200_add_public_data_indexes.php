@@ -22,7 +22,7 @@ return new class extends Migration
 
         if (!Schema::hasIndex('resultados_indicadores_municipales', ['id_indicador', 'año', 'periodo'])) {
             Schema::table('resultados_indicadores_municipales', function (Blueprint $table) {
-                $table->index(['id_indicador', 'año', 'periodo']);
+                $table->index(['id_indicador', 'año', 'periodo'], 'rim_indicador_anio_periodo_idx');
             });
         }
     }
@@ -41,7 +41,7 @@ return new class extends Migration
         }
         if (Schema::hasIndex('resultados_indicadores_municipales', ['id_indicador', 'año', 'periodo'])) {
             Schema::table('resultados_indicadores_municipales', function (Blueprint $table) {
-                $table->dropIndex(['id_indicador', 'año', 'periodo']);
+                $table->dropIndex('rim_indicador_anio_periodo_idx');
             });
         }
     }
