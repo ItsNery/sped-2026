@@ -62,7 +62,7 @@
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     <link href="{{ asset('css/estilos.css') }}" rel="stylesheet">
     <script src="{{ asset('js/echarts.min.js') }}"></script>
-    <script src="{{asset('./js/sienna-accessibility.umd.js')}}" async></script>
+    <script src="{{ asset('./js/sienna-accessibility.umd.js') }}" async></script>
 
     @yield('jss-inicial')
     @yield('css')
@@ -70,65 +70,65 @@
 
 <body class="@yield('body-class')">
     @auth
-    <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url('/') }}" rel="noopener" target="_self" title="Inicio">
-                <img src="{{ asset('img/logo_sped.png') }}" alt="" class="w-10p">
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarSupportedContent1" aria-controls="navbarSupportedContent1" aria-expanded="false"
-                aria-label="{{ __('Toggle navigation') }}">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+        <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
+            <div class="container">
+                <a class="navbar-brand" href="{{ url('/') }}" rel="noopener" target="_self" title="Inicio">
+                    <img src="{{ asset('img/logo_sped.png') }}" alt="" class="w-10p">
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent1" aria-controls="navbarSupportedContent1" aria-expanded="false"
+                    aria-label="{{ __('Toggle navigation') }}">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-            <div class="collapse navbar-collapse" id="navbarSupportedContent1">
-                <!-- Left Side Of Navbar -->
-                <ul class="navbar-nav mr-auto">
-                </ul>
-                <!-- Right Side Of Navbar -->
-                <ul class="navbar-nav ml-auto">
-                    <!-- Authentication Links -->
-                    @guest
-                    @if (Route::has('login'))
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
-                    </li>
-                    @endif
+                <div class="collapse navbar-collapse" id="navbarSupportedContent1">
+                    <!-- Left Side Of Navbar -->
+                    <ul class="navbar-nav mr-auto">
+                    </ul>
+                    <!-- Right Side Of Navbar -->
+                    <ul class="navbar-nav ml-auto">
+                        <!-- Authentication Links -->
+                        @guest
+                            @if (Route::has('login'))
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
+                                </li>
+                            @endif
 
-                    @if (Route::has('register'))
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
-                    </li>
-                    @endif
-                    @else
-                    <li class="nav-item dropdown">
-                        <a id="navbarDropdown" class="nav-link dropdown-toggle m-w-150" href="#"
-                            role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
-                            v-pre>
-                            {{ Auth::user()->name }}
-                        </a>
+                            @if (Route::has('register'))
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
+                                </li>
+                            @endif
+                        @else
+                            <li class="nav-item dropdown">
+                                <a id="navbarDropdown" class="nav-link dropdown-toggle m-w-150" href="#"
+                                    role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                    v-pre>
+                                    {{ Auth::user()->name }}
+                                </a>
 
-                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                            <a class="dropdown-item" href="{{ route('dashboard') }}" target="_self" title="Panel"
-                                rel="noopener">
-                                {{ __('Panel') }}
-                            </a>
-                            <a class="dropdown-item" href="{{ route('logout') }}"
-                                onclick="event.preventDefault();
+                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{{ route('dashboard') }}" target="_self" title="Panel"
+                                        rel="noopener">
+                                        {{ __('Panel') }}
+                                    </a>
+                                    <a class="dropdown-item" href="{{ route('logout') }}"
+                                        onclick="event.preventDefault();
                                                         document.getElementById('logout-form').submit();"
-                                title="Cerrar Sesión" rel="noopener">
-                                {{ __('Cerrar Sesión') }}
-                            </a>
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                @csrf
-                            </form>
-                        </div>
-                    </li>
-                    @endguest
-                </ul>
+                                        title="Cerrar Sesión" rel="noopener">
+                                        {{ __('Cerrar Sesión') }}
+                                    </a>
+                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                        @csrf
+                                    </form>
+                                </div>
+                            </li>
+                        @endguest
+                    </ul>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
     @endauth
     <main>
         @include('layouts.header')
@@ -150,8 +150,7 @@
         <div id="contenido-principal" tabindex="-1">
             @yield('content')
         </div>
-        <a class="btn-option scroll-top" href="#contenido-principal"
-            aria-label="Volver al inicio de la página">
+        <a class="btn-option scroll-top" href="#contenido-principal" aria-label="Volver al inicio de la página">
             <svg class="scroll-top__progress" viewBox="0 0 44 44" aria-hidden="true">
                 <circle class="scroll-top__track" cx="22" cy="22" r="18"></circle>
                 <circle class="scroll-top__value" cx="22" cy="22" r="18"></circle>

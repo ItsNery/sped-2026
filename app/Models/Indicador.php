@@ -10,10 +10,9 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Str;
 
 /**
- * Class Indicador
- * * Modelo que contiene toda la lógica de negocio para el cálculo de avances y semaforización.
- * * @package App\Models
- * * @property int $id
+ * Modelo de indicadores y sus cálculos de avance y semaforización.
+ *
+ * @property int $id
  * @property string $nombre
  * @property string $slug
  * @property string|null $programa_derivado
@@ -36,7 +35,7 @@ use Illuminate\Support\Str;
  * @property bool $indicador_validado
  * @property int|null $indicadorable_id
  * @property string|null $indicadorable_type
- * * Accessors (Propiedades mágicas)
+ * Accessors (propiedades mágicas):
  * @property-read EloquentCollection $datos_anuales_validados
  * @property-read float|string|null $dato_reciente
  * @property-read int|null $anio_reciente
@@ -104,7 +103,7 @@ class Indicador extends Model
     }
 
     /**
-     * Inicializa el modelo y sus eventos (Booting).
+     * Registra los eventos de creación y actualización del modelo.
      *
      * @return void
      */
@@ -112,21 +111,20 @@ class Indicador extends Model
     {
         parent::boot();
 
-        // Antes de crear (creating)
+        // Genera el slug a partir del nombre antes de guardar el indicador.
         static::creating(function ($indicador) {
             $indicador->slug = Str::slug($indicador->nombre);
         });
 
-        // Antes de actualizar (updating) - opcional, si quieres que cambie la URL si cambia el nombre
         static::updating(function ($indicador) {
             $indicador->slug = Str::slug($indicador->nombre);
         });
     }
 
     /**
-     * Escucha eventos del modelo después de que ha sido inicializado.
-     * Si el indicador se marca como validado, resetea el estado 'modificado'
-     * de todos sus datos anuales asociados.
+     * Registra eventos posteriores a la actualización del modelo.
+     *
+     * Al validar un indicador, marca sus datos anuales como no modificados.
      *
      * @return void
      */
@@ -140,7 +138,7 @@ class Indicador extends Model
     }
 
     /**
-     * Relación muchos a muchos con Odses.
+     * Obtiene los Objetivos de Desarrollo Sostenible asociados.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
@@ -150,7 +148,7 @@ class Indicador extends Model
     }
 
     /**
-     * Relación polimórfica para obtener el programa o plan al que pertenece el indicador.
+     * Obtiene el programa o plan al que pertenece el indicador.
      *
      * @return \Illuminate\Database\Eloquent\Relations\MorphTo
      */
@@ -160,7 +158,7 @@ class Indicador extends Model
     }
 
     /**
-     * Relación muchos a muchos con Programas Institucionales.
+     * Obtiene los programas institucionales asociados.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
@@ -175,7 +173,7 @@ class Indicador extends Model
     }
 
     /**
-     * Relación con DatoAnual. Un indicador tiene MUCHOS registros de datos anuales.
+     * Obtiene los datos anuales del indicador.
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
@@ -185,7 +183,7 @@ class Indicador extends Model
     }
 
     /**
-     * Relación inversa con User (Responsable del indicador).
+     * Obtiene el usuario responsable del indicador.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
@@ -195,7 +193,7 @@ class Indicador extends Model
     }
 
     /**
-     * Relación inversa con Institucion.
+     * Obtiene la institución responsable del indicador.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
@@ -205,9 +203,9 @@ class Indicador extends Model
     }
 
     /**
-     * Accesor que devuelve solo los datos anuales validados.
+     * Obtiene solo los datos anuales validados.
      *
-     * @return EloquentCollection
+     * @return EloquentCollection Datos anuales validados.
      */
     public function getDatosAnualesValidadosAttribute()
     {
@@ -223,24 +221,21 @@ class Indicador extends Model
     }
 
     /**
-     * Orquesta el cálculo completo de la semaforización.
+     * Calcula el avance y estado de semaforización del indicador.
      *
-     * @param bool $soloValidados Determina si se deben usar solo datos validados.
-     * @return array{anio_ultimo_dato: int|null, ultimo_dato: float|string|null, avance: float|null, semaforizacion: string}
+     * @param  bool  $soloValidados Indica si deben usarse solo datos validados.
+     * @return array{anio_ultimo_dato: int|null, ultimo_dato: float|string|null, avance: float|null, semaforizacion: string} Resultado del cálculo.
      */
     public function calcularSemaforizacion(bool $soloValidados = false): array
     {
         $ultimoDato = $this->calcularUltimoDato($soloValidados);
 
-        // Verificamos si es solo la línea base
         $esLineaBase = $ultimoDato['es_linea_base'] ?? false;
 
         if ($esLineaBase) {
-            // No calculamos avance ni semáforo tradicional
             $avance = null;
-            $semaforizacion = "Solo línea base"; // o "Solo línea base"
+            $semaforizacion = "Solo línea base";
         } else {
-            // Lógica normal
             $avance = $this->calcularAvance($ultimoDato);
             $semaforizacion = $this->determinarSemaforizacion($avance);
         }
@@ -254,17 +249,15 @@ class Indicador extends Model
     }
 
     /**
-     * Busca el último dato anual disponible o la línea base.
+     * Busca el dato anual más reciente o utiliza el valor de línea base.
      *
-     * @param bool $soloValidados
-     * @return array{valor: float|string|null, anio: int|null}
+     * @param  bool  $soloValidados Indica si deben usarse solo datos validados.
+     * @return array{valor: float|string|null, anio: int|null, es_linea_base: bool} Dato seleccionado y su origen.
      */
     private function calcularUltimoDato($soloValidados = false)
     {
-        // --- PARTE 1: Buscar en Datos Anuales ---
         $ultimoDatoAnual = null;
 
-        // Decidir qué colección o query usar
         $fuenteDatos = $soloValidados ? $this->getDatosAnualesValidadosAttribute() : $this->datosAnuales;
 
         if ($fuenteDatos instanceof EloquentCollection) {
@@ -275,7 +268,7 @@ class Indicador extends Model
                 ->sortByDesc('anio')
                 ->first();
         } else {
-            // Fallback si es un query (esto pasa si no se cargó la relación y se llamó al accessor)
+            // Consulta directamente la relación si la colección no fue cargada.
             $query = $this->datosAnuales();
             if ($soloValidados) {
                 $query->where('validado', true);
@@ -286,8 +279,6 @@ class Indicador extends Model
         }
 
         if ($ultimoDatoAnual) {
-            // Validamos si el "último" año que encontramos es en realidad la línea base (o incluso anterior).
-            // Si el año del dato es menor o igual a la línea base, entonces es línea base.
             $esIgualALineaBase = (!is_null($this->linea_base) && $ultimoDatoAnual->anio <= $this->linea_base);
 
             return [
@@ -297,13 +288,11 @@ class Indicador extends Model
             ];
         }
 
-        // --- PARTE 2: EL SALVAVIDAS (Línea Base) ---
-        // Si llegamos aquí es porque NO hubo dato anual.
-        // Verificamos si existe dato en la línea base.
+        // Usa la línea base cuando no existe un dato anual disponible.
         if (!is_null($this->dato_linea_base) && trim((string)$this->dato_linea_base) !== '') {
             return [
-                'valor' => $this->dato_linea_base, // Devuelve "21.6"
-                'anio' => $this->linea_base,       // Devuelve "2022"
+                'valor' => $this->dato_linea_base,
+                'anio' => $this->linea_base,
                 'es_linea_base' => true,
             ];
         }
@@ -314,61 +303,53 @@ class Indicador extends Model
     /**
      * Calcula el porcentaje de avance hacia la meta según la tendencia.
      *
-     * @param array{valor: float|string|null, anio: int|null} $ultimoDato
-     * @return float|null
+     * @param  array{valor: float|string|null, anio: int|null, es_linea_base?: bool}  $ultimoDato Dato usado para el cálculo.
+     * @return float|null Porcentaje de avance o null si no puede calcularse.
      */
     private function calcularAvance($ultimoDato)
     {
-        // 1. Validaciones iniciales
         if ($ultimoDato['valor'] === null) return null;
 
-        // 2. Limpieza de Meta
         $metaLimpia = $this->meta_2024 !== null ? str_replace(',', '', (string)$this->meta_2024) : null;
-        if (!is_numeric($metaLimpia) || $metaLimpia == 0) return null; // Evitar división por cero
+        if (!is_numeric($metaLimpia) || $metaLimpia == 0) return null;
         $meta = (float)$metaLimpia;
 
-        // 3. Limpieza de Valor (Dato Anual o Línea Base)
         $valorLimpio = str_replace(',', '', (string)$ultimoDato['valor']);
         if (!is_numeric($valorLimpio)) return null;
         $valor = (float)$valorLimpio;
 
-        // 4. Lógica de Tendencias
-        $tendencia = strtolower(trim((string)$this->tendencia)); // "constante"
+        $tendencia = strtolower(trim((string)$this->tendencia));
 
-        // --- AQUÍ ESTÁ EL ARREGLO ---
         if ($tendencia === "mayor es mejor") {
             return ($valor / $meta) * 100;
         } elseif ($tendencia === "menor es mejor") {
             return max(0, 100 - ((($valor - $meta) / $meta) * 100));
         } elseif ($tendencia === "constante") {
-            // Lógica para constante: Si la meta es mantener 21.6 y tienes 21.6, es el 100%
-            // Usamos la misma lógica que "mayor es mejor" para calcular el % de cumplimiento
             return ($valor / $meta) * 100;
         }
 
-        // Si no coincide con ninguna tendencia conocida
         return null;
     }
 
     /**
-     * Determina el color o estado del semáforo basado en el porcentaje de avance.
+     * Determina el estado del semáforo según el porcentaje de avance.
      *
-     * @param float|null $avance
-     * @return string
+     * @param  float|null  $avance Porcentaje de avance.
+     * @return string Estado de semaforización.
      */
     private function determinarSemaforizacion($avance)
     {
         if ($avance === null) return "No clasificado";
         if ($avance >= 110) return "Excedido";
-        if ($avance >= 91) return "Aceptable"; // De 91 a 109.9
-        if ($avance >= 71) return "Moderado";  // De 71 a 90.9
-        return "Insuficiente"; // Menos de 71
+        if ($avance >= 91) return "Aceptable";
+        if ($avance >= 71) return "Moderado";
+        return "Insuficiente";
     }
 
     /**
-     * Accesor para obtener el dato más reciente disponible.
+     * Obtiene el valor del dato más reciente disponible.
      *
-     * @return float|string|null
+     * @return float|string|null Valor más reciente o null si no existe.
      */
     public function getDatoRecienteAttribute()
     {
@@ -385,9 +366,9 @@ class Indicador extends Model
     }
 
     /**
-     * Accesor para obtener el año del dato más reciente disponible.
+     * Obtiene el año del dato más reciente disponible.
      *
-     * @return int|null
+     * @return int|null Año del dato más reciente.
      */
     public function getAnioRecienteAttribute()
     {
@@ -399,9 +380,9 @@ class Indicador extends Model
     }
 
     /**
-     * Accesor para obtener el dato más reciente, considerando solo los validados.
+     * Obtiene el valor del dato más reciente validado.
      *
-     * @return float|string|null
+     * @return float|string|null Valor validado más reciente o null si no existe.
      */
     public function getDatoRecienteValidadoAttribute()
     {
@@ -414,9 +395,9 @@ class Indicador extends Model
     }
 
     /**
-     * Accesor para obtener el año del dato validado más reciente.
+     * Obtiene el año del dato validado más reciente.
      *
-     * @return int|null
+     * @return int|null Año del dato validado más reciente.
      */
     public function getAnioRecienteValidadoAttribute()
     {
@@ -425,9 +406,9 @@ class Indicador extends Model
     }
 
     /**
-     * Accesor para obtener el último dato registrado mediante la lógica de semaforización.
+     * Obtiene el último valor usado por la semaforización.
      *
-     * @return float|string|null
+     * @return float|string|null Último valor disponible.
      */
     public function getUltimoDatoAttribute()
     {
@@ -435,9 +416,9 @@ class Indicador extends Model
     }
 
     /**
-     * Accesor para obtener el año del último dato registrado mediante la lógica de semaforización.
+     * Obtiene el año del último dato usado por la semaforización.
      *
-     * @return int|null
+     * @return int|null Año del último dato disponible.
      */
     public function getAnioUltimoDatoAttribute()
     {
@@ -445,9 +426,9 @@ class Indicador extends Model
     }
 
     /**
-     * Accesor para obtener el porcentaje de avance general.
+     * Obtiene el porcentaje de avance general del indicador.
      *
-     * @return float|null
+     * @return float|null Porcentaje de avance o null si no puede calcularse.
      */
     public function getAvanceAttribute()
     {
@@ -455,9 +436,9 @@ class Indicador extends Model
     }
 
     /**
-     * Accesor para obtener el estado de la semaforización general.
+     * Obtiene el estado general de semaforización del indicador.
      *
-     * @return string
+     * @return string Estado de semaforización.
      */
     public function getSemaforizacionAttribute()
     {
@@ -465,9 +446,9 @@ class Indicador extends Model
     }
 
     /**
-     * Accesor para obtener el estado de la semaforización considerando SOLO datos validados.
+     * Obtiene el estado de semaforización usando solo datos validados.
      *
-     * @return string
+     * @return string Estado de semaforización validada.
      */
     public function getSemaforizacionValidadaAttribute()
     {
@@ -475,12 +456,12 @@ class Indicador extends Model
     }
 
     /**
-     * Obtiene y formatea un valor anual específico para las vistas.
+     * Obtiene y formatea el valor de un año específico para las vistas.
      *
-     * @param int $year El año a consultar.
-     * @param string $default Valor por defecto si no se encuentra.
-     * @param bool $soloValidados Filtrar solo por datos validados.
-     * @return string
+     * @param  int  $year Año que se consultará.
+     * @param  string  $default Valor devuelto si no existe un dato.
+     * @param  bool  $soloValidados Indica si deben usarse solo datos validados.
+     * @return string Valor formateado o el valor por defecto.
      */
     public function getValorDatoAnual($year, $default = 'N/D', $soloValidados = false)
     {
@@ -502,11 +483,11 @@ class Indicador extends Model
     }
 
     /**
-     * Calcula la fecha de actualización más reciente para ser mostrada en la vista.
+     * Obtiene la fecha de actualización más reciente para la vista.
      *
-     * @param string $default Valor por defecto.
-     * @param bool $soloValidados Evaluar solo datos validados.
-     * @return string Fecha formateada (d-m-Y) o valor por defecto.
+     * @param  string  $default Valor devuelto si no existe una fecha válida.
+     * @param  bool  $soloValidados Indica si deben usarse solo datos validados.
+     * @return string Fecha en formato d-m-Y o valor por defecto.
      */
     public function getProximaFechaActualizacionParaVista($default = 'N/D', $soloValidados = false)
     {
@@ -542,9 +523,9 @@ class Indicador extends Model
     /**
      * Obtiene los resultados descriptivos más recientes para mostrarlos en la vista.
      *
-     * @param string $default Mensaje por defecto si no hay resultados.
-     * @param bool $soloValidados Evaluar solo datos validados.
-     * @return string
+     * @param  string  $default Mensaje devuelto si no hay resultados.
+     * @param  bool  $soloValidados Indica si deben usarse solo datos validados.
+     * @return string Resultados más recientes o el mensaje por defecto.
      */
     public function getResultadosParaVista($default = 'Sin resultados registrados.', $soloValidados = false)
     {

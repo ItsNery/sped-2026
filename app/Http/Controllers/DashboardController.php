@@ -20,21 +20,26 @@ use App\Models\CatProgramaDerivadoSectorial;
 use App\Models\DatoAnual;
 use App\Services\PedMetricsService;
 
+/**
+ * Gestiona las vistas y métricas principales del panel de control.
+ */
 class DashboardController extends Controller
 {
-    public function __construct(private PedMetricsService $pedMetrics)
-    {
-    }
+    /**
+     * Crea una nueva instancia del controlador.
+     *
+     * @param  PedMetricsService  $pedMetrics Servicio para calcular métricas de indicadores.
+     */
+    public function __construct(private PedMetricsService $pedMetrics) {}
 
     /**
-     * Prepara y muestra el panel de control (dashboard).
+     * Prepara y muestra el panel de control.
      *
-     * Este método es el corazón del dashboard. Agrega y procesa datos de
-     * múltiples fuentes (Indicadores, Instituciones, Usuarios, Datos Anuales)
-     * para calcular una variedad de métricas y KPIs que se envían a la vista.
-     * La vista que se muestra depende del rol del usuario.
+     * Para usuarios asociados a un municipio muestra el panel municipal. Para
+     * el resto de los usuarios calcula las métricas generales, la información
+     * de programas derivados y los datos necesarios para los gráficos.
      *
-     * @return \Illuminate\View\View
+     * @return \Illuminate\Contracts\View\View Vista del panel correspondiente.
      */
     public function index()
     {
@@ -55,7 +60,7 @@ class DashboardController extends Controller
 
             $instituciones = $institucionesTop;
 
-            //  Avance Global Promedio
+            // Calcula el avance promedio de los indicadores del plan vigente.
             $planId = 3;
             $plan = CatPlanEstatalDesarrollo::find($planId);
 
@@ -78,11 +83,11 @@ class DashboardController extends Controller
                 });
             })->get();
 
-        $metricasGlobal = $this->pedMetrics->summarizeCached($indicadoresPlan, false);
+            $metricasGlobal = $this->pedMetrics->summarizeCached($indicadoresPlan, false);
             $avanceGlobalPromedio = $metricasGlobal['avance_promedio'];
             $colorAvanceGlobal = $this->getSemaforoColor($avanceGlobalPromedio);
 
-            // Programas Derivados
+            // Agrupa y ordena el avance de los programas derivados.
             $programasData = collect($this->getProgramasAvance($planId, false))
                 ->groupBy('tipo_slug')
                 ->map(function ($programas, $tipo) {
@@ -101,22 +106,19 @@ class DashboardController extends Controller
             }
             $programasData = $programasAgrupadosOrdenados;
 
-            // Se obtiene el porcentaje de indicadores que son validados
+            // Calcula el porcentaje de indicadores validados.
             $totalIndicadoresValidados = Indicador::where('indicador_validado', true)->count();
 
             $totalIndicadores = Indicador::count();
             $porcentajeValidado = $totalIndicadores > 0 ? ($totalIndicadoresValidados / $totalIndicadores) * 100 : 0;
 
-            // Se obtiene el porcentaje de indicadores que no tienen datos anuales o no han sido validados
-            // La lógica de 'orWhereDoesntHave('datosAnuales')' sigue siendo válida si significa
-            // "no tiene ningún registro de dato anual asociado".
+            // Calcula el porcentaje de indicadores no validados o sin datos anuales.
             $totalIndicadoresIncompletos = Indicador::where(function ($query) {
                 $query->where('indicador_validado', false)
                     ->orWhereDoesntHave('datosAnuales')
                 ;
             })->count();
             $porcentajeIncompletos = $totalIndicadores > 0 ? ($totalIndicadoresIncompletos / $totalIndicadores) * 100 : 0;
-            /**------------------------------------------------------------------------------------------- */
             $indicadoresRecientes = Indicador::orderBy('updated_at', 'desc')
                 ->take(10)
                 ->get()
@@ -134,18 +136,14 @@ class DashboardController extends Controller
                         'tipo' => $esNuevo ? 'Nuevo' : 'Modificado'
                     ];
                 });
-            /**------------------------------------------------------------------------------------------- */
-            // Se muestran las instituciones que no tienen indicadores "completos" o "válidos"
-            // Un indicador se considera "bueno" si está validado O si tiene datos para todos los años 2015-2030.
-            // Una institución es "sin indicadores (buenos)" si NO TIENE indicadores que cumplan esa condición.
-            // Obtener instituciones que TIENEN indicadores, y de esos, AL MENOS UNO NO ESTÁ VALIDADO.
+            // Obtiene instituciones con al menos un indicador no validado.
             $institucionesSinIndicadores = Institucion::where('id', '!=', 1)
                 ->whereHas('indicadores', function ($queryIndicador) {
-                    $queryIndicador->where('indicador_validado', false); // O $queryIndicador->where('indicador_validado', 0);
+                    $queryIndicador->where('indicador_validado', false);
                 })
                 ->get();
 
-            // Se obtendrán los indicadores que están próximos a caducar, a tiempo y los que ya caducaron
+            // Clasifica los indicadores según la fecha de actualización más reciente.
             $hoy = Carbon::now()->format('Y-m-d');
 
             $getFechaMasReciente = function ($indicador) {
@@ -167,14 +165,14 @@ class DashboardController extends Controller
                     }
                 }
 
-                if ($fechasValidasEnDatosAnuales->isNotEmpty()) { //
-                    return $fechasValidasEnDatosAnuales->max()->format('Y-m-d'); //
+                if ($fechasValidasEnDatosAnuales->isNotEmpty()) {
+                    return $fechasValidasEnDatosAnuales->max()->format('Y-m-d');
                 }
 
-                // Fallback a la fecha_actualizacion del indicador principal si no hay fechas en datosAnuales
+                // Usa la fecha del indicador si no hay fechas válidas en los datos anuales.
                 if (!empty($indicador->fecha_actualizacion)) {
                     try {
-                        return Carbon::parse($indicador->fecha_actualizacion)->format('Y-m-d'); //
+                        return Carbon::parse($indicador->fecha_actualizacion)->format('Y-m-d');
                     } catch (\Exception $e) {
                         return null;
                     }
@@ -188,7 +186,7 @@ class DashboardController extends Controller
 
             Indicador::with('datosAnuales')->get()->each(function ($indicador) use ($hoy, $getFechaMasReciente, &$indicadoresProximos, &$indicadoresATiempo, &$indicadoresCaducados) {
                 $fechaMasReciente = $getFechaMasReciente($indicador);
-                $indicador->setAttribute('fecha_actualizacion_calculada', $fechaMasReciente); //
+                $indicador->setAttribute('fecha_actualizacion_calculada', $fechaMasReciente);
 
                 if ($fechaMasReciente) {
                     if ($fechaMasReciente > $hoy) {
@@ -200,8 +198,7 @@ class DashboardController extends Controller
                     }
                 }
             });
-            /**------------------------------------------------------------------------------------------- */
-            // Cantidad de indicadores validados por enlace
+            // Prepara la cantidad de indicadores validados por usuario Enlace.
             $usuariosEnlace = User::whereHas('roles', function ($query) {
                 $query->where('name', 'Enlace');
             })->with('instituciones.indicadores')->get();
@@ -237,8 +234,7 @@ class DashboardController extends Controller
                     ->count();
                 $datosPorAnio[] = $count;
             }
-            /**------------------------------------------------------------------------------------------- */
-            // Indicadores por periodicidad
+            // Obtiene la distribución de indicadores por periodicidad.
             $periodicidades = Indicador::select('periodicidad', DB::raw('COUNT(*) as total'))
                 ->groupBy('periodicidad')
                 ->get();
@@ -246,8 +242,7 @@ class DashboardController extends Controller
             $etiquetas_periodicidades = $periodicidades->pluck('periodicidad');
             $values_periodicidades = $periodicidades->pluck('total');
 
-            /**------------------------------------------------------------------------------------------- */
-            $indicadoresSemaforizacion = Indicador::with('datosAnuales') //
+            $indicadoresSemaforizacion = Indicador::with('datosAnuales')
                 ->get();
 
             $semaforizacionCounts = [
@@ -285,7 +280,7 @@ class DashboardController extends Controller
                 }
             }
 
-            // 1. Distribución por Tendencia
+            // Calcula la distribución de indicadores por tendencia.
             $tendenciaCounts = [
                 "Mayor es mejor" => 0,
                 "Menor es mejor" => 0,
@@ -304,7 +299,7 @@ class DashboardController extends Controller
                 }
             }
 
-            // 2. Top 5: Indicadores con Avance más Bajo (Focos Rojos)
+            // Obtiene los cinco indicadores insuficientes con menor avance.
             $focosRojos = collect($indicadoresSemaforizacion)
                 ->filter(function ($ind) {
                     return $ind->semaforizacion === "Insuficiente" && $ind->avance !== null;
@@ -312,7 +307,7 @@ class DashboardController extends Controller
                 ->sortBy('avance')
                 ->take(5);
 
-            // 3. Instituciones Críticas (Más indicadores Insuficientes + Caducados)
+            // Obtiene las cinco instituciones con más indicadores críticos.
             $institucionesCriticas = Institucion::where('id', '!=', 1)
                 ->get()
                 ->map(function ($inst) use ($indicadoresPorSemaforo, $indicadoresCaducados) {
@@ -334,7 +329,6 @@ class DashboardController extends Controller
                 ->sortByDesc('total_criticos')
                 ->take(5);
 
-            /**------------------------------------------------------------------------------------------- */
             return view('dashboard', compact(
                 'instituciones',
                 'porcentajeValidado',
@@ -368,10 +362,10 @@ class DashboardController extends Controller
 
     /**
      * Muestra una lista filtrada de indicadores según su estado de semaforización.
-     * Es el endpoint al que apuntan los clics en el gráfico de semaforización.
+     * Este método atiende los clics en el gráfico de semaforización.
      *
-     * @param  string $categoria La categoría de semaforización (Ej. "Aceptable").
-     * @return \Illuminate\View\View
+     * @param  string  $categoria Categoría solicitada del semáforo.
+     * @return \Illuminate\Contracts\View\View Vista con los indicadores filtrados.
      */
     public function semaforizacion($categoria)
     {
@@ -399,11 +393,11 @@ class DashboardController extends Controller
 
     /**
      * Muestra los indicadores de un usuario "Enlace", filtrados por estado de validación.
-     * Es el endpoint al que apuntan los clics en los gráficos de avance por Enlace.
+     * Este método atiende los clics en los gráficos de avance por Enlace.
      *
-     * @param  \Illuminate\Http\Request $request
-     * @param  int $id ID del usuario Enlace.
-     * @return \Illuminate\View\View
+     * @param  Request  $request Solicitud con el filtro de validación.
+     * @param  int  $id Identificador del usuario Enlace.
+     * @return \Illuminate\Contracts\View\View Vista con los indicadores filtrados.
      */
     public function mostrarIndicadores(Request $request, $id)
     {
@@ -420,11 +414,15 @@ class DashboardController extends Controller
             );
         }
 
-        return view('users.indicadores', compact('usuario', 'indicadores', 'filtro')); //
+        return view('users.indicadores', compact('usuario', 'indicadores', 'filtro'));
     }
 
     /**
      * Calcula el promedio de avance de una colección de indicadores.
+     *
+     * @param  Collection  $indicadores Indicadores cuyo avance se calculará.
+     * @param  bool  $soloValidados Indica si deben considerarse solo indicadores validados.
+     * @return float Promedio de avance redondeado a dos decimales.
      */
     private function calcularPromedioAvance($indicadores, $soloValidados)
     {
@@ -445,7 +443,11 @@ class DashboardController extends Controller
     }
 
     /**
-     * Obtiene el avance de todos los programas derivados del plan.
+     * Obtiene el avance de los programas derivados de un plan estatal.
+     *
+     * @param  int  $planId Identificador del plan estatal.
+     * @param  bool  $soloValidados Indica si deben considerarse solo indicadores validados.
+     * @return array<int, array<string, mixed>> Datos resumidos de cada programa.
      */
     private function getProgramasAvance($planId, $soloValidados)
     {
@@ -481,7 +483,10 @@ class DashboardController extends Controller
     }
 
     /**
-     * Determina el color del semáforo basado en el avance.
+     * Determina el color del semáforo según el porcentaje de avance.
+     *
+     * @param  float|null  $avance Porcentaje de avance del indicador o programa.
+     * @return string Código hexadecimal del color correspondiente.
      */
     private function getSemaforoColor($avance)
     {
