@@ -83,11 +83,17 @@
                         <div class="ficha-pdf__value">{{ $indicador->meta_2024 ?? 'N/D' }}</div>
                     </div>
                 </div>
+                @php
+                    $ultimoDatoPdf = $chartConfig['ultimoDato'] ?? null;
+                    $ultimoDatoNumericoPdf = $ultimoDatoPdf !== null
+                        ? filter_var($ultimoDatoPdf, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION | FILTER_FLAG_ALLOW_THOUSAND)
+                        : null;
+                @endphp
                 <div class="ficha-pdf__status">
                     <div class="ficha-pdf__status-item">
                         <div class="ficha-pdf__label">Último dato {{ $chartConfig['anioUltimoDato'] ?? '' }}</div>
                         <div class="ficha-pdf__status-value">
-                            {{ $esDatoLineaBase ? 'N/D' : ($chartConfig['ultimoDato'] ?? 'N/D') }}</div>
+                            {{ $esDatoLineaBase || !is_numeric($ultimoDatoNumericoPdf) ? 'N/D' : number_format((float) str_replace(',', '', $ultimoDatoNumericoPdf), 2, '.', ',') }}</div>
                     </div>
                     <div class="ficha-pdf__status-item">
                         <div class="ficha-pdf__label">Semaforización</div><span class="ficha-pdf__badge"
@@ -126,7 +132,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($indicador->datos_anuales_validados->sortBy('anio') as $dato)
+                            @forelse($indicador->datos_anuales_validados
+                                ->filter(fn($dato) => $dato->valor_dato !== null && trim((string) $dato->valor_dato) !== '')
+                                ->sortBy('anio') as $dato)
                                 @php
                                     $valorHistorico = filter_var(
                                         $dato->valor_dato,
@@ -138,7 +146,11 @@
                                     <td>{{ $dato->anio }}</td>
                                     <td>{{ is_numeric($valorHistorico) ? number_format((float) str_replace(',', '', $valorHistorico), 2, '.', ',') : $dato->valor_dato }}</td>
                                 </tr>
-                            @endforeach
+                            @empty
+                                <tr>
+                                    <td colspan="2">No hay datos anuales validados con valor registrado.</td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                     <div id="grafica-historica" class="ficha-pdf__chart"></div>

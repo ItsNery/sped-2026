@@ -81,8 +81,8 @@ class DatoAnual extends Model
      * Inicializa eventos del modelo (Booting).
      *
      * Se ejecuta cuando se actualiza un registro de DatoAnual.
-     * Si se modifican campos críticos, marca este registro como modificado (y no validado),
-     * y revoca la validación del Indicador padre por seguridad.
+     * Si se modifican campos críticos, marca este registro como modificado y
+     * pendiente de validación, sin alterar la validación de otros años.
      * * @return void
      */
     protected static function booted()
@@ -96,12 +96,6 @@ class DatoAnual extends Model
                 $datoAnual->validado = false;
                 $datoAnual->modificado = true;
 
-                // También desvalidamos el indicador principal para que no se muestre información parcial o no oficial
-                $indicador = $datoAnual->indicador;
-                if ($indicador && $indicador->indicador_validado) {
-                    $indicador->indicador_validado = false;
-                    $indicador->save();
-                }
             }
         });
     }

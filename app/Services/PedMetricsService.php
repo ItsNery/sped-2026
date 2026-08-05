@@ -136,9 +136,21 @@ class PedMetricsService
 
     private function motivoNoEvaluable($indicador, bool $soloValidados): string
     {
-        $tieneDatoAnual = $soloValidados
-            ? $indicador->datosAnuales()->where('validado', true)->whereNotNull('valor_dato')->exists()
-            : $indicador->datosAnuales()->whereNotNull('valor_dato')->exists();
+        if ($indicador->relationLoaded('datosAnuales')) {
+            $datosAnuales = $indicador->datosAnuales;
+            if ($soloValidados) {
+                $datosAnuales = $datosAnuales->where('validado', true);
+            }
+            $tieneDatoAnual = $datosAnuales->contains(function ($dato) {
+                return $dato->valor_dato !== null && trim((string) $dato->valor_dato) !== '';
+            });
+        } else {
+            $query = $indicador->datosAnuales()->whereNotNull('valor_dato');
+            if ($soloValidados) {
+                $query->where('validado', true);
+            }
+            $tieneDatoAnual = $query->exists();
+        }
 
         if (!$tieneDatoAnual && !is_null($indicador->dato_linea_base) && trim((string) $indicador->dato_linea_base) !== '') {
             return 'solo_linea_base';

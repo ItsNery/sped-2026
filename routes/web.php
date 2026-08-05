@@ -7,11 +7,9 @@ use App\Http\Controllers\IndicadorController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DatosAnualesIndicadorController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\CarruselIndicadorController;
 use App\Http\Controllers\IndicadorMunicipalController;
 use App\Http\Controllers\CatalogoController;
 use App\Http\Controllers\MunicipioConvenioController;
-use App\Http\Controllers\SliderInicioController;
 use App\Http\Controllers\LogCambioController;
 use App\Http\Controllers\DatosAbiertosController;
 use App\Http\Controllers\CatPlanEstatalDesarrolloController;
@@ -23,6 +21,8 @@ use App\Http\Controllers\CatProgramaDerivadoInstitucionalController;
 use App\Http\Controllers\InstitucionController;
 use App\Http\Controllers\LoginAttemptController;
 use App\Http\Controllers\DashboardGeneralController;
+use App\Http\Controllers\DashboardExportController;
+use App\Http\Controllers\DashboardDrillDownController;
 // use App\Http\Controllers\PublicProgramasController;
 
 /*
@@ -151,6 +151,9 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
     // --- Dashboards Generales ---
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/exportar/pdf', [DashboardExportController::class, 'pdf'])->name('dashboard.export.pdf');
+    Route::get('/dashboard/exportar/xlsx', [DashboardExportController::class, 'xlsx'])->name('dashboard.export.xlsx');
+    Route::get('/dashboard/drill-down', [DashboardDrillDownController::class, 'index'])->name('dashboard.drill-down');
     Route::get('/panel-avance-general', [DashboardGeneralController::class, 'adminIndex'])
         ->middleware('permission:ver-panel-avance-general')
         ->name('admin.avance-general');
@@ -186,6 +189,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     // Acciones específicas para Indicadores
     Route::get('/filtrar-indicadores/{institucion}/{programa?}', [IndicadorController::class, 'filtrarIndicadores'])->name('filtrar-indicadores');
     Route::patch('/indicadores/{id}/toggle-validacion', [IndicadorController::class, 'toggleValidacion'])->name('indicadores.toggleValidacion');
+    Route::patch('/indicadores/{id}/{year}/toggle-validacion-anual', [IndicadorController::class, 'toggleValidacionAnual'])->name('indicadores.toggleValidacionAnual');
     Route::put('indicador/{id}/{year}', [IndicadorController::class, 'updateAnualData'])->name('indicador.updateAnual');
     Route::post('indicador/{id}/anual', [IndicadorController::class, 'storeAnualData'])->name('indicador.storeAnual');
     Route::post('/finalizar-captura', [IndicadorController::class, 'finalizarCaptura'])->name('finalizar.captura');
@@ -210,10 +214,6 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/excel/download-template', [IndicadorController::class, 'downloadTemplate'])->name('excel.downloadTemplate');
     Route::get('/excel/download-users', [IndicadorController::class, 'downloadUsuarios'])->name('excel.downloadUsuarios');
     Route::get('/excel/download-institutions', [IndicadorController::class, 'downloadInstituciones'])->name('excel.downloadInstituciones');
-
-    // --- Gestión de Componentes Visuales del Frontend ---
-    Route::resource('panel-slider-inicio', SliderInicioController::class);
-    Route::resource('panel-carrusel-indicadores', CarruselIndicadorController::class);
 
     // --- APIs Internas y Logs ---
     Route::get('/niveles/{tipoId}', [CatalogoController::class, 'getNiveles']);

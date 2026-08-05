@@ -57,6 +57,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'is_system_account' => 'boolean',
     ];
 
     /**
@@ -81,5 +82,20 @@ class User extends Authenticatable
     public function instituciones()
     {
         return $this->belongsToMany(Institucion::class, 'institucion_user')->withTimestamps();
+    }
+
+    public function isSuperAdministrator(): bool
+    {
+        return $this->hasRole('SuperAdministrador');
+    }
+
+    public function isAdministrator(): bool
+    {
+        return $this->hasAnyRole(['Administrador', 'SuperAdministrador']);
+    }
+
+    public function isSystemAccount(): bool
+    {
+        return (bool) $this->is_system_account;
     }
 }

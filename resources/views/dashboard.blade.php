@@ -1,641 +1,389 @@
 <x-app-layout>
-    @section('title', 'Administración: Inicio')
+    @section('title', 'Centro de mando del PED')
     <x-slot name="header">
-        <h2 class="h4 font-weight-bold">
-            {{ __('Inicio') }}
-        </h2>
+        <div class="exec-header">
+            <div>
+                <span class="exec-eyebrow">Centro de mando</span>
+                <h2 class="exec-header__title">Seguimiento del Plan Estatal de Desarrollo</h2>
+            </div>
+            <span class="exec-header__plan">{{ $plan->nombre }}</span>
+        </div>
     </x-slot>
 
+    @php
+        $semaforoColores = [
+            'Excedido' => '#3E8CEE',
+            'Aceptable' => '#43B383',
+            'Moderado' => '#F5E35B',
+            'Insuficiente' => '#B94149',
+            'No clasificado' => '#A7AFB2',
+        ];
+        $totalSemaforo = max(array_sum($semaforizacionCounts), 1);
+        $programasPrioritarios = $programasData
+            ->flatMap(fn ($grupo) => $grupo['programas'])
+            ->sortBy(fn ($programa) => $programa['avance'] ?? -1)
+            ->take(8);
+    @endphp
 
-    @auth
-    @if (auth()->user()->hasRole('Administrador'))
-    <div class="contenedor-principal">
-        <div class="dashboard-container">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 class="fw-bold mb-0 text-dark">Dashboard</h1>
-                    <p class="text-muted">Estado de los Indicadores del Plan Estatal de Desarrollo 2024-2030</p>
-                </div>
-                <div class="text-end">
-                    <span class="badge bg-white text-dark shadow-sm p-2 px-3">
-                        <i class="fas fa-calendar-alt me-2 text-primary"></i>
-                        {{ \Carbon\Carbon::now()->isoFormat('D [de] MMMM, YYYY') }}
-                    </span>
-                </div>
+    <div class="exec-dashboard">
+        <section class="exec-intro" aria-labelledby="exec-title">
+            <div class="exec-intro__copy">
+                <span class="exec-eyebrow">Lectura ejecutiva</span>
+                <h1 id="exec-title">¿Qué requiere atención hoy?</h1>
+                <p>
+                    Resumen operativo del {{ $plan->nombre }} con datos
+                    {{ $soloValidados ? 'validados' : 'registrados' }}.
+                </p>
             </div>
-
-            <!-- Zona 1: Signos Vitales (KPIs Principales) -->
-            <div class="row g-4 mb-5">
-                <div class="col-md-4">
-                    <a href="{{ route('admin.avance-general') }}" class="text-decoration-none h-100">
-                        <div class="card card-modern h-100 p-3" style="border-top: 5px solid {{ $colorAvanceGlobal }}">
-                            <div class="card-body text-center">
-                                <span class="kpi-title">Avance promedio evaluable</span>
-                                <div class="kpi-value" style="color: {{ $colorAvanceGlobal }}">
-                                    {{ $avanceGlobalPromedio }}%
-                                </div>
-                                <div class="progress" style="height: 8px; border-radius: 4px;">
-                                    <div class="progress-bar" role="progressbar"
-                                        style="width: {{ $avanceGlobalPromedio }}%; background-color: {{ $colorAvanceGlobal }};"
-                                        aria-valuenow="{{ $avanceGlobalPromedio }}" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                                <small class="text-muted d-block mt-2">
-                                    {{ $metricasGlobal['total_evaluables'] }} de {{ $metricasGlobal['total_registrados'] }} evaluables
-                                    ({{ number_format($metricasGlobal['cobertura_evaluacion'], 2) }}% de cobertura)
-                                </small>
-                            </div>
-                        </div>
-                    </a>
+            <div class="exec-options" aria-label="Opciones de consulta">
+                <div class="exec-options__header">
+                    <div>
+                        <span class="exec-eyebrow">Controles del tablero</span>
+                        <strong>Opciones de consulta</strong>
+                    </div>
+                    <span class="exec-options__hint">Actualiza el universo visible</span>
                 </div>
-
-                <div class="col-md-4">
-                    <div class="card card-modern h-100 p-3" style="border-top: 5px solid #198754">
-                        <div class="card-body text-center">
-                            <span class="kpi-title">Indicadores Validados</span>
-                            <div class="kpi-value text-success">
-                                {{ $totalIndicadoresValidados }}
-                            </div>
-                            <span class="badge bg-success-subtle text-success p-2">
-                                {{ round($porcentajeValidado, 1) }}% del Total
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="card card-modern h-100 p-3" style="border-top: 5px solid #dc3545">
-                        <div class="card-body text-center">
-                            <span class="kpi-title">Indicadores sin Datos Anuales</span>
-                            <div class="kpi-value text-danger">
-                                {{ $totalIndicadoresIncompletos }}
-                            </div>
-                            <span class="badge bg-danger-subtle text-danger p-2">
-                                {{ round($porcentajeIncompletos, 1) }}% en Rezago
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Zona 2: Salud del Plan y Metodología -->
-            <div class="row g-4 mb-5">
-                <div class="col-lg-6">
-                    <div class="card card-modern p-4 h-100">
-                        <h3 class="zone-title">Semaforización de Avances</h3>
-                        <span class="text-muted mb-3">
-                            Gráfico de la distribución de la semaforización de los indicadores.
-                        </span>
-                        <div id="chart-semaforizacion" role="img" aria-label="Distribución de indicadores por semáforo"
-                            style="height: 350px; width: 100%;"></div>
-                        <p class="visually-hidden">La gráfica muestra la distribución de indicadores por estado de avance.</p>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="card card-modern p-4 h-100">
-                        <h3 class="zone-title">Distribución por Tendencia</h3>
-                        <span class="text-muted mb-3">
-                            Gráfico de la distribución de la tendencia de los indicadores.
-                        </span>
-                        <div id="chart-tendencia" role="img" aria-label="Distribución de indicadores por tendencia"
-                            style="height: 350px; width: 100%;"></div>
-                        <p class="visually-hidden">La gráfica muestra la distribución de indicadores según su tendencia.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Zona 3: Inteligencia de Riesgos (Focos Rojos e Instituciones Críticas) -->
-            <div class="row g-4 mb-5">
-                <div class="col-lg-6">
-                    <div class="card card-modern p-4 h-100">
-                        <h3 class="zone-title">Focos rojos: Menor avance</h3>
-                        <span class="text-muted mb-3">
-                            Indicadores con menor avance en el semáforo de indicadores.
-                        </span>
-                        @if($focosRojos->isEmpty())
-                        <div class="text-center py-5">
-                            <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
-                            <p class="text-muted">No hay indicadores en estado insuficiente con datos.</p>
-                        </div>
-                        @else
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Indicador</th>
-                                        <th>Avance</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($focosRojos as $ind)
-                                    <tr>
-                                        <td>
-                                            <a href="{{ route('panel-indicadores.show', $ind->id) }}" class="text-decoration-none">
-                                                <div class="fw-bold text-truncate" style="max-width: 300px;" title="{{ $ind->nombre }}" title="{{ $ind->nombre }}">
-                                                    {{ $ind->nombre }}
-                                                </div>
-                                            </a>
-                                            <small class="text-muted">{{ $ind->institucion->nombre ?? 'N/A' }}</small>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-danger">{{ $ind->avance }}%</span>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        @endif
-                    </div>
-                </div>
-
-                <div class="col-lg-6">
-                    <div class="card card-modern p-4 h-100">
-                        <h3 class="zone-title">Instituciones con rezago</h3>
-                        <span class="text-muted mb-3">
-                            Instituciones con indicadores en estado insuficiente o caducados.
-                        </span>
-                        @if($institucionesCriticas->isEmpty())
-                        <div class="text-center py-5">
-                            <i class="fas fa-thumbs-up text-primary fa-3x mb-3"></i>
-                            <p class="text-muted">Todas las instituciones están al día.</p>
-                        </div>
-                        @else
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Institución</th>
-                                        <th>Estado Crítico</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($institucionesCriticas as $inst)
-                                    <tr>
-                                        <td>
-                                            <div class="fw-bold">{{ $inst->nombre }}</div>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex flex-column">
-                                                <span class="badge bg-danger mb-1">{{ $inst->conteo_insuficientes }} Insuficientes</span>
-                                                <span class="badge bg-secondary">{{ $inst->conteo_caducados }} Caducados</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            <!-- Zona 4: Operación y Seguimiento -->
-            <div class="card card-modern p-4 mb-5">
-                <h3 class="zone-title">Operación y Seguimiento Anual</h3>
-                <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="pills-enlace-tab" data-bs-toggle="pill" data-bs-target="#pills-enlace" type="button" role="tab">Por Enlace</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="pills-anual-tab" data-bs-toggle="pill" data-bs-target="#pills-anual" type="button" role="tab">Desempeño Anual</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="pills-periodo-tab" data-bs-toggle="pill" data-bs-target="#pills-periodo" type="button" role="tab">Periodicidad</button>
-                    </li>
-                </ul>
-                <div class="tab-content" id="pills-tabContent">
-                    <div class="tab-pane fade show active" id="pills-enlace" role="tabpanel">
-                        <span class="text-muted mb-3">
-                            Gráfico del estado de validación de los indicadores por enlace.
-                        </span>
-                        <div id="chart-avance-enlace" style="height: 400px; width: 100%;"></div>
-                    </div>
-                    <div class="tab-pane fade" id="pills-anual" role="tabpanel">
-                        <span class="text-muted mb-3">
-                            Gráfico de la cantidad de datos anuales de los indicadores.
-                        </span>
-                        <div id="chart-avance-anual" style="height: 400px; width: 100%;"></div>
-                    </div>
-                    <div class="tab-pane fade" id="pills-periodo" role="tabpanel">
-                        <span class="text-muted mb-3">
-                            Gráfico de la periodicidad de los indicadores.
-                        </span>
-                        <div id="chart-avance-periodo" style="height: 400px; width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sección de Notificaciones y Alertas Rápidas -->
-            <div class="row g-4 mb-5">
-                <!-- Ya Caducados -->
-                <div class="col-md-4">
-                    <div class="card card-modern">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-danger-subtle p-3 rounded-circle me-3">
-                                        <i class="fas fa-clock text-danger fa-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="h6 mb-0">Ya caducados</h4>
-                                        <span class="text-muted mb-3">
-                                            Indicadores cuya fecha de actualización registrada ya pasó.
-                                        </span>
-                                        <p class="h4 mb-0 fw-bold">{{ $indicadoresCaducados->count() }}</p>
-                                    </div>
-                                </div>
-                                <button class="btn btn-light btn-toggle-alert border" type="button" data-bs-toggle="collapse" data-bs-target="#listCaducados">
-                                    <i class="fas fa-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="collapse mt-3" id="listCaducados">
-                                <div class="alert-scroll-container pe-2">
-                                    @foreach($indicadoresCaducados as $ind)
-                                    <div class="alert-item-compact shadow-sm">
-                                        <a href="{{ route('panel-indicadores.show', $ind->id) }}" class="text-decoration-none text-dark">
-                                            <div class="fw-bold">{{ Str::limit($ind->nombre, 50) }}</div>
-                                            <small class="text-muted d-block">{{ $ind->institucion->nombre ?? 'N/A' }}</small>
-                                            <small class="text-muted d-block">{{ $ind->fecha_actualizacion ?? 'N/D' }}</small>
-                                        </a>
-                                    </div>
-                                    @endforeach
-                                    @if($indicadoresCaducados->isEmpty())
-                                    <div class="text-center py-3 text-muted">No hay indicadores caducados</div>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Próximos a Caducar -->
-                <div class="col-md-4">
-                    <div class="card card-modern">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-warning-subtle p-3 rounded-circle me-3">
-                                        <i class="fas fa-hourglass-half text-warning fa-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="h6 mb-0">Próximos a caducar</h4>
-                                        <span class="text-muted mb-3">
-                                            Indicadores cuya fecha de actualización está próxima a vencer.
-                                        </span>
-                                        <p class="h4 mb-0 fw-bold">{{ $indicadoresProximos->count() }}</p>
-                                    </div>
-                                </div>
-                                <button class="btn btn-light btn-toggle-alert border" type="button" data-bs-toggle="collapse" data-bs-target="#listProximos">
-                                    <i class="fas fa-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="collapse mt-3" id="listProximos">
-                                <div class="alert-scroll-container pe-2">
-                                    @foreach($indicadoresProximos as $ind)
-                                    <div class="alert-item-compact shadow-sm">
-                                        <a href="{{ route('panel-indicadores.show', $ind->id) }}" class="text-decoration-none text-dark">
-                                            <div class="fw-bold">{{ Str::limit($ind->nombre, 50) }}</div>
-                                            <small class="text-muted d-block">{{ $ind->institucion->nombre ?? 'N/A' }}</small>
-                                        </a>
-                                    </div>
-                                    @endforeach
-                                    @if($indicadoresProximos->isEmpty())
-                                    <div class="text-center py-3 text-muted">No hay indicadores próximos a caducar</div>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pendientes a Tiempo -->
-                <div class="col-md-4">
-                    <div class="card card-modern">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-success-subtle p-3 rounded-circle me-3">
-                                        <i class="fas fa-calendar-check text-success fa-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="h6 mb-0">Pendientes a tiempo</h4>
-                                        <span class="text-muted mb-3">
-                                            Indicadores cuya fecha de actualización es hoy.
-                                        </span>
-                                        <p class="h4 mb-0 fw-bold">{{ $indicadoresATiempo->count() }}</p>
-                                    </div>
-                                </div>
-                                <button class="btn btn-light btn-toggle-alert border" type="button" data-bs-toggle="collapse" data-bs-target="#listATiempo">
-                                    <i class="fas fa-chevron-down"></i>
-                                </button>
-                            </div>
-                            <div class="collapse mt-3" id="listATiempo">
-                                <div class="alert-scroll-container pe-2">
-                                    @foreach($indicadoresATiempo as $ind)
-                                    <div class="alert-item-compact shadow-sm">
-                                        <a href="{{ route('panel-indicadores.show', $ind->id) }}" class="text-decoration-none text-dark">
-                                            <div class="fw-bold">{{ Str::limit($ind->nombre, 50) }}</div>
-                                            <small class="text-muted d-block">{{ $ind->institucion->nombre ?? 'N/A' }}</small>
-                                        </a>
-                                    </div>
-                                    @endforeach
-                                    @if($indicadoresATiempo->isEmpty())
-                                    <div class="text-center py-3 text-muted">No hay indicadores pendientes a tiempo</div>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Programas Derivados (Agrupados en Tabs) -->
-            <div class="card card-modern p-4 mb-4">
-                <h3 class="zone-title">Programas derivados</h3>
-                <span class="text-muted mb-3">
-                    Avance de los indicadores por programa derivado.
-                </span>
-                <ul class="nav nav-pills mb-4" id="programs-tab" role="tablist">
-                    @foreach($programasData as $tipoSlug => $grupo)
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link {{ $loop->first ? 'active' : '' }}"
-                            id="tab-{{ $tipoSlug }}"
-                            data-bs-toggle="pill"
-                            data-bs-target="#content-{{ $tipoSlug }}"
-                            type="button" role="tab">
-                            {{ $grupo['tipo'] }}
-                        </button>
-                    </li>
-                    @endforeach
-                </ul>
-
-                <div class="tab-content" id="programs-tabContent">
-                    @foreach($programasData as $tipoSlug => $grupo)
-                    <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}"
-                        id="content-{{ $tipoSlug }}" role="tabpanel">
-                        <div class="row g-3">
-                            @foreach($grupo['programas'] as $prog)
-                            <div class="col-md-6 col-lg-3">
-                                <div class="card h-100 border-0 shadow-sm p-3 bg-light transition-hover">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <small class="fw-bold text-wrap" style="max-width: 150px;" title="{{ $prog['nombre'] }}">{{ $prog['nombre'] }}</small>
-                                        <span class="badge" style="background-color: {{ $prog['semaforo_color'] }}">{{ $prog['avance'] }}%</span>
-                                    </div>
-                                    <div class="progress" style="height: 6px; border-radius: 10px;">
-                                        <div class="progress-bar" style="width: {{ $prog['avance'] }}%; background-color: {{ $prog['semaforo_color'] }}"></div>
-                                    </div>
-                                </div>
-                            </div>
+                <div class="exec-options__body">
+                    <form class="exec-filters" method="GET" action="{{ route('dashboard') }}">
+                        <label class="exec-filter-field exec-filter-field--plan">
+                            <span>Plan estatal</span>
+                            <select name="plan_id" aria-label="Seleccionar plan">
+                                @foreach ($planes as $optionPlan)
+                                    <option value="{{ $optionPlan->id }}" @selected($optionPlan->id === $plan->id)>
+                                        {{ $optionPlan->nombre }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </label>
+                        <label class="exec-filter-field">
+                            <span>Datos</span>
+                            <select name="solo_validados" aria-label="Seleccionar estado de datos">
+                                <option value="1" @selected($soloValidados)>Solo validados</option>
+                                <option value="0" @selected(!$soloValidados)>Todos los registrados</option>
+                            </select>
+                        </label>
+                        <label class="exec-filter-field exec-filter-field--year">
+                            <span>Desde</span>
+                            <input type="number" name="anio_desde" min="2000" max="2100" value="{{ request('anio_desde') }}" placeholder="Año">
+                        </label>
+                        <label class="exec-filter-field exec-filter-field--year">
+                            <span>Hasta</span>
+                            <input type="number" name="anio_hasta" min="2000" max="2100" value="{{ request('anio_hasta') }}" placeholder="Año">
+                        </label>
+                        @foreach (['eje_id', 'programa_id', 'institucion_id', 'semaforo', 'calidad'] as $hiddenFilter)
+                            @foreach ($filters[$hiddenFilter] as $hiddenValue)
+                                <input type="hidden" name="{{ $hiddenFilter }}[]" value="{{ $hiddenValue }}">
                             @endforeach
+                        @endforeach
+                        @if ($filters['programa_tipo'])<input type="hidden" name="programa_tipo" value="{{ $filters['programa_tipo'] }}">@endif
+                        @if ($filters['buscar'])<input type="hidden" name="buscar" value="{{ $filters['buscar'] }}">@endif
+                        <button type="submit" class="exec-filter-button">Actualizar</button>
+                    </form>
+                    <div class="exec-options__tools">
+                        <div class="exec-options__tool-group">
+                            <a class="exec-clear-filters" href="{{ route('dashboard', ['plan_id' => $plan->id]) }}">
+                                <span aria-hidden="true">×</span> Limpiar
+                            </a>
+                            <button type="button" class="exec-more-filters" data-bs-toggle="offcanvas" data-bs-target="#dashboardFilters" aria-controls="dashboardFilters">
+                                <span class="exec-more-filters__icon" aria-hidden="true">+</span>
+                                <span class="exec-more-filters__label">Más filtros</span>
+                                <b>{{ count($filters['eje_id']) + count($filters['programa_id']) + count($filters['institucion_id']) + count($filters['semaforo']) + count($filters['calidad']) + ($filters['programa_tipo'] ? 1 : 0) + ($filters['buscar'] ? 1 : 0) }}</b>
+                            </button>
+                        </div>
+                        <div class="exec-export-actions" aria-label="Exportar dashboard">
+                            <span class="exec-tools-label">Exportar</span>
+                            <a href="{{ route('dashboard.export.pdf', request()->query()) }}" title="Descargar PDF"><strong>PDF</strong><small>Descargar</small></a>
+                            <a href="{{ route('dashboard.export.xlsx', request()->query()) }}" title="Descargar Excel"><strong>XLSX</strong><small>Descargar</small></a>
                         </div>
                     </div>
-                    @endforeach
                 </div>
             </div>
-            <!-- Footer Lists: Cambios Recientes y Top Instituciones -->
-            <div class="row g-4 mb-5">
-                <div class="col-lg-8">
-                    <div class="card card-modern p-4 h-100">
-                        <h3 class="zone-title">Actividad reciente</h3>
-                        <span class="text-muted mb-3">
-                            Indicadores que han sido actualizados recientemente.
-                        </span>
-                        <div class="scroll-container-modern d-flex flex-column gap-2" style="max-height: 400px; overflow-y: auto;">
-                            @foreach ($indicadoresRecientes as $indicador)
-                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded shadow-sm">
-                                <a href="{{ route('panel-indicadores.show', $indicador['id']) }}" class="text-dark fw-medium text-decoration-none">
-                                    {{ Str::limit($indicador['nombre'], 70) }}
-                                </a>
-                                <div class="text-end">
-                                    <span class="badge {{ $indicador['tipo'] == 'Nuevo' ? 'bg-success' : 'bg-primary' }} mb-1 d-block">{{ $indicador['tipo'] }}</span>
-                                    <small class="text-muted d-block">{{ $indicador['updated_at'] }}</small>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="card card-modern p-4 h-100">
-                        <h3 class="zone-title">Top desempeño</h3>
-                        <span class="text-muted mb-3">
-                            Instituciones con el mayor número de indicadores validados.
-                        </span>
-                        <div class="list-group list-group-flush">
+        </section>
 
-                            @foreach ($instituciones as $index => $institucion)
-                            <div class="list-group-item bg-transparent d-flex align-items-center px-0 border-bottom">
-                                <div class="bg-primary text-white p-2 rounded-circle me-3 flex-shrink-0 d-flex align-items-center justify-content-center" style="width:30px; height:30px; font-size: 0.8rem;">
-                                    #{{ $index + 1 }}
-                                </div>
-                                <div class="flex-grow-1 text-truncate">
-                                    <div class="fw-bold small">{{ $institucion->nombre }}</div>
-                                    <div class="progress mt-1" style="height: 4px;">
-                                        @php
-                                        $total = $totalIndicadores > 0 ? $totalIndicadores : 1;
-                                        $perc = ($institucion->indicadores_validados_count / $total) * 100;
-                                        @endphp
-                                        <div class="progress-bar bg-success" style="width: {{ $perc }}%"></div>
-                                    </div>
-                                </div>
-                                @if($index === 0) <span class="ms-2">🏆</span> @endif
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
+        <div class="exec-filter-chips" aria-label="Filtros activos">
+            @if ($filters['eje_id']) <a href="{{ route('dashboard', request()->except('eje_id')) }}">Eje: {{ count($filters['eje_id']) }} seleccionado(s) ×</a> @endif
+            @if ($filters['institucion_id']) <a href="{{ route('dashboard', request()->except('institucion_id')) }}">Institución: {{ count($filters['institucion_id']) }} seleccionada(s) ×</a> @endif
+            @if ($filters['programa_id']) <a href="{{ route('dashboard', request()->except(['programa_id', 'programa_tipo'])) }}">Programa: {{ count($filters['programa_id']) }} seleccionado(s) ×</a> @endif
+            @if ($filters['semaforo']) <a href="{{ route('dashboard', request()->except('semaforo')) }}">Estado: {{ implode(', ', $filters['semaforo']) }} ×</a> @endif
+            @if ($filters['calidad']) <a href="{{ route('dashboard', request()->except('calidad')) }}">Calidad: {{ count($filters['calidad']) }} criterio(s) ×</a> @endif
+            @if ($filters['buscar']) <a href="{{ route('dashboard', request()->except('buscar')) }}">Búsqueda: {{ $filters['buscar'] }} ×</a> @endif
+        </div>
+
+        <div class="offcanvas offcanvas-end exec-filter-drawer" tabindex="-1" id="dashboardFilters" aria-labelledby="dashboardFiltersTitle">
+            <div class="offcanvas-header">
+                <div><span class="exec-eyebrow">Consulta avanzada</span><h2 id="dashboardFiltersTitle">Más filtros</h2></div>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar filtros"></button>
+            </div>
+            <div class="offcanvas-body">
+                <form method="GET" action="{{ route('dashboard') }}" class="exec-drawer-form">
+                    <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                    <input type="hidden" name="solo_validados" value="{{ $soloValidados ? 1 : 0 }}">
+                    @if ($filters['anio_desde'] !== null)<input type="hidden" name="anio_desde" value="{{ $filters['anio_desde'] }}">@endif
+                    @if ($filters['anio_hasta'] !== null)<input type="hidden" name="anio_hasta" value="{{ $filters['anio_hasta'] }}">@endif
+
+                    <fieldset><legend>Alcance</legend>
+                        <label class="exec-drawer-field">Buscar indicador<input type="search" name="buscar" value="{{ $filters['buscar'] }}" placeholder="Nombre, tema o descripción"></label>
+                        <label class="exec-drawer-field">Ejes<select name="eje_id[]" multiple size="5">@foreach ($filterOptions['ejes'] as $eje)<option value="{{ $eje->id }}" @selected(in_array($eje->id, $filters['eje_id']))>{{ $eje->numero }}. {{ $eje->nombre }}</option>@endforeach</select></label>
+                        <label class="exec-drawer-field">Tipo de programa<select name="programa_tipo"><option value="">Todos los tipos</option>@foreach ($filterOptions['programas'] as $tipo => $programas)<option value="{{ $tipo }}" @selected($filters['programa_tipo'] === $tipo)>{{ ucfirst($tipo) }}</option>@endforeach</select></label>
+                        <label class="exec-drawer-field">Programas<select name="programa_id[]" multiple size="6">@foreach ($filterOptions['programas'] as $tipo => $programas)<optgroup label="{{ ucfirst($tipo) }}">@foreach ($programas as $programa)<option value="{{ $programa->id }}" @selected(in_array($programa->id, $filters['programa_id']))>{{ $programa->nombre }}</option>@endforeach</optgroup>@endforeach</select></label>
+                        <label class="exec-drawer-field">Instituciones<select name="institucion_id[]" multiple size="6">@foreach ($filterOptions['instituciones'] as $institucion)<option value="{{ $institucion->id }}" @selected(in_array($institucion->id, $filters['institucion_id']))>{{ $institucion->nombre }}</option>@endforeach</select></label>
+                    </fieldset>
+
+                    <fieldset><legend>Diagnóstico</legend>
+                        <div class="exec-check-grid">@foreach (['Excedido', 'Aceptable', 'Moderado', 'Insuficiente', 'No clasificado'] as $estado)<label><input type="checkbox" name="semaforo[]" value="{{ $estado }}" @checked(in_array($estado, $filters['semaforo']))>{{ $estado }}</label>@endforeach</div>
+                        <div class="exec-check-grid">@foreach (['sin_datos' => 'Sin datos', 'sin_meta' => 'Sin meta', 'sin_tendencia' => 'Sin tendencia', 'pendiente_validacion' => 'Pendiente de validación'] as $valor => $label)<label><input type="checkbox" name="calidad[]" value="{{ $valor }}" @checked(in_array($valor, $filters['calidad']))>{{ $label }}</label>@endforeach</div>
+                    </fieldset>
+
+                    <div class="exec-drawer-actions"><a href="{{ route('dashboard', ['plan_id' => $plan->id]) }}">Limpiar</a><button type="submit" class="exec-filter-button">Aplicar filtros</button></div>
+                </form>
             </div>
         </div>
-        @endif
-        @endauth
 
-        @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+        <section class="exec-kpis" aria-label="Indicadores principales">
+            <a class="exec-kpi exec-kpi--primary" href="#prioridades">
+                <span class="exec-kpi__label">Avance promedio</span>
+                <strong>{{ number_format($avanceGlobalPromedio, 1) }}<small>%</small></strong>
+                <span class="exec-kpi__detail">{{ $metricasGlobal['total_evaluables'] }} de {{ $totalIndicadores }} evaluables</span>
+                <span class="exec-kpi__bar"><i style="width: {{ min(100, max(0, $avanceGlobalPromedio)) }}%; background: {{ $colorAvanceGlobal }}"></i></span>
+            </a>
+            <div class="exec-kpi">
+                <span class="exec-kpi__label">Cobertura de evaluación</span>
+                <strong>{{ number_format($metricasGlobal['cobertura_evaluacion'], 1) }}<small>%</small></strong>
+                <span class="exec-kpi__detail">{{ $metricasGlobal['total_evaluables'] }} indicadores con dato útil</span>
+                <span class="exec-kpi__signal exec-kpi__signal--green">Calidad de seguimiento</span>
+            </div>
+            <div class="exec-kpi">
+                <span class="exec-kpi__label">Validación del universo</span>
+                <strong>{{ number_format($porcentajeValidado, 1) }}<small>%</small></strong>
+                <span class="exec-kpi__detail">{{ $totalIndicadoresValidados }} de {{ $totalIndicadores }} indicadores</span>
+                <span class="exec-kpi__signal exec-kpi__signal--sand">{{ $quality['pendientes_validacion'] }} pendientes</span>
+            </div>
+            <a class="exec-kpi exec-kpi--alert" href="{{ route('dashboard.drill-down', array_merge(request()->query(), ['criticas' => 1])) }}">
+                <span class="exec-kpi__label">Alertas críticas</span>
+                <strong>{{ $indicadoresCriticos }}</strong>
+                <span class="exec-kpi__detail">Avance insuficiente, actualización vencida o validación pendiente</span>
+                <span class="exec-kpi__signal exec-kpi__signal--red">{{ $totalCriticos }} sin dato o insuficientes</span>
+            </a>
+        </section>
+
+        <section class="exec-section" id="prioridades" aria-labelledby="prioridades-title">
+            <div class="exec-section__heading">
+                <div>
+                    <span class="exec-eyebrow">Bandeja de atención</span>
+                    <h2 id="prioridades-title">Prioridades para decisión</h2>
+                </div>
+                <a class="exec-table__action" href="{{ route('dashboard.drill-down', array_merge(request()->query(), ['alertas' => 1])) }}">{{ $actionQueue->count() }} alertas · Ver todas <span aria-hidden="true">→</span></a>
+            </div>
+            @if ($actionQueue->isEmpty())
+                <div class="exec-empty exec-empty--success">
+                    <i class="fas fa-circle-check" aria-hidden="true"></i>
+                    <div><strong>Sin pendientes críticos</strong><span>El universo seleccionado no tiene alertas que requieran intervención inmediata.</span></div>
+                </div>
+            @else
+                <div class="exec-priority-table-wrap">
+                    <table class="exec-table">
+                        <caption class="visually-hidden">Indicadores que requieren atención prioritaria</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Indicador</th>
+                                <th scope="col">Institución</th>
+                                <th scope="col">Motivo</th>
+                                <th scope="col">Avance</th>
+                                <th scope="col">Último dato</th>
+                                <th scope="col"><span class="visually-hidden">Acción</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($actionQueue->take(12) as $item)
+                                <tr>
+                                    <td data-label="Indicador">
+                                        <a href="{{ route('panel-indicadores.show', $item['id']) }}" class="exec-table__indicator">
+                                            {{ Str::limit($item['nombre'], 72) }}
+                                        </a>
+                                    </td>
+                                    <td data-label="Institución">{{ Str::limit($item['institucion'], 34) }}</td>
+                                    <td data-label="Motivo"><span class="exec-status exec-status--{{ $item['prioridad'] <= 2 ? 'red' : 'sand' }}">{{ $item['motivo'] }}</span></td>
+                                    <td data-label="Avance" class="exec-table__number">
+                                        {{ $item['avance'] !== null ? number_format($item['avance'], 1) . '%' : 'N/D' }}
+                                    </td>
+                                    <td data-label="Último dato">{{ $item['fecha_dato'] }}{{ $item['anio'] ? ' · ' . $item['anio'] : '' }}</td>
+                                    <td data-label="Acción" class="text-end"><a href="{{ route('panel-indicadores.show', $item['id']) }}" class="exec-table__action">Revisar <span aria-hidden="true">→</span></a></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </section>
+
+        <div class="exec-grid exec-grid--main">
+            <section class="exec-section" aria-labelledby="semaforo-title">
+                <div class="exec-section__heading">
+                    <div>
+                        <span class="exec-eyebrow">Desempeño</span>
+                        <h2 id="semaforo-title">Estado del universo</h2>
+                    </div>
+                    <span class="exec-section__meta">{{ $totalIndicadores }} indicadores</span>
+                </div>
+                <div class="exec-semaphore" role="img" aria-label="Distribución de indicadores por estado de avance">
+                    @foreach ($semaforizacionCounts as $estado => $cantidad)
+                        <span style="width: {{ ($cantidad / $totalSemaforo) * 100 }}%; background: {{ $semaforoColores[$estado] }}"></span>
+                    @endforeach
+                </div>
+                <div class="exec-legend">
+                    @foreach ($semaforizacionCounts as $estado => $cantidad)
+                        <div><i style="background: {{ $semaforoColores[$estado] }}"></i><a class="exec-legend__link" href="{{ route('dashboard.drill-down', ['plan_id' => $plan->id, 'solo_validados' => $soloValidados ? 1 : 0, 'semaforo' => [$estado]]) }}">{{ $estado }}</a><strong>{{ $cantidad }}</strong></div>
+                    @endforeach
+                </div>
+                <div class="exec-method-note">
+                    <i class="fas fa-circle-info" aria-hidden="true"></i>
+                    <span>El avance se calcula contra la meta y la tendencia registrada de cada indicador.</span>
+                </div>
+            </section>
+
+            <section class="exec-section" aria-labelledby="quality-title">
+                <div class="exec-section__heading">
+                    <div>
+                        <span class="exec-eyebrow">Calidad de información</span>
+                        <h2 id="quality-title">Qué limita la lectura</h2>
+                    </div>
+                </div>
+                <div class="exec-quality-list">
+                    <div><span class="exec-quality__marker exec-quality__marker--red"></span><span>Sin dato anual</span><strong>{{ $quality['sin_datos'] }}</strong></div>
+                    <div><span class="exec-quality__marker exec-quality__marker--sand"></span><span>Pendientes de validación</span><strong>{{ $quality['pendientes_validacion'] }}</strong></div>
+                    <div><span class="exec-quality__marker exec-quality__marker--gray"></span><span>Sin meta válida</span><strong>{{ $quality['sin_meta'] }}</strong></div>
+                    <div><span class="exec-quality__marker exec-quality__marker--green"></span><span>Sin tendencia definida</span><strong>{{ $quality['sin_tendencia'] }}</strong></div>
+                </div>
+                <div class="exec-quality-footer">Último corte de datos: <strong>{{ $fechaCorte ? $fechaCorte->format('d/m/Y') : 'Sin fecha registrada' }}</strong></div>
+            </section>
+        </div>
+
+        <section class="exec-section" aria-labelledby="trend-title">
+            <div class="exec-section__heading">
+                <div>
+                    <span class="exec-eyebrow">Comportamiento observado</span>
+                    <h2 id="trend-title">Evolución del desempeño</h2>
+                </div>
+                <span class="exec-section__meta">{{ $trend['anio_desde'] ?? 'Sin año' }} - {{ $trend['anio_hasta'] ?? 'Sin año' }}</span>
+            </div>
+            <div class="exec-trend-summary">
+                <div><span class="exec-quality__marker exec-quality__marker--green"></span><span>Mejoran</span><strong>{{ $trend['comparaciones']['mejoran'] }}</strong></div>
+                <div><span class="exec-quality__marker exec-quality__marker--red"></span><span>Retroceden</span><strong>{{ $trend['comparaciones']['retroceden'] }}</strong></div>
+                <div><span class="exec-quality__marker exec-quality__marker--sand"></span><span>Estables</span><strong>{{ $trend['comparaciones']['estables'] }}</strong></div>
+                <div><span class="exec-quality__marker exec-quality__marker--gray"></span><span>Sin comparación</span><strong>{{ $trend['comparaciones']['sin_comparacion'] }}</strong></div>
+            </div>
+            <div id="exec-trend-chart" class="exec-trend-chart" role="img" aria-label="Evolución histórica del avance promedio"></div>
+            <div class="exec-trend-tables">
+                <div>
+                    <h3>Mayores mejoras</h3>
+                    @forelse ($trend['mejoras'] as $item)
+                        <div class="exec-trend-item"><span>{{ Str::limit($item['nombre'], 48) }}</span><strong class="exec-trend-item--up">+{{ number_format($item['variacion'], 1) }} pp</strong></div>
+                    @empty
+                        <p class="exec-trend-empty">No hay mejoras comparables.</p>
+                    @endforelse
+                </div>
+                <div>
+                    <h3>Mayores retrocesos</h3>
+                    @forelse ($trend['retrocesos'] as $item)
+                        <div class="exec-trend-item"><span>{{ Str::limit($item['nombre'], 48) }}</span><strong class="exec-trend-item--down">{{ number_format($item['variacion'], 1) }} pp</strong></div>
+                    @empty
+                        <p class="exec-trend-empty">No hay retrocesos comparables.</p>
+                    @endforelse
+                </div>
+            </div>
+            <p class="exec-method-note"><i class="fas fa-circle-info" aria-hidden="true"></i><span>La variación compara el avance calculado entre los dos últimos años disponibles por indicador. No representa una proyección.</span></p>
+        </section>
+
+        <section class="exec-section" aria-labelledby="ejes-title">
+            <div class="exec-section__heading">
+                <div>
+                    <span class="exec-eyebrow">Seguimiento estratégico</span>
+                    <h2 id="ejes-title">Avance por eje</h2>
+                </div>
+                <span class="exec-section__meta">Comparación con la misma regla de cálculo</span>
+            </div>
+            <div class="exec-axis-list">
+                @foreach ($ejesData as $eje)
+                    <a class="exec-axis exec-axis__link" href="{{ route('dashboard.drill-down', ['plan_id' => $plan->id, 'solo_validados' => $soloValidados ? 1 : 0, 'eje_id' => [$eje['id']]]) }}">
+                        <div class="exec-axis__identity"><span style="background: {{ $eje['color'] }}">{{ $eje['numero'] }}</span><strong>{{ $eje['nombre'] }}</strong></div>
+                        <div class="exec-axis__bar"><i style="width: {{ min(100, max(0, $eje['avance'] ?? 0)) }}%; background: {{ $eje['semaforo_color'] }}"></i></div>
+                        <strong class="exec-axis__value" style="color: {{ $eje['semaforo_color'] }}">{{ number_format($eje['avance'] ?? 0, 1) }}%</strong>
+                        <span class="exec-axis__coverage">{{ number_format($eje['cobertura'], 0) }}% cobertura</span>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+
+        <div class="exec-grid exec-grid--lower">
+            <section class="exec-section" aria-labelledby="institutions-title">
+                <div class="exec-section__heading">
+                    <div>
+                        <span class="exec-eyebrow">Responsabilidad</span>
+                        <h2 id="institutions-title">Instituciones bajo presión</h2>
+                    </div>
+                </div>
+                <div class="exec-institution-list">
+                    @forelse ($institucionesData as $institucion)
+                        <a class="exec-institution exec-institution__link" href="{{ route('dashboard.drill-down', ['plan_id' => $plan->id, 'solo_validados' => $soloValidados ? 1 : 0, 'institucion_id' => [$institucion['id']]]) }}">
+                            <div class="exec-institution__name"><strong>{{ Str::limit($institucion['nombre'], 38) }}</strong><span>{{ $institucion['criticos'] }} señales</span></div>
+                            <div class="exec-institution__bar"><i style="width: {{ min(100, max(0, $institucion['cobertura'])) }}%"></i></div>
+                            <div class="exec-institution__meta"><span>{{ number_format($institucion['avance'] ?? 0, 1) }}% avance</span><span>{{ number_format($institucion['cobertura'], 0) }}% cobertura</span></div>
+                        </a>
+                    @empty
+                        <div class="exec-empty"><span>No hay instituciones con indicadores en el universo seleccionado.</span></div>
+                    @endforelse
+                </div>
+            </section>
+
+            <section class="exec-section" aria-labelledby="programs-title">
+                <div class="exec-section__heading">
+                    <div>
+                        <span class="exec-eyebrow">Implementación</span>
+                        <h2 id="programs-title">Programas con mayor rezago</h2>
+                    </div>
+                </div>
+                <div class="exec-program-list">
+                    @forelse ($programasPrioritarios as $programa)
+                        <a class="exec-program exec-program__link" href="{{ route('dashboard.drill-down', ['plan_id' => $plan->id, 'solo_validados' => $soloValidados ? 1 : 0, 'programa_tipo' => $programa['tipo_slug'], 'programa_id' => [$programa['id']]]) }}">
+                            <div><strong>{{ Str::limit($programa['nombre'], 42) }}</strong><span>{{ $programa['tipo'] }}</span></div>
+                            <strong class="exec-program__value" style="color: {{ $programa['semaforo_color'] }}">{{ number_format($programa['avance'] ?? 0, 1) }}%</strong>
+                        </a>
+                    @empty
+                        <div class="exec-empty"><span>No hay programas asociados al plan seleccionado.</span></div>
+                    @endforelse
+                </div>
+            </section>
+        </div>
+    </div>
+
+    @push('scripts')
+        <script src="{{ asset('js/echarts.min.js') }}"></script>
         <script>
-            // --- GRÁFICO DE SEMAFORIZACIÓN (DONA) ---
-            var semaforizacionLabels = @json(array_keys($semaforizacionCounts));
-            var semaforizacionValues = @json(array_values($semaforizacionCounts));
-            var semaforizacionColors = ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#adb5bd'];
-            var semaforizacionData = semaforizacionLabels.map(function(label, i) {
-                return { value: semaforizacionValues[i], name: label, itemStyle: { color: semaforizacionColors[i % semaforizacionColors.length] } };
-            });
-            var chartSemaforizacion = echarts.init(document.getElementById('chart-semaforizacion'));
-            chartSemaforizacion.setOption({
-                tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-                legend: {
-                    bottom: '0',
-                    left: 'center'
-                },
-                series: [{
-                    type: 'pie',
-                    radius: ['35%', '60%'],
-                    avoidLabelOverlap: true,
-                    label: {
-                        show: true,
-                        position: 'outside',
-                        formatter: '{b}: {d}%'
-                    },
-                    emphasis: {
-                        label: {
-                            show: true,
-                            fontSize: '14',
-                            fontWeight: 'bold'
-                        }
-                    },
-                    data: semaforizacionData
-                }]
-            });
-            chartSemaforizacion.on('click', function(params) {
-                window.location.href = "{{ route('indicadores.semaforizacion', ['categoria' => ':cat']) }}".replace(':cat', params.name);
-            });
+            document.addEventListener('DOMContentLoaded', function () {
+                var element = document.getElementById('exec-trend-chart');
+                if (!element || typeof echarts === 'undefined') return;
 
-            // --- GRÁFICO DE TENDENCIA (BARRAS HORIZONTALES) ---
-            var tendenciaLabels = @json(array_keys($tendenciaCounts));
-            var tendenciaValues = @json(array_values($tendenciaCounts));
-            var tendenciaColors = ['#4f46e5', '#34d399', '#f59e0b', '#94a3b8'];
-            var chartTendencia = echarts.init(document.getElementById('chart-tendencia'));
-            chartTendencia.setOption({
-                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-                grid: { left: '3%', right: '8%', bottom: '3%', containLabel: true },
-                xAxis: { type: 'value' },
-                yAxis: { type: 'category', data: tendenciaLabels },
-                series: [{
-                    type: 'bar',
-                    data: tendenciaValues.map(function(v, i) {
-                        return { value: v, itemStyle: { color: tendenciaColors[i % tendenciaColors.length] } };
-                    }),
-                    label: {
-                        show: true,
-                        position: 'right',
-                        formatter: function(params) {
-                            var total = tendenciaValues.reduce(function(a, b) { return a + b; }, 0);
-                            var pct = total > 0 ? ((params.value / total) * 100).toFixed(1) + '%' : '0%';
-                            return params.value + ' (' + pct + ')';
-                        }
-                    }
-                }]
-            });
-
-            // --- GRÁFICOS DE OPERACIÓN (TABS) ---
-            var dataGraficas = @json($datosGraficas);
-
-            // Avance por Enlace
-            var chartAvanceEnlace = echarts.init(document.getElementById('chart-avance-enlace'));
-            chartAvanceEnlace.setOption({
-                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-                legend: { data: ['Validados', 'No Validados'], top: 0 },
-                xAxis: {
-                    type: 'category',
-                    data: dataGraficas.map(function(d) { return d.nombre; }),
-                    axisLabel: { rotate: 45, fontSize: 10 }
-                },
-                yAxis: { type: 'value' },
-                series: [
-                    {
-                        name: 'Validados',
-                        type: 'bar',
-                        stack: 'total',
-                        data: dataGraficas.map(function(d) { return d.validados; }),
-                        itemStyle: { color: '#22c55e' },
-                        label: {
-                            show: true,
-                            position: 'inside',
-                            formatter: function(params) {
-                                return params.value > 0 ? params.value : '';
-                            }
-                        }
-                    },
-                    {
-                        name: 'No Validados',
-                        type: 'bar',
-                        stack: 'total',
-                        data: dataGraficas.map(function(d) { return d.no_validados; }),
-                        itemStyle: { color: '#e2e8f0' },
-                        label: {
-                            show: true,
-                            position: 'inside',
-                            formatter: function(params) {
-                                return params.value > 0 ? params.value : '';
-                            }
-                        }
-                    }
-                ]
-            });
-            chartAvanceEnlace.on('click', function(params) {
-                var idUsuario = dataGraficas[params.dataIndex].id_usuario;
-                var filtro = params.seriesName === 'Validados' ? 'validados' : 'no-validados';
-                var url = "{{ route('usuarios.indicadores', ['id' => ':id']) }}".replace(':id', idUsuario);
-                window.location.href = url + "?filtro=" + filtro;
-            });
-
-            // Desempeño Anual
-            var chartAvanceAnual = echarts.init(document.getElementById('chart-avance-anual'));
-            chartAvanceAnual.setOption({
-                tooltip: { trigger: 'axis' },
-                legend: {
-                    data: ['Avance Anual'],
-                    bottom: '0'
-                },
-                xAxis: { type: 'category', data: @json($years) },
-                yAxis: { type: 'value' },
-                series: [{
-                    name: 'Avance Anual',
-                    type: 'bar',
-                    data: @json($datosPorAnio),
-                    itemStyle: { color: '#6366f1', borderRadius: [4, 4, 0, 0] },
-                    barWidth: '50%',
-                    label: {
-                        show: true,
-                        position: 'top',
-                        formatter: function(params) {
-                            return params.value > 0 ? params.value : '';
-                        }
-                    }
-                }]
-            });
-
-            // Periodicidad
-            var periodoLabels = @json($etiquetas_periodicidades);
-            var periodoValues = @json($values_periodicidades);
-            var periodoColors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#94a3b8'];
-            var chartAvancePeriodo = echarts.init(document.getElementById('chart-avance-periodo'));
-            chartAvancePeriodo.setOption({
-                tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-                legend: {
-                    bottom: '0',
-                    left: 'center'
-                },
-                series: [{
-                    type: 'pie',
-                    radius: ['35%', '60%'],
-                    avoidLabelOverlap: true,
-                    label: {
-                        show: true,
-                        position: 'outside',
-                        formatter: '{b}: {d}%'
-                    },
-                    emphasis: {
-                        label: {
-                            show: true,
-                            fontSize: '14',
-                            fontWeight: 'bold'
-                        }
-                    },
-                    data: periodoLabels.map(function(label, i) {
-                        return { value: periodoValues[i], name: label, itemStyle: { color: periodoColors[i % periodoColors.length] } };
-                    })
-                }]
-            });
-
-            // Redimensionar las gráficas cuando se cambia de pestaña para que se estiren al 100% de ancho
-            document.querySelectorAll('button[data-bs-toggle="pill"]').forEach(function(tabEl) {
-                tabEl.addEventListener('shown.bs.tab', function() {
-                    if (typeof chartAvanceEnlace !== 'undefined') chartAvanceEnlace.resize();
-                    if (typeof chartAvanceAnual !== 'undefined') chartAvanceAnual.resize();
-                    if (typeof chartAvancePeriodo !== 'undefined') chartAvancePeriodo.resize();
+                var chart = echarts.init(element);
+                var series = @json($trend['series']);
+                chart.setOption({
+                    animation: false,
+                    tooltip: { trigger: 'axis', valueFormatter: function (value) { return value + '%'; } },
+                    grid: { left: 12, right: 20, top: 20, bottom: 28, containLabel: true },
+                    xAxis: { type: 'category', data: series.map(function (item) { return item.anio; }) },
+                    yAxis: { type: 'value', name: '%', min: 0 },
+                    series: [{
+                        name: 'Avance promedio',
+                        type: 'line',
+                        smooth: true,
+                        symbolSize: 7,
+                        data: series.map(function (item) { return item.avance; }),
+                        lineStyle: { width: 3, color: '#0c312d' },
+                        itemStyle: { color: '#9d2449' },
+                        areaStyle: { color: 'rgba(12, 49, 45, 0.08)' }
+                    }]
                 });
+                window.addEventListener('resize', function () { chart.resize(); });
             });
         </script>
-        @endpush
+    @endpush
 </x-app-layout>

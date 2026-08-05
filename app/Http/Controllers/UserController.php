@@ -271,6 +271,12 @@ class UserController extends Controller
             $input['reporte_generado_at'] = null;
         }
         $user = User::findOrFail($id);
+
+        if ($user->isSystemAccount()) {
+            abort_unless(auth()->user()->isSuperAdministrator(), 403, 'La cuenta del sistema solo puede ser gestionada por SuperAdministrador.');
+            abort_unless($request->input('roles') === 'SuperAdministrador', 403, 'La cuenta del sistema debe conservar el rol SuperAdministrador.');
+        }
+
         $user->update($input);
 
         $user->syncRoles($request->input('roles'));
@@ -304,7 +310,9 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        User::find($id)->delete();
+        $user = User::findOrFail($id);
+        abort_if($user->isSystemAccount(), 403, 'La cuenta del sistema no puede eliminarse.');
+        $user->delete();
         return redirect()->route('panel-usuarios.index')->with('success', 'Usuario borrado correctamente');
     }
 
@@ -315,6 +323,7 @@ class UserController extends Controller
      */
     public function deactivate(User $user)
     {
+        abort_if($user->isSystemAccount(), 403, 'La cuenta del sistema no puede desactivarse.');
         $user->is_active = false;
         $user->save();
 
@@ -328,6 +337,7 @@ class UserController extends Controller
      */
     public function activate(User $user)
     {
+        abort_if($user->isSystemAccount(), 403, 'La cuenta del sistema no puede modificarse desde esta acción.');
         $user->is_active = true;
         $user->save();
 

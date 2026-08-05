@@ -75,7 +75,100 @@ function initFicha() {
             });
         }
 
+        // Calcula una regresión lineal únicamente con los datos históricos disponibles.
+        function calcularTendencia(categorias, datos) {
+            var puntos = [];
+
+            categorias.forEach(function (categoria, indice) {
+                var valor = datos[indice];
+                var x = Number(categoria);
+                var y = valor === null || valor === undefined || valor === '' ? NaN : Number(valor);
+
+                if (Number.isFinite(x) && Number.isFinite(y)) {
+                    puntos.push({ x: x, y: y, indice: indice });
+                }
+            });
+
+            if (puntos.length < 2) return null;
+
+            var n = puntos.length;
+            var sumaX = puntos.reduce(function (total, punto) { return total + punto.x; }, 0);
+            var sumaY = puntos.reduce(function (total, punto) { return total + punto.y; }, 0);
+            var sumaXY = puntos.reduce(function (total, punto) { return total + punto.x * punto.y; }, 0);
+            var sumaX2 = puntos.reduce(function (total, punto) { return total + punto.x * punto.x; }, 0);
+            var denominador = n * sumaX2 - sumaX * sumaX;
+
+            if (denominador === 0) return null;
+
+            var pendiente = (n * sumaXY - sumaX * sumaY) / denominador;
+            var intercepto = (sumaY - pendiente * sumaX) / n;
+            var primeraObservacion = puntos[0].indice;
+            var ultimaObservacion = puntos[puntos.length - 1].indice;
+
+            return categorias.map(function (categoria, indice) {
+                if (indice < primeraObservacion || indice > ultimaObservacion) return null;
+                return pendiente * Number(categoria) + intercepto;
+            });
+        }
+
         var chartHistorico = echarts.init(document.getElementById('grafica-historica'));
+        var datosTendencia = calcularTendencia(config.categoriasEjeX, config.datosParaGraficaPrincipal);
+        var seriesHistorico = [
+            {
+                name: config.nombreSerieLineaBase,
+                type: 'line',
+                data: config.datosLineaBasePunto,
+                lineStyle: { type: 'dashed', width: 2 },
+                showSymbol: true,
+                symbol: 'circle',
+                symbolSize: 6,
+                itemStyle: { color: '#00E396' },
+                connectNulls: true
+            },
+            {
+                name: config.unidadMedida,
+                type: 'line',
+                data: config.datosParaGraficaPrincipal,
+                lineStyle: { width: 4, color: config.colorIndicador },
+                showSymbol: true,
+                symbol: 'circle',
+                symbolSize: 4,
+                itemStyle: { color: config.colorIndicador },
+                smooth: true,
+                connectNulls: true
+            },
+            {
+                name: 'Meta 2030',
+                type: 'line',
+                data: config.datosMetaPunto,
+                lineStyle: { type: 'dashed', width: 2 },
+                showSymbol: true,
+                symbol: 'circle',
+                symbolSize: 7,
+                itemStyle: { color: '#FF0000' },
+                connectNulls: true,
+                label: {
+                    show: true,
+                    formatter: function(params) { return params.value ? formatNumber(params.value) : ''; },
+                    color: '#FF0000',
+                    fontWeight: 'bold'
+                }
+            }
+        ];
+
+        if (datosTendencia) {
+            seriesHistorico.push({
+                name: 'Tendencia lineal',
+                type: 'line',
+                data: datosTendencia,
+                symbol: 'none',
+                lineStyle: { type: 'dashed', width: 2, color: '#F59E0B' },
+                itemStyle: { color: '#F59E0B' },
+                connectNulls: false,
+                tooltip: { valueFormatter: function(value) { return formatNumber(value) + ' ' + config.unidadMedida; } }
+            });
+        }
+
         chartHistorico.setOption({
             animation: config.pdfMode ? false : true,
             tooltip: {
@@ -91,7 +184,7 @@ function initFicha() {
                 }
             },
             legend: {
-                data: [config.nombreSerieLineaBase, config.unidadMedida, 'Meta 2030'],
+                data: [config.nombreSerieLineaBase, config.unidadMedida, 'Meta 2030'].concat(datosTendencia ? ['Tendencia lineal'] : []),
                 top: 'top'
             },
             xAxis: {
@@ -106,48 +199,7 @@ function initFicha() {
                     formatter: function(val) { return formatNumber(val); }
                 }
             },
-            series: [
-                {
-                    name: config.nombreSerieLineaBase,
-                    type: 'line',
-                    data: config.datosLineaBasePunto,
-                    lineStyle: { type: 'dashed', width: 2 },
-                    showSymbol: true,
-                    symbol: 'circle',
-                    symbolSize: 6,
-                    itemStyle: { color: '#00E396' },
-                    connectNulls: true
-                },
-                {
-                    name: config.unidadMedida,
-                    type: 'line',
-                    data: config.datosParaGraficaPrincipal,
-                    lineStyle: { width: 4, color: config.colorIndicador },
-                    showSymbol: true,
-                    symbol: 'circle',
-                    symbolSize: 4,
-                    itemStyle: { color: config.colorIndicador },
-                    smooth: true,
-                    connectNulls: true
-                },
-                {
-                    name: 'Meta 2030',
-                    type: 'line',
-                    data: config.datosMetaPunto,
-                    lineStyle: { type: 'dashed', width: 2 },
-                    showSymbol: true,
-                    symbol: 'circle',
-                    symbolSize: 7,
-                    itemStyle: { color: '#FF0000' },
-                    connectNulls: true,
-                    label: {
-                        show: true,
-                        formatter: function(params) { return params.value ? formatNumber(params.value) : ''; },
-                        color: '#FF0000',
-                        fontWeight: 'bold'
-                    }
-                }
-            ]
+            series: seriesHistorico
         });
         chartHistorico.resize();
         }

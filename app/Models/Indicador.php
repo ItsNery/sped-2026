@@ -122,22 +122,6 @@ class Indicador extends Model
     }
 
     /**
-     * Registra eventos posteriores a la actualización del modelo.
-     *
-     * Al validar un indicador, marca sus datos anuales como no modificados.
-     *
-     * @return void
-     */
-    protected static function booted()
-    {
-        static::updated(function ($indicador) {
-            if ($indicador->isDirty('indicador_validado') && $indicador->indicador_validado) {
-                $indicador->datosAnuales()->update(['modificado' => false]);
-            }
-        });
-    }
-
-    /**
      * Obtiene los Objetivos de Desarrollo Sostenible asociados.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
@@ -323,6 +307,7 @@ class Indicador extends Model
         if ($tendencia === "mayor es mejor") {
             return ($valor / $meta) * 100;
         } elseif ($tendencia === "menor es mejor") {
+            if ($valor == 0.0) return null;
             return  (($meta / $valor) * 100);
         } elseif ($tendencia === "constante") {
             return ($valor / $meta) * 100;

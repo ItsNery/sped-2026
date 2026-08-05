@@ -27,7 +27,13 @@
     {{-- ============================================================
      1. HERO SECTION
      ============================================================ --}}
-    <section class="inicio-hero">
+    <section class="inicio-hero @if($heroVideo) inicio-hero--video @endif">
+        @if ($heroVideo)
+            <video class="inicio-hero__video" autoplay muted loop playsinline preload="metadata"
+                poster="{{ asset('img/puebla_hero_bg.png') }}" aria-hidden="true">
+                <source src="{{ asset($heroVideo) }}" type="video/mp4">
+            </video>
+        @endif
         <div class="inicio-hero__container">
             <div class="inicio-hero__content">
                 <span class="inicio-hero__tag">Acerca del SPED</span>
@@ -59,14 +65,12 @@
     <section class="inicio-dashboard" id="avance-general">
         <div class="inicio-dashboard__container">
             <div class="row align-items-center g-5">
-                {{-- Columna Izquierda: Logo + Ejes + CTA --}}
                 <div class="col-lg-5 col-md-12 text-center text-lg-start border-end-lg">
                     <div class="inicio-dashboard__brand-block">
                         <img src="{{ asset('img/imagotipo-logo-ped.png') }}" alt="Plan Estatal de Desarrollo 2024-2030"
                             class="inicio-dashboard__mide-logo">
                         <h2 class="inicio-dashboard__mide-title">Plan Estatal de Desarrollo 2024–2030</h2>
 
-                        {{-- Ejes Navigation --}}
                         <div class="inicio-dashboard__mide-ejes-wrapper">
                             <span class="inicio-dashboard__mide-ejes-label">Ejes:</span>
                             <div class="inicio-dashboard__mide-ejes">
@@ -81,7 +85,6 @@
                             </div>
                         </div>
 
-                        {{-- CTA Button --}}
                         <div class="mt-4">
                             <a href="https://ped2024-2030.puebla.gob.mx/" target="_blank" rel="noopener noreferrer"
                                 class="inicio-dashboard__cta">
@@ -91,12 +94,10 @@
                     </div>
                 </div>
 
-                {{-- Columna Derecha: Indicadores y Avance --}}
                 <div class="col-lg-7 col-md-12">
                     <div class="inicio-dashboard__stats-block">
                         <div
                             class="d-flex align-items-center gap-4 flex-wrap flex-sm-nowrap justify-content-center justify-content-sm-start mb-3">
-                            {{-- Círculo / Gauge de Avance --}}
                             <div class="inicio-dashboard__mide-gauge-wrapper">
                                 <div id="mainGaugeInicio" class="inicio-dashboard__gauge"></div>
                                 <div class="inicio-dashboard__gauge-label" style="color: {{ $colorPlan }};">
@@ -104,7 +105,6 @@
                                 </div>
                             </div>
 
-                            {{-- Textos principales --}}
                             <div class="text-center text-sm-start">
                                 <h3 class="inicio-dashboard__stats-title">
                                     <strong>{{ $metricasPlan['total_registrados'] }}</strong> Indicadores registrados
@@ -136,13 +136,11 @@
                             </div>
                         </div>
 
-                        {{-- Párrafo explicativo debajo --}}
                         <p class="inicio-dashboard__stats-desc">
                             El avance promedio se calcula con indicadores que cuentan con datos validados y condiciones suficientes para compararse contra una meta. Los indicadores no evaluables se muestran por separado en el desglose.
                             <a href="{{ url('/ped#metodologia') }}" class="inicio-dashboard__methodology-link">¿Cómo se calcula?</a>
                         </p>
 
-                        {{-- Distribución de Semáforo: Barra Segmentada Horizontal y Leyenda --}}
                         <div class="inicio-dashboard__semaforo-bar mt-4">
                             @php
                                 $totalRegistrados =
@@ -200,7 +198,6 @@
                                 @endif
                             </div>
 
-                            {{-- Leyenda interactiva simplificada --}}
                             <div class="d-flex justify-content-between flex-wrap gap-2 mt-3 text-muted"
                                 style="font-size: 0.78rem;">
                                 <div><span class="d-inline-block rounded-circle me-1"
@@ -238,24 +235,19 @@
         <div class="inicio-cumplimiento__container">
             <div class="inicio-cumplimiento__card">
 
-                {{-- Cabecera del Reporte de Ejes --}}
                 <div class="inicio-cumplimiento__header">
                     <h3>Cumplimiento por Eje</h3>
                     <span class="inicio-cumplimiento__header-sub">Distribución de indicadores por rango de cumplimiento</span>
                 </div>
 
-                {{-- Cuerpo de Ejes --}}
                 <div class="inicio-cumplimiento__body">
                     <div class="inicio-ejes__list">
                         @foreach ($ejesData as $eje)
                             <div class="inicio-ejes__row" id="eje-{{ $eje['numero'] }}"
                                 style="border-left-color: var(--color-eje{{ $eje['numero'] }});">
-                                {{-- Ícono del eje --}}
                                 <img src="{{ asset('img/iconos/eje-' . $eje['numero'] . '.png') }}"
                                     class="inicio-ejes__icon"
                                     alt="Icono del {{ $eje['nombre'] }}">
-
-                                {{-- Info --}}
                                 <div class="inicio-ejes__info">
                                     <div class="inicio-ejes__name">{{ $eje['nombre'] }}</div>
                                     <div class="inicio-ejes__meta">
@@ -271,7 +263,6 @@
                                     </div>
                                 </div>
 
-                                {{-- Rangos de cumplimiento --}}
                                 <div class="inicio-ejes__rangos">
                                     <div class="inicio-ejes__rango inicio-ejes__rango--rojo">
                                         <span class="inicio-ejes__rango-count">{{ $eje['distribucion']['rojo'] }}</span>
@@ -292,7 +283,6 @@
                                     </div>
                                 </div>
 
-                                {{-- Link detalle --}}
                                 <a href="{{ url('/ped/eje-' . $eje['numero']) }}" class="inicio-ejes__link">
                                     + detalle
                                 </a>
@@ -301,7 +291,6 @@
                     </div>
                 </div>
 
-                {{-- Reporte de Programas Derivados --}}
                 @if ($programasData->count() > 0)
                     <div class="inicio-cumplimiento__header inicio-cumplimiento__header--programas">
                         <h3>Avance por Programas Derivados</h3>
@@ -320,7 +309,6 @@
                             });
                         @endphp
 
-                        {{-- Buscador General de Programas Derivados --}}
                         <div class="row mb-4 justify-content-center">
                             <div class="col-md-8 col-lg-6">
                                 <div class="input-group shadow-sm rounded-pill overflow-hidden border">
@@ -333,7 +321,6 @@
                             </div>
                         </div>
 
-                        {{-- Pestañas de Navegación por Tipo de Programa --}}
                         <ul class="nav nav-pills" id="programasTab" role="tablist">
                             @foreach ($programasOrdenados as $tipo => $programas)
                                 <li class="nav-item" role="presentation">
@@ -348,14 +335,12 @@
                             @endforeach
                         </ul>
 
-                        {{-- Contenedor de Contenidos por Pestaña --}}
                         <div class="tab-content" id="programasTabContent">
                             @foreach ($programasOrdenados as $tipo => $programas)
                                 <div class="tab-pane fade @if ($loop->first) show active @endif"
                                     id="pane-{{ Illuminate\Support\Str::slug($tipo) }}" role="tabpanel"
                                     aria-labelledby="tab-{{ Illuminate\Support\Str::slug($tipo) }}">
 
-                                    {{-- Filtro de Grupos para la pestaña de Institucionales --}}
                                     @if ($tipo === 'Institucionales' && count($gruposInstitucionales) > 0)
                                         <div class="d-flex justify-content-center flex-wrap gap-2 mb-4"
                                             id="grupo-filters">
@@ -468,7 +453,6 @@
             <h2 class="inicio-section-title">Esquema Integral</h2>
 
             <div class="inicio-esquema__grid">
-                {{-- Esquema del SEPD --}}
                 <div class="inicio-esquema__block">
                     <img src="{{ asset('img/Banners/General/sepd.png') }}"
                         alt="Sistema Estatal de Planeación Democrática" style="max-width: 800px;">
@@ -480,7 +464,6 @@
                     </p>
                 </div>
 
-                {{-- Pirámide de programas derivados --}}
                 <div class="inicio-esquema__block">
                     <img src="{{ asset('img/esquemas/piramide.png') }}"
                         alt="Esquema de pirámide de los programas derivados" style="max-width: 600px;">
@@ -491,7 +474,6 @@
                     </p>
                 </div>
 
-                {{-- Esquema SED --}}
                 <div class="inicio-esquema__block">
                     <img src="{{ asset('img/Banners/General/esquema_sed.png') }}"
                         alt="Esquema de Seguimiento del Sistema de Evaluación del Desempeño" style="max-width: 800px;">
@@ -506,7 +488,7 @@
     </section>
 
     {{-- ============================================================
-     7. FUENTES DE CONSULTA (rediseñada)
+     7. FUENTES DE CONSULTA
      ============================================================ --}}
     <section class="inicio-fuentes" id="fuentes">
         <div class="inicio-fuentes__container">

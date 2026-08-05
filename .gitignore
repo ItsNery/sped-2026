@@ -18,7 +18,9 @@ yarn-error.log
 /public/docs
 /public/image
 /public/img
-/public/videos
+/public/videos/*
+!/public/videos/
+!/public/videos/hero.mp4
 /public/apexcharts-bundle
 /public/fontAwesome
 /public/webfonts

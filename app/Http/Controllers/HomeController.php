@@ -3,12 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Indicador;
-use App\Models\SliderInicio;
 use App\Models\CatEje;
 use App\Models\CatPlanEstatalDesarrollo;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
-use App\Models\CarruselIndicador;
 use App\Models\CatRegion;
 use App\Models\Institucion;
 use App\Models\Odses;
@@ -666,6 +664,8 @@ class HomeController extends Controller
             ->distinct()
             ->pluck('grupo');
 
+        $heroVideo = config('sped.hero_video');
+
         return view('inicio', compact(
             'plan',
             'avancePlan',
@@ -676,7 +676,8 @@ class HomeController extends Controller
             'distribucionGeneral',
             'ejesData',
             'programasData',
-            'gruposInstitucionales'
+            'gruposInstitucionales',
+            'heroVideo'
         ));
     }
 

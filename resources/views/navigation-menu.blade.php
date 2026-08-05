@@ -42,33 +42,7 @@
                 @endauth
 
                 @auth
-                @if(auth()->user()->can('ver-ind-carrusel') || auth()->user()->can('ver-slider-inicio'))
-                <x-dropdown id="difusionDropdown" class="ms-3">
-                    <x-slot name="trigger">
-                        <span class="d-inline-flex align-items-center text-muted fw-bold {{ (request()->routeIs('panel-carrusel-indicadores*', 'panel-slider-inicio*')) ? 'text-primary border-bottom border-primary border-2' : '' }}"
-                            style="cursor: pointer; font-size: 0.9rem;">
-                            {{ __('Difusión') }}
-                        </span>
-                    </x-slot>
-
-                    <x-slot name="content">
-                        @can('ver-ind-carrusel')
-                        <x-dropdown-link href="{{ route('panel-carrusel-indicadores.index') }}">
-                            {{ __('Carrusel') }}
-                        </x-dropdown-link>
-                        @endcan
-                        @can('ver-slider-inicio')
-                        <x-dropdown-link href="{{ route('panel-slider-inicio.index') }}">
-                            {{ __('Slider') }}
-                        </x-dropdown-link>
-                        @endcan
-                    </x-slot>
-                </x-dropdown>
-                @endif
-                @endauth
-
-                @auth
-                @if (auth()->user()->id === 1)
+                @if (auth()->user()->isAdministrator())
                 <x-dropdown id="adminDropdown" class="ms-3">
                     <x-slot name="trigger">
                         <span class="d-inline-flex align-items-center text-muted fw-bold {{ (request()->routeIs('panel-usuarios*', 'usuarios*', 'panel-roles*', 'panel-logs*', 'panel-accesos*')) ? 'text-primary border-bottom border-primary border-2' : '' }}"
@@ -127,7 +101,7 @@
                 </x-dropdown>
 
                 @auth
-                @if (auth()->user()->hasRole('Administrador'))
+                @if (auth()->user()->isAdministrator())
                 <x-dropdown id="catalogosDropdown" class="ms-3">
                     <x-slot name="trigger">
                         <span class="d-inline-flex align-items-center text-muted fw-bold {{ (request()->routeIs('panel-cat-instituciones*', 'panel-cat-planes*', 'panel-cat-prog-der-*')) ? 'text-primary border-bottom border-primary border-2' : '' }}"

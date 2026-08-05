@@ -88,6 +88,10 @@ class ModeloObserver
             return null;
         }
 
+        if (is_bool($valor)) {
+            return $valor ? '1' : '0';
+        }
+
         if (is_scalar($valor)) {
             return (string) $valor;
         }

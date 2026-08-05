@@ -237,7 +237,9 @@ class IndicadorMunicipalController extends Controller
         $periodicidades = PeriodicidadIndicadorMunicipal::all();
         $odes = Odses::all();
         $indicador = IndicadorMunicipal::with(['resultados'])->findOrFail($id);
-        if ($indicador->validado == 1 && !auth()->user()->hasRole('Administrador Municipal')) {
+        if ($indicador->validado == 1
+            && !auth()->user()->hasRole('Administrador Municipal')
+            && !auth()->user()->isSuperAdministrator()) {
             return redirect()->route('panel-indicadores-municipales.index')->with('error', 'La información de este indicador no puede ser editada porque ha sido validado.');
         }
         $datosResultadosIndicador = ResultadoIndicadorMunicipal::where('id_indicador', $id)->get();

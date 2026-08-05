@@ -2021,7 +2021,7 @@ nav {
 .card-body {
     cursor: default !important;
     background-color: #F2F2F2;
-    border-radius: 20px;
+    border-radius: var(--radio-borde);
 }
 
 .card_indicador .titulo {
@@ -3326,42 +3326,6 @@ nav {
     padding-left: 33px;
     visibility: hidden;
 }
-
-/*Estilos del slider principal*/
-.swiper {
-    width: 100%;
-    height: 100%;
-    border-radius: 10px;
-}
-
-.swiper-slide {
-    text-align: center;
-    font-size: 1.125rem;
-    background-color: #fff;
-
-    /*Center slide text vertically*/
-    display: -webkit-box;
-    display: -ms-flexbox;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-box-pack: center;
-    -ms-flex-pack: center;
-    -webkit-justify-content: center;
-    justify-content: center;
-    -webkit-box-align: center;
-    -ms-flex-align: center;
-    -webkit-align-items: center;
-    align-items: center;
-}
-
-.swiper-slide img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/*Fin Estilos del slider principal*/
 
 /*Estilos del loader y pleca fija*/
 .loader {
@@ -5868,18 +5832,35 @@ nav {
 
 .inicio-hero {
     background-image: linear-gradient(rgba(0, 0, 0, 0.52), rgba(0, 0, 0, 0.32)), url('../img/puebla_hero_bg.png');
-    background-attachment: fixed;
+    background-attachment: scroll;
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
     color: #fff;
-    padding: 6rem 0;
-    min-height: 580px;
-    height: calc(100vh - 100px);
+    padding: 5rem 0;
+    min-height: 480px;
+    height: auto;
     display: flex;
     align-items: center;
     position: relative;
     overflow: hidden;
+}
+
+.inicio-hero__video {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.inicio-hero--video::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: rgba(0, 0, 0, 0.52);
 }
 
 .inicio-hero__container {
@@ -5895,6 +5876,10 @@ nav {
     width: 100%;
 }
 
+.inicio-hero--video .inicio-hero__container {
+    z-index: 2;
+}
+
 .inicio-hero__logo-wrapper {
     display: flex;
     justify-content: center;
@@ -5903,7 +5888,7 @@ nav {
 
 .inicio-hero__logo {
     width: 100%;
-    max-width: 320px;
+    max-width: 180px;
     display: flex;
     justify-content: center;
 }
@@ -5926,7 +5911,7 @@ nav {
     color: var(--arena);
     padding: 0.3rem 1.1rem;
     border-radius: 5px;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 600;
     margin-bottom: 1rem;
     border: 1px solid rgba(255, 255, 255, 0.5);
@@ -5934,7 +5919,7 @@ nav {
 
 .inicio-hero__title {
     font-family: "Gilroy-Bold", "Corra-Montserra-Bold", sans-serif;
-    font-size: 3.2rem;
+    font-size: 3rem;
     margin-bottom: 1.25rem;
     line-height: 1.2;
     color: var(--color-eje2);
@@ -5943,7 +5928,7 @@ nav {
 
 .inicio-hero__subtitle {
     font-family: "Gilroy-Medium", "Corra-Montserra-Medium", sans-serif;
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     opacity: 0.95;
     line-height: 1.6;
     max-width: 700px;
@@ -7061,10 +7046,15 @@ nav {
 @media (max-width: 768px) {
     .inicio-hero {
         padding: 2rem 0;
+        min-height: 360px;
     }
 
     .inicio-hero__title {
-        font-size: 1.35rem;
+        font-size: 2.25rem;
+    }
+
+    .inicio-hero__subtitle {
+        font-size: 1rem;
     }
 
     .inicio-dashboard,
@@ -7140,6 +7130,16 @@ nav {
 
     .inicio-programas__grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .inicio-hero__video {
+        display: none;
+    }
+
+    .inicio-hero--video::before {
+        display: none;
     }
 }
 
@@ -7695,6 +7695,7 @@ nav {
 }
 
 .contenedor__ficha .card-ficha-moderna {
+    border-top: 4px solid var(--bg-gobierno);
     height: auto !important;
     margin-bottom: 0.75rem;
     padding: 1rem !important;
@@ -7844,20 +7845,10 @@ nav {
 .ficha-panel {
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(219, 211, 207, 0.75) !important;
+    /* border: 1px solid rgba(219, 211, 207, 0.75) !important; */
     border-radius: 14px;
     background: var(--ficha-surface) !important;
     box-shadow: 0 8px 24px rgba(57, 37, 40, 0.06) !important;
-}
-
-.ficha-panel::before {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 4px;
-    background: var(--ficha-panel-accent, #9d2449);
-    content: '';
 }
 
 .ficha-panel--planning {

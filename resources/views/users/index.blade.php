@@ -21,8 +21,7 @@
             @can('crear-usuario')
                 <div class="d-flex justify-content-end mx-4">
                     <a href="{{ route('panel-usuarios.create') }}" class="text-decoration-none">
-                        <button class="button-add-new" type="button" data-bs-toggle="modal"
-                            data-bs-target="#modalSliderInicio" data-action="create">
+                        <button class="button-add-new" type="button">
                             <span class="button__text">Agregar</span>
                             <span class="button__icon"><svg class="svg" fill="none" height="24"
                                     stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -91,7 +90,7 @@
                                             </form>
                                         @endif
                                     @endcan --}}
-                                    @if ($user->id != 1)
+                                    @if (!$user->isSystemAccount())
                                         @can('des-activar-usuario')
                                             @if ($user->is_active)
                                                 <form action="{{ route('users.deactivate', $user->id) }}" method="POST"
@@ -118,7 +117,7 @@
                                     @endif
 
                                     @can('borrar-usuario')
-                                        @if ($user->id != 1)
+                                        @if (!$user->isSystemAccount())
                                             <form action="{{ route('panel-usuarios.destroy', $user->id) }}" method="POST"
                                                 class="d-inline confirmable-form" id="form-delete-{{ $user->id }}">
                                                 @csrf

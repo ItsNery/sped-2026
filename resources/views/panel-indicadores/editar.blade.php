@@ -34,7 +34,7 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        @if (auth()->user()->id === 1)
+                        @if (auth()->user()->isAdministrator())
                         <div class="col-md-6 mb-2">
                             <div class="custom-section-title">
                                 Institución responsable: <span class="text-danger">*</span>
@@ -53,7 +53,7 @@
                             @enderror
                         </div>
                         @endif
-                        @if (auth()->user()->id === 1)
+                        @if (auth()->user()->isAdministrator())
                         <div class="col-md-6 mb-2">
                             <div class="custom-section-title">
                                 Usuario a cargo:

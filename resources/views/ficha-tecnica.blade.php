@@ -305,8 +305,8 @@
                                 <table class="table table-hover table-historicos text-center mb-0">
                                     <thead class="sticky-top">
                                         <tr>
-                                            <th class="text-start" style="background-color: {{ $indicador->color ?? '#6c757d' }};">Año</th>
-                                            <th style="background-color: {{ $indicador->color ?? '#6c757d' }};">Valor Alcanzado</th>
+                                            <th class="text-start text-white" style="background-color: {{ $indicador->color ?? '#6c757d' }};">Año</th>
+                                            <th class="text-white" style="background-color: {{ $indicador->color ?? '#6c757d' }};">Valor Alcanzado</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -367,9 +367,9 @@
                 <a href="{{ route('ficha-tecnica.download', $indicador) }}" class="btn ficha-action ficha-action--primary" style="--ficha-accent: {{ $indicador->color ?? '#9d2449' }};">
                     <i class="fas fa-download me-2"></i> Descargar ficha
                 </a>
-                <a href="{{ route('ficha-tecnica.preview', $indicador) }}" class="ficha-preview-link ms-3" target="_blank" rel="noopener">
+                {{-- <a href="{{ route('ficha-tecnica.preview', $indicador) }}" class="ficha-preview-link ms-3" target="_blank" rel="noopener">
                     Vista previa de impresión
-                </a>
+                </a> --}}
             </div>
         </div>
 

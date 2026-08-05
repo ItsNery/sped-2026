@@ -7,72 +7,74 @@
         </h2>
     </x-slot>
     @if ($message = Session::get('success'))
-    <script>
-        Swal.fire({
-            icon: 'success',
-            title: '{{ $message }}'
-        })
-    </script>
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: '{{ $message }}'
+            })
+        </script>
     @endif
     @if (session('error'))
-    <div class="alert alert-danger">
-        <i class="fa-solid fa-circle-exclamation"></i> {{ session('error') }}
-    </div>
+        <div class="alert alert-danger">
+            <i class="fa-solid fa-circle-exclamation"></i> {{ session('error') }}
+        </div>
     @endif
-    <div class="contenedor-principal">
-        <div class="encabezado-lista my-2">
-            <h2>Gestión de Instituciones</h2>
-        </div>
-        <div class="d-flex justify-content-end mx-4 my-4">
-            {{-- Use data-bs-toggle and data-bs-target for Bootstrap 5 --}}
-            <button class="button-add-new" type="button" id="btnAddInstitucion" data-bs-toggle="modal"
-                data-bs-target="#modalInstitucion">
-                <span class="button__text">Agregar</span>
-                <span class="button__icon"><svg class="svg" fill="none" height="24" stroke="currentColor"
-                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"
-                        width="24" xmlns="http://www.w3.org/2000/svg">
-                        <line x1="12" x2="12" y1="5" y2="19"></line>
-                        <line x1="5" x2="19" y1="12" y2="12"></line>
-                    </svg></span>
-            </button>
-        </div>
-        <div class="container table-responsive">
-            <table class="table table-striped table-users" id="table-instituciones">
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Titular</th>
-                        <th class="text-center">Opciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($instituciones as $institucion)
-                    <tr>
-                        <td>{{ $institucion->nombre }}</td>
-                        <td>{{ $institucion->titular }}</td>
-                        <td class="text-center">
-                            {{-- Use distinct class for edit buttons to attach listeners --}}
-                            <button class="btn btn-warning btn-sm text-black btn-edit-institucion" title="Editar"
-                                data-bs-toggle="modal" data-bs-target="#modalInstitucion"
-                                data-institucion='@json($institucion)'>
-                                <i class="fa-regular fa-pen-to-square"></i>
-                            </button>
-                            <form action="{{ route('panel-cat-instituciones.destroy', $institucion->id) }}"
-                                method="POST" class="d-inline" id="form-delete-{{ $institucion->id }}">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm text-white" title="Eliminar">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+    <div class="container mx-auto">
+        <div class="contenedor-principal">
+            <div class="encabezado-lista my-2">
+                <h2>Gestión de Instituciones</h2>
+            </div>
+            <div class="d-flex justify-content-end mx-4 my-4">
+                {{-- Use data-bs-toggle and data-bs-target for Bootstrap 5 --}}
+                <button class="button-add-new" type="button" id="btnAddInstitucion" data-bs-toggle="modal"
+                    data-bs-target="#modalInstitucion">
+                    <span class="button__text">Agregar</span>
+                    <span class="button__icon"><svg class="svg" fill="none" height="24" stroke="currentColor"
+                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"
+                            width="24" xmlns="http://www.w3.org/2000/svg">
+                            <line x1="12" x2="12" y1="5" y2="19"></line>
+                            <line x1="5" x2="19" y1="12" y2="12"></line>
+                        </svg></span>
+                </button>
+            </div>
+            <div class="container table-responsive">
+                <table class="table table-striped table-users" id="table-instituciones">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Titular</th>
+                            <th class="text-center">Opciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($instituciones as $institucion)
+                            <tr>
+                                <td>{{ $institucion->nombre }}</td>
+                                <td>{{ $institucion->titular }}</td>
+                                <td class="text-center">
+                                    {{-- Use distinct class for edit buttons to attach listeners --}}
+                                    <button class="btn btn-warning btn-sm text-black btn-edit-institucion"
+                                        title="Editar" data-bs-toggle="modal" data-bs-target="#modalInstitucion"
+                                        data-institucion='@json($institucion)'>
+                                        <i class="fa-regular fa-pen-to-square"></i>
+                                    </button>
+                                    <form action="{{ route('panel-cat-instituciones.destroy', $institucion->id) }}"
+                                        method="POST" class="d-inline" id="form-delete-{{ $institucion->id }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-sm text-white"
+                                            title="Eliminar">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-
     {{-- MODAL --}}
     <div class="modal fade" id="modalInstitucion" tabindex="-1" aria-labelledby="modalInstitucionLabel"
         aria-hidden="true">

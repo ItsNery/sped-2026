@@ -73,9 +73,9 @@
                             Inicio
                         </a>
                         <br>
-                        <a class="text-white mb-2" href="{{ url('/informacion-general') }}">
+                        <a class="text-white mb-2" href="{{ url('/informacion-general/api') }}">
                             <i class="fa fa-angle-right mr-2"></i>
-                            Información General
+                            API Pública
                         </a>
                         <br>
                         <a class="text-white mb-2" href="{{ url('/normatividad') }}">
@@ -216,5 +216,5 @@
     </div>
 </div>
 <div class="textura-footer">
-    <img src="{{ asset('img/footer.svg') }}" alt="" class="w-100 px-0 mx-0">
+    <img src="{{ asset('img/footer-green-final.svg') }}" alt="" class="w-100 px-0 mx-0">
 </div>

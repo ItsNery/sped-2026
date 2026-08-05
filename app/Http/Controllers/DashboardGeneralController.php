@@ -31,7 +31,7 @@ class DashboardGeneralController extends Controller
      */
     public function adminIndex(Request $request)
     {
-        return $this->generarDashboard($request, 'admin.dashboard-general');
+        return redirect()->route('dashboard', $request->query());
     }
 
     private function generarDashboard(Request $request, $vista)
@@ -169,10 +169,10 @@ class DashboardGeneralController extends Controller
      */
     private function getSemaforoColor($avance)
     {
-        if ($avance === null || $avance == 0) return '#adb5bd'; // Solo línea base / Sin datos
-        if ($avance >= 110) return '#0d6efd'; // Excedido (Azul)
-        if ($avance >= 91) return '#198754';  // Aceptable (Verde)
-        if ($avance >= 71) return '#ffc107';  // Moderado (Amarillo)
-        return '#dc3545'; // Insuficiente (Rojo)
+        if ($avance === null) return '#adb5bd'; // Solo línea base / Sin datos
+        if ($avance >= 110) return '#3E8CEE'; // Excedido
+        if ($avance >= 91) return '#43B383';  // Aceptable
+        if ($avance >= 71) return '#F5E35B';  // Moderado
+        return '#B94149'; // Insuficiente
     }
 }

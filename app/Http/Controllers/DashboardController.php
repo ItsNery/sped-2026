@@ -4,21 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use App\Models\Institucion;
 use App\Models\Indicador;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-// use App\Models\DatoAnualIndicador;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
 use App\Models\CatPlanEstatalDesarrollo;
 use App\Models\CatEje;
 use App\Models\CatProgramaDerivadoEspecial;
 use App\Models\CatProgramaDerivadoInstitucional;
 use App\Models\CatProgramaDerivadoRegional;
 use App\Models\CatProgramaDerivadoSectorial;
-use App\Models\DatoAnual;
 use App\Services\PedMetricsService;
+use App\Services\PedTrendService;
+use App\Services\DashboardFilterService;
 
 /**
  * Gestiona las vistas y métricas principales del panel de control.
@@ -30,7 +27,11 @@ class DashboardController extends Controller
      *
      * @param  PedMetricsService  $pedMetrics Servicio para calcular métricas de indicadores.
      */
-    public function __construct(private PedMetricsService $pedMetrics) {}
+    public function __construct(
+        private PedMetricsService $pedMetrics,
+        private PedTrendService $pedTrend,
+        private DashboardFilterService $dashboardFilters
+    ) {}
 
     /**
      * Prepara y muestra el panel de control.
@@ -41,323 +42,280 @@ class DashboardController extends Controller
      *
      * @return \Illuminate\Contracts\View\View Vista del panel correspondiente.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
-        if ($user->id_municipio !== null  && $user->id_municipio !== 0) {
+
+        if ((int) $user->id_municipio !== 0) {
             return view('panel-indicadores-municipales.dashboard');
-        } else {
-            $institucionesExcluidas = [1];
-
-            $institucionesTop = Institucion::whereNotIn('id', $institucionesExcluidas)
-                ->whereHas('indicadores')
-                ->withCount(['indicadores as indicadores_validados_count' => function ($query) {
-                    $query->where('indicador_validado', true);
-                }])
-                ->orderByDesc('indicadores_validados_count')
-                ->take(5)
-                ->get();
-
-            $instituciones = $institucionesTop;
-
-            // Calcula el avance promedio de los indicadores del plan vigente.
-            $planId = 3;
-            $plan = CatPlanEstatalDesarrollo::find($planId);
-
-            if (!$plan) {
-                $plan = CatPlanEstatalDesarrollo::where('nombre', 'like', '%2024-2030%')->first();
-                if ($plan) $planId = $plan->id;
-            }
-
-            $indicadoresPlan = Indicador::where(function ($query) use ($planId) {
-                $query->whereHasMorph('indicadorable', [CatEje::class], function ($q) use ($planId) {
-                    $q->where('plan_id', $planId);
-                })->orWhereHasMorph('indicadorable', [
-                    CatProgramaDerivadoSectorial::class,
-                    CatProgramaDerivadoEspecial::class,
-                    CatProgramaDerivadoRegional::class
-                ], function ($q) use ($planId) {
-                    $q->where('plan_estatal', $planId);
-                })->orWhereHas('programasInstitucionales', function ($q) use ($planId) {
-                    $q->where('plan_estatal', $planId);
-                });
-            })->get();
-
-            $metricasGlobal = $this->pedMetrics->summarizeCached($indicadoresPlan, false);
-            $avanceGlobalPromedio = $metricasGlobal['avance_promedio'];
-            $colorAvanceGlobal = $this->getSemaforoColor($avanceGlobalPromedio);
-
-            // Agrupa y ordena el avance de los programas derivados.
-            $programasData = collect($this->getProgramasAvance($planId, false))
-                ->groupBy('tipo_slug')
-                ->map(function ($programas, $tipo) {
-                    return [
-                        'tipo' => $programas->first()['tipo'],
-                        'programas' => $programas
-                    ];
-                });
-
-            $ordenDeseado = ['sectoriales', 'especiales', 'regionales', 'institucionales'];
-            $programasAgrupadosOrdenados = [];
-            foreach ($ordenDeseado as $tipoSlug) {
-                if ($programasData->has($tipoSlug)) {
-                    $programasAgrupadosOrdenados[$tipoSlug] = $programasData->get($tipoSlug);
-                }
-            }
-            $programasData = $programasAgrupadosOrdenados;
-
-            // Calcula el porcentaje de indicadores validados.
-            $totalIndicadoresValidados = Indicador::where('indicador_validado', true)->count();
-
-            $totalIndicadores = Indicador::count();
-            $porcentajeValidado = $totalIndicadores > 0 ? ($totalIndicadoresValidados / $totalIndicadores) * 100 : 0;
-
-            // Calcula el porcentaje de indicadores no validados o sin datos anuales.
-            $totalIndicadoresIncompletos = Indicador::where(function ($query) {
-                $query->where('indicador_validado', false)
-                    ->orWhereDoesntHave('datosAnuales')
-                ;
-            })->count();
-            $porcentajeIncompletos = $totalIndicadores > 0 ? ($totalIndicadoresIncompletos / $totalIndicadores) * 100 : 0;
-            $indicadoresRecientes = Indicador::orderBy('updated_at', 'desc')
-                ->take(10)
-                ->get()
-                ->map(function ($indicador) {
-                    $esNuevo = false;
-
-                    if ($indicador->created_at && $indicador->updated_at) {
-                        $esNuevo = $indicador->created_at->eq($indicador->updated_at);
-                    }
-
-                    return [
-                        'id' => $indicador->id,
-                        'nombre' => $indicador->nombre,
-                        'updated_at' => $indicador->updated_at ? $indicador->updated_at->diffForHumans() : 'Sin fecha',
-                        'tipo' => $esNuevo ? 'Nuevo' : 'Modificado'
-                    ];
-                });
-            // Obtiene instituciones con al menos un indicador no validado.
-            $institucionesSinIndicadores = Institucion::where('id', '!=', 1)
-                ->whereHas('indicadores', function ($queryIndicador) {
-                    $queryIndicador->where('indicador_validado', false);
-                })
-                ->get();
-
-            // Clasifica los indicadores según la fecha de actualización más reciente.
-            $hoy = Carbon::now()->format('Y-m-d');
-
-            $getFechaMasReciente = function ($indicador) {
-                $fechasValidasEnDatosAnuales = new Collection();
-
-                foreach ($indicador->datosAnuales as $datoAnual) {
-                    $yearDelDato = $datoAnual->anio;
-                    if ($yearDelDato >= 2020 && $yearDelDato <= Carbon::now()->year) {
-                        if (!empty($datoAnual->fecha_actualizacion)) {
-                            try {
-                                $fecha = Carbon::parse($datoAnual->fecha_actualizacion);
-                                if ($fecha->isValid()) {
-                                    $fechasValidasEnDatosAnuales->push($fecha);
-                                }
-                            } catch (\Exception $e) {
-                                continue;
-                            }
-                        }
-                    }
-                }
-
-                if ($fechasValidasEnDatosAnuales->isNotEmpty()) {
-                    return $fechasValidasEnDatosAnuales->max()->format('Y-m-d');
-                }
-
-                // Usa la fecha del indicador si no hay fechas válidas en los datos anuales.
-                if (!empty($indicador->fecha_actualizacion)) {
-                    try {
-                        return Carbon::parse($indicador->fecha_actualizacion)->format('Y-m-d');
-                    } catch (\Exception $e) {
-                        return null;
-                    }
-                }
-                return null;
-            };
-
-            $indicadoresProximos = new Collection();
-            $indicadoresATiempo = new Collection();
-            $indicadoresCaducados = new Collection();
-
-            Indicador::with('datosAnuales')->get()->each(function ($indicador) use ($hoy, $getFechaMasReciente, &$indicadoresProximos, &$indicadoresATiempo, &$indicadoresCaducados) {
-                $fechaMasReciente = $getFechaMasReciente($indicador);
-                $indicador->setAttribute('fecha_actualizacion_calculada', $fechaMasReciente);
-
-                if ($fechaMasReciente) {
-                    if ($fechaMasReciente > $hoy) {
-                        $indicadoresProximos->push($indicador);
-                    } elseif ($fechaMasReciente == $hoy) {
-                        $indicadoresATiempo->push($indicador);
-                    } else {
-                        $indicadoresCaducados->push($indicador);
-                    }
-                }
-            });
-            // Prepara la cantidad de indicadores validados por usuario Enlace.
-            $usuariosEnlace = User::whereHas('roles', function ($query) {
-                $query->where('name', 'Enlace');
-            })->with('instituciones.indicadores')->get();
-
-            $datosGraficas = [];
-
-            foreach ($usuariosEnlace as $usuario) {
-                $totalIndicadores = 0;
-                $indicadoresValidados = 0;
-
-                foreach ($usuario->instituciones as $institucion) {
-                    $totalIndicadores += $institucion->indicadores->count();
-                    $indicadoresValidados += $institucion->indicadores->where('indicador_validado', 1)->count();
-                }
-
-                if ($totalIndicadores > 0) {
-                    $datosGraficas[] = [
-                        'id_usuario' => $usuario->id,
-                        'nombre' => $usuario->name,
-                        'total' => $totalIndicadores,
-                        'validados' => $indicadoresValidados,
-                        'no_validados' => $totalIndicadores - $indicadoresValidados
-                    ];
-                }
-            }
-
-            $years = range(2015, Carbon::now()->year);
-            $datosPorAnio = [];
-
-            foreach ($years as $year) {
-                $count = DatoAnual::where('anio', $year)
-                    ->whereNotNull('valor_dato')
-                    ->count();
-                $datosPorAnio[] = $count;
-            }
-            // Obtiene la distribución de indicadores por periodicidad.
-            $periodicidades = Indicador::select('periodicidad', DB::raw('COUNT(*) as total'))
-                ->groupBy('periodicidad')
-                ->get();
-
-            $etiquetas_periodicidades = $periodicidades->pluck('periodicidad');
-            $values_periodicidades = $periodicidades->pluck('total');
-
-            $indicadoresSemaforizacion = Indicador::with('datosAnuales')
-                ->get();
-
-            $semaforizacionCounts = [
-                "Excedido" => 0,
-                "Aceptable" => 0,
-                "Moderado" => 0,
-                "Insuficiente" => 0,
-                "No clasificado" => 0
-            ];
-
-            $indicadoresPorSemaforo = [
-                "Excedido" => [],
-                "Aceptable" => [],
-                "Moderado" => [],
-                "Insuficiente" => [],
-                "No clasificado" => []
-            ];
-
-            foreach ($indicadoresSemaforizacion as $indicador) {
-                $resultado = $indicador->calcularSemaforizacion();
-
-                $indicador->anio_ultimo_dato = $resultado['anio_ultimo_dato'];
-                $indicador->ultimo_dato = $resultado['ultimo_dato'];
-                $indicador->avance = $resultado['avance'];
-                $indicador->semaforizacion = $resultado['semaforizacion'];
-
-                if (isset($semaforizacionCounts[$resultado['semaforizacion']])) {
-                    $semaforizacionCounts[$resultado['semaforizacion']]++;
-                    $indicadoresPorSemaforo[$resultado['semaforizacion']][] = $indicador;
-                } else {
-                    if (isset($semaforizacionCounts["No clasificado"])) {
-                        $semaforizacionCounts["No clasificado"]++;
-                        $indicadoresPorSemaforo["No clasificado"][] = $indicador;
-                    }
-                }
-            }
-
-            // Calcula la distribución de indicadores por tendencia.
-            $tendenciaCounts = [
-                "Mayor es mejor" => 0,
-                "Menor es mejor" => 0,
-                "Constante" => 0,
-                "No definida" => 0
-            ];
-
-            foreach ($indicadoresSemaforizacion as $indicador) {
-                $tend = trim((string)$indicador->tendencia);
-                if (empty($tend)) {
-                    $tendenciaCounts["No definida"]++;
-                } elseif (isset($tendenciaCounts[$tend])) {
-                    $tendenciaCounts[$tend]++;
-                } else {
-                    $tendenciaCounts["No definida"]++;
-                }
-            }
-
-            // Obtiene los cinco indicadores insuficientes con menor avance.
-            $focosRojos = collect($indicadoresSemaforizacion)
-                ->filter(function ($ind) {
-                    return $ind->semaforizacion === "Insuficiente" && $ind->avance !== null;
-                })
-                ->sortBy('avance')
-                ->take(5);
-
-            // Obtiene las cinco instituciones con más indicadores críticos.
-            $institucionesCriticas = Institucion::where('id', '!=', 1)
-                ->get()
-                ->map(function ($inst) use ($indicadoresPorSemaforo, $indicadoresCaducados) {
-                    $insuficientes = collect($indicadoresPorSemaforo['Insuficiente'] ?? [])
-                        ->where('id_institucion', $inst->id)
-                        ->count();
-
-                    $caducados = $indicadoresCaducados->where('id_institucion', $inst->id)->count();
-
-                    $inst->total_criticos = $insuficientes + $caducados;
-                    $inst->conteo_insuficientes = $insuficientes;
-                    $inst->conteo_caducados = $caducados;
-
-                    return $inst;
-                })
-                ->filter(function ($inst) {
-                    return $inst->total_criticos > 0;
-                })
-                ->sortByDesc('total_criticos')
-                ->take(5);
-
-            return view('dashboard', compact(
-                'instituciones',
-                'porcentajeValidado',
-                'totalIndicadoresValidados',
-                'totalIndicadores',
-                'porcentajeIncompletos',
-                'totalIndicadoresIncompletos',
-                'indicadoresRecientes',
-                'institucionesSinIndicadores',
-                'indicadoresProximos',
-                'indicadoresATiempo',
-                'indicadoresCaducados',
-                'datosGraficas',
-                'years',
-                'datosPorAnio',
-                'etiquetas_periodicidades',
-                'values_periodicidades',
-                'semaforizacionCounts',
-                'indicadoresSemaforizacion',
-                'indicadoresPorSemaforo',
-                'avanceGlobalPromedio',
-                'metricasGlobal',
-                'colorAvanceGlobal',
-                'programasData',
-                'tendenciaCounts',
-                'focosRojos',
-                'institucionesCriticas'
-            ));
         }
+
+        if (!$user->isAdministrator()
+            && !$user->can('ver-panel-avance-general')
+            && $user->can('ver-indicador')) {
+            return redirect()->route('panel-indicadores.index');
+        }
+
+        abort_unless(
+            $user->isAdministrator() || $user->can('ver-panel-avance-general'),
+            403
+        );
+
+        $filters = $this->dashboardFilters->normalize($request);
+        $planes = CatPlanEstatalDesarrollo::query()
+            ->orderByDesc('id')
+            ->get(['id', 'nombre']);
+        $plan = $planes->firstWhere('id', $filters['plan_id']) ?? $planes->first();
+
+        if (!$plan) {
+            abort(404, 'No hay un plan estatal disponible.');
+        }
+
+        $filters['plan_id'] = $plan->id;
+        $soloValidados = $filters['solo_validados'];
+        $indicadoresPlan = $this->dashboardFilters
+            ->queryForPlan($plan->id, $filters, $soloValidados)
+            ->get();
+        $indicadoresPlan = $this->dashboardFilters->filterComputed($indicadoresPlan, $filters, $soloValidados);
+        $metricasGlobal = $this->pedMetrics->summarizeCached($indicadoresPlan, $soloValidados);
+        $avanceGlobalPromedio = $metricasGlobal['avance_promedio'];
+        $colorAvanceGlobal = $this->getSemaforoColor($avanceGlobalPromedio);
+        $totalIndicadores = $indicadoresPlan->count();
+        $totalIndicadoresValidados = $indicadoresPlan->where('indicador_validado', true)->count();
+        $porcentajeValidado = $totalIndicadores > 0
+            ? round(($totalIndicadoresValidados / $totalIndicadores) * 100, 1)
+            : 0;
+
+        $quality = [
+            'sin_datos' => 0,
+            'sin_meta' => 0,
+            'sin_tendencia' => 0,
+            'pendientes_validacion' => $totalIndicadores - $totalIndicadoresValidados,
+        ];
+        $semaforizacionCounts = [
+            'Excedido' => 0,
+            'Aceptable' => 0,
+            'Moderado' => 0,
+            'Insuficiente' => 0,
+            'No clasificado' => 0,
+        ];
+        $tendenciaCounts = [
+            'Mayor es mejor' => 0,
+            'Menor es mejor' => 0,
+            'Constante' => 0,
+            'No definida' => 0,
+        ];
+
+        foreach ($indicadoresPlan as $indicador) {
+            $resultado = $indicador->calcularSemaforizacion($soloValidados);
+            $estado = array_key_exists($resultado['semaforizacion'], $semaforizacionCounts)
+                ? $resultado['semaforizacion']
+                : 'No clasificado';
+            $semaforizacionCounts[$estado]++;
+
+            $tendencia = trim((string) $indicador->tendencia);
+            $tendenciaCounts[$tendencia] = isset($tendenciaCounts[$tendencia])
+                ? $tendenciaCounts[$tendencia] + 1
+                : $tendenciaCounts['No definida'] + 1;
+
+            $datos = $indicador->datosAnuales
+                ->filter(fn ($dato) => $dato->valor_dato !== null && trim((string) $dato->valor_dato) !== '');
+            $datosDisponibles = $soloValidados
+                ? $datos->where('validado', true)
+                : $datos;
+
+            if ($datosDisponibles->isEmpty()) {
+                $quality['sin_datos']++;
+            }
+            if (!is_numeric(str_replace(',', '', (string) $indicador->meta_2024)) || (float) $indicador->meta_2024 === 0.0) {
+                $quality['sin_meta']++;
+            }
+            if (!in_array(strtolower($tendencia), ['mayor es mejor', 'menor es mejor', 'constante'], true)) {
+                $quality['sin_tendencia']++;
+            }
+        }
+
+        $totalCriticos = $indicadoresPlan->filter(function ($indicador) use ($soloValidados) {
+            $resultado = $indicador->calcularSemaforizacion($soloValidados);
+            $datos = $indicador->datosAnuales
+                ->filter(fn ($dato) => $dato->valor_dato !== null && trim((string) $dato->valor_dato) !== '');
+            $datosDisponibles = $soloValidados ? $datos->where('validado', true) : $datos;
+
+            return ($resultado['avance'] !== null && $resultado['avance'] < 71)
+                || $datosDisponibles->isEmpty();
+        })->count();
+
+        $actionQueue = $this->buildActionQueue($indicadoresPlan, $soloValidados);
+        $indicadoresCriticos = $actionQueue->whereIn('prioridad', [1, 2, 3])->count();
+
+        $ejesData = CatEje::query()
+            ->where('plan_id', $plan->id)
+            ->orderBy('numero')
+            ->get()
+            ->map(function ($eje) use ($soloValidados, $indicadoresPlan) {
+                $ejeIndicadores = $indicadoresPlan->filter(fn ($indicador) =>
+                    $indicador->indicadorable_type === CatEje::class
+                    && (int) $indicador->indicadorable_id === (int) $eje->id
+                );
+                $metricas = $this->pedMetrics->summarizeCached($ejeIndicadores, $soloValidados);
+
+                return [
+                    'id' => $eje->id,
+                    'numero' => $eje->numero,
+                    'nombre' => $eje->nombre,
+                    'color' => $eje->color ?: '#0c312d',
+                    'avance' => $metricas['avance_promedio'],
+                    'cobertura' => $metricas['cobertura_evaluacion'],
+                    'evaluables' => $metricas['total_evaluables'],
+                    'total' => $metricas['total_registrados'],
+                    'semaforo_color' => $this->getSemaforoColor($metricas['avance_promedio']),
+                ];
+            });
+
+        $programasData = collect($this->getProgramasAvance($plan->id, $soloValidados, $indicadoresPlan))
+            ->groupBy('tipo_slug')
+            ->map(fn ($programas) => [
+                'tipo' => $programas->first()['tipo'],
+                'programas' => $programas,
+            ]);
+
+        $institucionesData = $indicadoresPlan
+            ->filter(fn ($indicador) => $indicador->id_institucion && $indicador->institucion)
+            ->groupBy('id_institucion')
+            ->map(function ($indicadores) use ($actionQueue, $soloValidados) {
+                $metricas = $this->pedMetrics->summarizeCached($indicadores, $soloValidados);
+                $institucionId = $indicadores->first()->id_institucion;
+                $criticos = $actionQueue->where('id_institucion', $institucionId)->count();
+
+                return [
+                    'id' => $institucionId,
+                    'nombre' => $indicadores->first()->institucion->nombre,
+                    'total' => $metricas['total_registrados'],
+                    'avance' => $metricas['avance_promedio'],
+                    'cobertura' => $metricas['cobertura_evaluacion'],
+                    'validados' => $indicadores->where('indicador_validado', true)->count(),
+                    'criticos' => $criticos,
+                ];
+            })
+            ->sortByDesc(fn ($institucion) => [$institucion['criticos'], -($institucion['avance'] ?? 0)])
+            ->take(8)
+            ->values();
+
+        $fechaCorte = $indicadoresPlan
+            ->flatMap(fn ($indicador) => $indicador->datosAnuales)
+            ->pluck('fecha_actualizacion')
+            ->filter()
+            ->map(function ($fecha) {
+                try {
+                    return Carbon::parse($fecha);
+                } catch (\Throwable) {
+                    return null;
+                }
+            })
+            ->filter()
+            ->sortDesc()
+            ->first();
+
+        $trend = $this->pedTrend->summarize(
+            $indicadoresPlan,
+            $soloValidados,
+            $filters['anio_desde'],
+            $filters['anio_hasta']
+        );
+        $filterOptions = $this->dashboardFilters->options($plan->id);
+
+        return view('dashboard', compact(
+            'plan',
+            'planes',
+            'soloValidados',
+            'metricasGlobal',
+            'avanceGlobalPromedio',
+            'colorAvanceGlobal',
+            'totalIndicadores',
+            'totalIndicadoresValidados',
+            'porcentajeValidado',
+            'quality',
+            'semaforizacionCounts',
+            'tendenciaCounts',
+            'actionQueue',
+            'indicadoresCriticos',
+            'totalCriticos',
+            'ejesData',
+            'programasData',
+            'institucionesData',
+            'fechaCorte',
+            'trend',
+            'filters',
+            'filterOptions'
+        ));
+    }
+
+    private function buildActionQueue(Collection $indicadores, bool $soloValidados): Collection
+    {
+        return $indicadores->map(function ($indicador) use ($soloValidados) {
+            $resultado = $indicador->calcularSemaforizacion($soloValidados);
+            $datos = $indicador->datosAnuales
+                ->filter(fn ($dato) => $dato->valor_dato !== null && trim((string) $dato->valor_dato) !== '');
+            $datosDisponibles = $soloValidados ? $datos->where('validado', true) : $datos;
+            $ultimoDato = $datosDisponibles->sortByDesc('anio')->first();
+            $proximaActualizacion = null;
+
+            if ($indicador->proxima_actualizacion) {
+                try {
+                    $proximaActualizacion = Carbon::parse($indicador->proxima_actualizacion);
+                } catch (\Throwable) {
+                    $proximaActualizacion = null;
+                }
+            }
+
+            $motivo = null;
+            $prioridad = null;
+            if ($resultado['avance'] !== null && $resultado['avance'] < 71) {
+                $motivo = 'Avance insuficiente';
+                $prioridad = 1;
+            } elseif ($proximaActualizacion?->isPast()) {
+                $motivo = 'Actualización vencida';
+                $prioridad = 2;
+            } elseif (!$indicador->indicador_validado) {
+                $motivo = 'Pendiente de validación';
+                $prioridad = 3;
+            } elseif (!$ultimoDato) {
+                $motivo = 'Sin dato anual';
+                $prioridad = 4;
+            } elseif (!is_numeric(str_replace(',', '', (string) $indicador->meta_2024)) || (float) $indicador->meta_2024 === 0.0) {
+                $motivo = 'Sin meta válida';
+                $prioridad = 5;
+            } elseif (!in_array(strtolower(trim((string) $indicador->tendencia)), ['mayor es mejor', 'menor es mejor', 'constante'], true)) {
+                $motivo = 'Sin tendencia definida';
+                $prioridad = 6;
+            }
+
+            if (!$motivo) {
+                return null;
+            }
+
+            $fechaDato = $ultimoDato?->fecha_actualizacion;
+            try {
+                $fechaDato = $fechaDato ? Carbon::parse($fechaDato)->format('d/m/Y') : 'Sin fecha';
+            } catch (\Throwable) {
+                $fechaDato = 'Sin fecha';
+            }
+
+            return [
+                'id' => $indicador->id,
+                'nombre' => $indicador->nombre,
+                'institucion' => $indicador->institucion?->nombre ?? 'Sin institución',
+                'id_institucion' => $indicador->id_institucion,
+                'motivo' => $motivo,
+                'prioridad' => $prioridad,
+                'avance' => $resultado['avance'],
+                'anio' => $resultado['anio_ultimo_dato'],
+                'fecha_dato' => $fechaDato,
+                'proxima_actualizacion' => $proximaActualizacion?->format('d/m/Y'),
+            ];
+        })->filter()->sortBy(function ($item) {
+            return sprintf('%02d-%08.2f', $item['prioridad'], $item['avance'] ?? 999999);
+        })->values();
     }
 
     /**
@@ -449,7 +407,7 @@ class DashboardController extends Controller
      * @param  bool  $soloValidados Indica si deben considerarse solo indicadores validados.
      * @return array<int, array<string, mixed>> Datos resumidos de cada programa.
      */
-    private function getProgramasAvance($planId, $soloValidados)
+    private function getProgramasAvance($planId, $soloValidados, Collection $selectedIndicators)
     {
         $tipos = [
             ['class' => CatProgramaDerivadoEspecial::class, 'nombre' => 'Programas Especiales', 'slug' => 'especiales'],
@@ -459,22 +417,30 @@ class DashboardController extends Controller
         ];
 
         $resultados = [];
+        $selectedById = $selectedIndicators->keyBy('id');
 
         foreach ($tipos as $tipo) {
-            $programas = $tipo['class']::where('plan_estatal', $planId)->get();
+            $programas = $tipo['class']::with('indicadores.datosAnuales')
+                ->where('plan_estatal', $planId)
+                ->get();
             foreach ($programas as $prog) {
-                $indicadores = $prog->indicadores;
-                $avance = $this->calcularPromedioAvance($indicadores, $soloValidados);
+                $indicadores = $prog->indicadores
+                    ->map(fn ($indicador) => $selectedById->get($indicador->id))
+                    ->filter()
+                    ->values();
+                $metricas = $this->pedMetrics->summarizeCached($indicadores, $soloValidados);
 
                 $resultados[] = [
                     'id' => $prog->id,
                     'nombre' => $prog->nombre,
                     'tipo' => $tipo['nombre'],
                     'tipo_slug' => $tipo['slug'],
-                    'avance' => $avance,
+                    'avance' => $metricas['avance_promedio'],
                     'color' => $prog->color,
-                    'semaforo_color' => $this->getSemaforoColor($avance),
-                    'total_indicadores' => $indicadores->count()
+                    'semaforo_color' => $this->getSemaforoColor($metricas['avance_promedio']),
+                    'total_indicadores' => $metricas['total_registrados'],
+                    'evaluables' => $metricas['total_evaluables'],
+                    'cobertura' => $metricas['cobertura_evaluacion'],
                 ];
             }
         }
@@ -490,10 +456,10 @@ class DashboardController extends Controller
      */
     private function getSemaforoColor($avance)
     {
-        if ($avance === null || $avance == 0) return '#adb5bd';
-        if ($avance >= 110) return '#0d6efd';
-        if ($avance >= 91) return '#198754';
-        if ($avance >= 71) return '#ffc107';
-        return '#dc3545';
+        if ($avance === null) return '#adb5bd';
+        if ($avance >= 110) return '#3E8CEE';
+        if ($avance >= 91) return '#43B383';
+        if ($avance >= 71) return '#F5E35B';
+        return '#B94149';
     }
 }

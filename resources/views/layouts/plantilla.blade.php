@@ -60,7 +60,7 @@
     <link href="{{ asset('css/media_queries.css') }}" rel="stylesheet">
     <link href="{{ asset('css/efectos.css') }}" rel="stylesheet">
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/estilos.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/estilos.css') }}?v={{ filemtime(public_path('css/estilos.css')) }}" rel="stylesheet">
     <script src="{{ asset('js/echarts.min.js') }}"></script>
     <script src="{{ asset('./js/sienna-accessibility.umd.js') }}" async></script>
 

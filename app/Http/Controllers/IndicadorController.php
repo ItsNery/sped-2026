@@ -31,20 +31,21 @@ use Illuminate\Support\Facades\Log; // Para registrar errores (opcional pero rec
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use App\Services\AuditLogger;
 
 class IndicadorController extends Controller
 {
+    public function __construct(private AuditLogger $auditLogger)
+    {
     /**
      * Aplica el middleware de permisos a las acciones del controlador.
      */
-    public function __construct()
-    {
         $this->middleware('permission:ver-indicador|crear-indicador|editar-indicador|borrar-indicador', ['only' => ['index']]);
         $this->middleware('permission:crear-indicador', ['only' => ['create', 'store']]);
         $this->middleware('permission:editar-indicador', ['only' => ['edit', 'update']]);
         $this->middleware('permission:borrar-indicador', ['only' => ['destroy']]);
         $this->middleware('permission:editar-indicador-anual', ['only' => ['updateAnualData']]);
-        $this->middleware('permission:validar-indicador', ['only' => ['toggleValidacion']]);
+        $this->middleware('permission:validar-indicador', ['only' => ['toggleValidacion', 'toggleValidacionAnual']]);
         $this->middleware('permission:subida-masiva-indicador', ['only' => ['confirmImport']]);
     }
 
@@ -63,7 +64,7 @@ class IndicadorController extends Controller
             ->pluck('programa_derivado')
             ->toArray();
 
-        if ($user->hasRole('Administrador')) {
+        if ($user->isAdministrator()) {
             $indicadores = Indicador::with('datosAnuales')->get();
             $instituciones = Institucion::whereHas('indicadores')->where('id', '!=', 1)->get();
             return view('panel-indicadores.index', compact('indicadores', 'instituciones', 'tiposPrograma'));
@@ -144,9 +145,7 @@ class IndicadorController extends Controller
             'Constante'
         ];
 
-        $usuarios = User::where('id', '>=', 8)
-            ->role('Enlace dependencia')
-            ->get();
+        $usuarios = User::role('Enlace dependencia')->orderBy('id')->get();
         $instituciones = Institucion::where('id', '!=', 1)->get();
 
         $planes = CatPlanEstatalDesarrollo::all();
@@ -419,7 +418,7 @@ class IndicadorController extends Controller
             }
         }
 
-        if ($user->hasRole('Administrador')) {
+        if ($user->isAdministrator()) {
             return view('panel-indicadores.mostrar', compact('indicador'));
         }
 
@@ -455,9 +454,7 @@ class IndicadorController extends Controller
         $odeses = Odses::all();
         $planes = CatPlanEstatalDesarrollo::all();
         $programasInstitucionales = CatProgramaDerivadoInstitucional::all();
-        $usuarios = User::where('id', '>=', 8)
-            ->role('Enlace dependencia')
-            ->get();
+        $usuarios = User::role('Enlace dependencia')->orderBy('id')->get();
         $periodicidades = [
             'Sexenal',
             'Quinquenal',
@@ -929,17 +926,84 @@ class IndicadorController extends Controller
      * @param  int $id
      * @return RedirectResponse
      */
-    public function toggleValidacion($id)
+    public function toggleValidacion(Request $request, $id)
     {
         $indicador = Indicador::findOrFail($id);
 
-        $estadoValidacion = !$indicador->indicador_validado;
-        $indicador->indicador_validado = $estadoValidacion;
+        $valorAnterior = (bool) $indicador->getRawOriginal('indicador_validado');
+        $estadoValidacion = $request->has('estado')
+            ? $request->boolean('estado')
+            : !$valorAnterior;
 
-        $indicador->save();
-        $indicador->datosAnuales()->update(['validado' => $estadoValidacion]);
+        if ($valorAnterior === $estadoValidacion) {
+            return redirect()->back()->with('status', 'La ficha ya tenía ese estado de validación.');
+        }
+        DB::transaction(function () use ($indicador, $estadoValidacion, $valorAnterior) {
+            $actualizados = DB::table($indicador->getTable())
+                ->where('id', $indicador->id)
+                ->update([
+                    'indicador_validado' => $estadoValidacion,
+                    'updated_at' => now(),
+                ]);
 
-        return redirect()->back()->with('status', 'Estado de validación actualizado.');
+            abort_unless($actualizados === 1, 500, 'No se pudo guardar el estado de validación de la ficha.');
+            $this->auditLogger->recordUpdate(
+                $indicador,
+                'indicador_validado',
+                $valorAnterior,
+                $estadoValidacion,
+                $estadoValidacion ? 'validado' : 'invalidado',
+                'Cambio de validación de ficha'
+            );
+        });
+
+        return redirect()->back()->with('status', 'Estado de validación de la ficha actualizado. Los datos anuales conservan su validación independiente.');
+    }
+
+    /**
+     * Cambia el estado de validación de un dato anual sin modificar los demás años.
+     *
+     * La carga histórica conserva su estado actual; esta acción aplica a las
+     * validaciones independientes de nuevas cargas y actualizaciones futuras.
+     */
+    public function toggleValidacionAnual(Request $request, $id, $year)
+    {
+        $indicador = Indicador::findOrFail($id);
+        $datoAnual = $indicador->datosAnuales()->where('anio', $year)->firstOrFail();
+        $valorAnterior = (bool) $datoAnual->getRawOriginal('validado');
+        $estadoValidacion = $request->has('estado')
+            ? $request->boolean('estado')
+            : !$valorAnterior;
+
+        if ($valorAnterior === $estadoValidacion) {
+            return redirect()->back()->with('status', "El dato anual {$year} ya tenía ese estado de validación.");
+        }
+        DB::transaction(function () use ($datoAnual, $estadoValidacion, $valorAnterior, $year) {
+            $actualizados = DB::table($datoAnual->getTable())
+                ->where('id', $datoAnual->id)
+                ->update([
+                    'validado' => $estadoValidacion,
+                    'modificado' => !$estadoValidacion,
+                    'updated_at' => now(),
+                ]);
+
+            abort_unless($actualizados === 1, 500, "No se pudo guardar la validación del dato anual {$year}.");
+            $this->auditLogger->recordUpdate(
+                $datoAnual,
+                'validado',
+                $valorAnterior,
+                $estadoValidacion,
+                $estadoValidacion ? 'validado' : 'invalidado',
+                "Cambio de validación del dato anual {$year}"
+            );
+        });
+
+        return redirect()->back()->with(
+            'status',
+            $estadoValidacion
+                ? "El dato anual {$year} fue validado."
+                : "El dato anual {$year} quedó pendiente de validación."
+        );
     }
 
     /**

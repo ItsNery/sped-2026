@@ -21,7 +21,7 @@
                 <h2>Listado de Indicadores </h2>
             </div>
             @auth
-            @if (auth()->user()->hasRole('Administrador'))
+            @if (auth()->user()->isAdministrator())
             @if (isset($instituciones) && isset($tiposPrograma))
             <div class="container row py-2">
                 <div class="col-md-6">
