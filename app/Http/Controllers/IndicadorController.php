@@ -32,10 +32,14 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Services\AuditLogger;
+use App\Services\ActivePlanResolver;
 
 class IndicadorController extends Controller
 {
-    public function __construct(private AuditLogger $auditLogger)
+    public function __construct(
+        private AuditLogger $auditLogger,
+        private ActivePlanResolver $activePlan
+    )
     {
     /**
      * Aplica el middleware de permisos a las acciones del controlador.
@@ -56,6 +60,7 @@ class IndicadorController extends Controller
     public function index()
     {
         $user = auth()->user();
+        $activePlanId = $this->activePlan->id();
         $tiposPrograma = Indicador::select('programa_derivado')
             ->whereNotNull('programa_derivado')
             ->where('programa_derivado', '!=', '')
@@ -65,14 +70,17 @@ class IndicadorController extends Controller
             ->toArray();
 
         if ($user->isAdministrator()) {
-            $indicadores = Indicador::with('datosAnuales')->get();
-            $instituciones = Institucion::whereHas('indicadores')->where('id', '!=', 1)->get();
+            $indicadores = Indicador::forPlan($activePlanId)->with('datosAnuales')->get();
+            $instituciones = Institucion::whereHas('indicadores', fn ($query) => $query->forPlan($activePlanId))
+                ->where('id', '!=', 1)
+                ->get();
             return view('panel-indicadores.index', compact('indicadores', 'instituciones', 'tiposPrograma'));
         }
 
         if ($user->hasRole('Enlace')) {
             $institucionesAsignadas = $user->instituciones()->pluck('institucion_id');
-            $indicadores = Indicador::whereIn('id_institucion', $institucionesAsignadas)
+            $indicadores = Indicador::forPlan($activePlanId)
+                ->whereIn('id_institucion', $institucionesAsignadas)
                 ->orderBy('id')
                 ->paginate(1000);
             $instituciones = $user->instituciones;
@@ -81,7 +89,8 @@ class IndicadorController extends Controller
         }
 
         if ($user->hasRole(['Enlace dependencia', 'Visualizador'])) {
-            $indicadores = Indicador::where('id_institucion', $user->id_institucion)
+            $indicadores = Indicador::forPlan($activePlanId)
+                ->where('id_institucion', $user->id_institucion)
                 ->where('id', '!=', 608)
                 ->orderBy('id')
                 ->get();
@@ -94,7 +103,8 @@ class IndicadorController extends Controller
             return view('panel-indicadores.index', compact('indicadores', 'mostrarBotonFinalizar', 'user', 'mostrarBotonGenerarReporte'));
         }
 
-        $indicadores = Indicador::where('id_usuario', $user->id)
+        $indicadores = Indicador::forPlan($activePlanId)
+            ->where('id_usuario', $user->id)
             ->where('id', '!=', 608)
             ->orderBy('id')
             ->get();
@@ -148,7 +158,7 @@ class IndicadorController extends Controller
         $usuarios = User::role('Enlace dependencia')->orderBy('id')->get();
         $instituciones = Institucion::where('id', '!=', 1)->get();
 
-        $planes = CatPlanEstatalDesarrollo::all();
+        $planes = collect([$this->activePlan->get()]);
         $programasInstitucionales = CatProgramaDerivadoInstitucional::all();
 
         return view('panel-indicadores.crear', compact('pds', 'instituciones', 'usuarios', 'odses', 'periodicidades', 'coberturas', 'tendencias', 'planes', 'programasInstitucionales'));
@@ -403,7 +413,9 @@ class IndicadorController extends Controller
         /** @var User */
         $user = auth()->user();
 
-        $indicador = Indicador::with(['datosAnuales', 'ods', 'programasInstitucionales'])->findOrFail($id);
+        $indicador = Indicador::forPlan($this->activePlan->id())
+            ->with(['datosAnuales', 'ods', 'programasInstitucionales'])
+            ->findOrFail($id);
 
         if ($user->hasRole('Enlace')) {
             $institucionesAsignadas = $user->instituciones->pluck('id');
@@ -435,7 +447,9 @@ class IndicadorController extends Controller
         /** @var User */
         $user = auth()->user();
 
-        $indicador = Indicador::with(['datosAnuales', 'programasInstitucionales'])->findOrFail($id);
+        $indicador = Indicador::forPlan($this->activePlan->id())
+            ->with(['datosAnuales', 'programasInstitucionales'])
+            ->findOrFail($id);
 
         if ($user->hasRole('Enlace')) {
             $institucionesAsignadas = $user->instituciones->pluck('id');
@@ -452,8 +466,8 @@ class IndicadorController extends Controller
 
         $instituciones = Institucion::where('id', '!=', 1)->get();
         $odeses = Odses::all();
-        $planes = CatPlanEstatalDesarrollo::all();
-        $programasInstitucionales = CatProgramaDerivadoInstitucional::all();
+        $planes = collect([$this->activePlan->get()]);
+        $programasInstitucionales = CatProgramaDerivadoInstitucional::where('plan_estatal', $this->activePlan->id())->get();
         $usuarios = User::role('Enlace dependencia')->orderBy('id')->get();
         $periodicidades = [
             'Sexenal',
@@ -928,7 +942,7 @@ class IndicadorController extends Controller
      */
     public function toggleValidacion(Request $request, $id)
     {
-        $indicador = Indicador::findOrFail($id);
+        $indicador = Indicador::forPlan($this->activePlan->id())->findOrFail($id);
 
         $valorAnterior = (bool) $indicador->getRawOriginal('indicador_validado');
         $estadoValidacion = $request->has('estado')
@@ -968,7 +982,7 @@ class IndicadorController extends Controller
      */
     public function toggleValidacionAnual(Request $request, $id, $year)
     {
-        $indicador = Indicador::findOrFail($id);
+        $indicador = Indicador::forPlan($this->activePlan->id())->findOrFail($id);
         $datoAnual = $indicador->datosAnuales()->where('anio', $year)->firstOrFail();
         $valorAnterior = (bool) $datoAnual->getRawOriginal('validado');
         $estadoValidacion = $request->has('estado')
@@ -1038,7 +1052,7 @@ class IndicadorController extends Controller
         Log::debug("IndicadorController@updateAnualData: Request Files:", $request->files->all());
 
 
-        $indicador = Indicador::findOrFail($id);
+        $indicador = Indicador::forPlan($this->activePlan->id())->findOrFail($id);
 
         $rules = [
             'valor_dato' => 'nullable|numeric',
@@ -1204,7 +1218,7 @@ class IndicadorController extends Controller
         Log::debug('IndicadorController@datosAbiertosPed: Iniciado.', $request->all());
         $nombreArchivoBase = $request->nombre_archivo;
         $parametro = $request->parametro;
-        $indicadoresQuery = Indicador::select(
+        $indicadoresQuery = Indicador::forPlan($this->activePlan->id())->select(
             'id',
             'nombre',
             'programa_derivado',
@@ -1241,12 +1255,7 @@ class IndicadorController extends Controller
                 Log::debug("IndicadorController@datosAbiertosPed: Aplicado filtro where programa_derivado = 'Plan Estatal de Desarrollo'");
                 break;
             case 'indicadores-pd-ped':
-                $indicadoresQuery->whereIn('programa_derivado', [
-                    'Programa Sectorial',
-                    'Programa Especial',
-                    'Programa Institucional',
-                    'Programa Regional'
-                ]);
+                $this->applyDerivedProgramFilter($indicadoresQuery);
                 Log::debug("IndicadorController@datosAbiertosPed: Aplicado filtro whereIn programa_derivado.");
                 break;
             case 'indicadores-eje1-ped':
@@ -1415,7 +1424,7 @@ class IndicadorController extends Controller
         $nombreArchivoBase = $request->input('nombre_archivo', 'exportacion_indicadores'); // Usar input()
         $parametro = $request->input('parametro');
 
-        $indicadoresQuery = Indicador::select(
+        $indicadoresQuery = Indicador::forPlan($this->activePlan->id())->select(
             'id',
             'nombre',
             'programa_derivado',
@@ -1452,12 +1461,7 @@ class IndicadorController extends Controller
                 Log::debug("IndicadorController@datosAbiertosPedCSV: Aplicado filtro where programa_derivado = 'Plan Estatal de Desarrollo'");
                 break;
             case 'indicadores-pd-ped':
-                $indicadoresQuery->whereIn('programa_derivado', [
-                    'Programa Sectorial',
-                    'Programa Especial',
-                    'Programa Institucional',
-                    'Programa Regional'
-                ]);
+                $this->applyDerivedProgramFilter($indicadoresQuery);
                 Log::debug("IndicadorController@datosAbiertosPedCSV: Aplicado filtro whereIn programa_derivado.");
                 break;
             case 'indicadores-eje1-ped':
@@ -1571,7 +1575,7 @@ class IndicadorController extends Controller
         Log::debug('IndicadorController@datosAbiertosPedJson: Iniciado.', $request->all());
         $parametro = $request->input('parametro');
 
-        $indicadoresQuery = Indicador::select(
+        $indicadoresQuery = Indicador::forPlan($this->activePlan->id())->select(
             'id',
             'nombre',
             'programa_derivado',
@@ -1607,12 +1611,7 @@ class IndicadorController extends Controller
                 Log::debug("IndicadorController@datosAbiertosPedJSON: Aplicado filtro where programa_derivado = 'Plan Estatal de Desarrollo'");
                 break;
             case 'indicadores-pd-ped':
-                $indicadoresQuery->whereIn('programa_derivado', [
-                    'Programa Sectorial',
-                    'Programa Especial',
-                    'Programa Institucional',
-                    'Programa Regional'
-                ]);
+                $this->applyDerivedProgramFilter($indicadoresQuery);
                 Log::debug("IndicadorController@datosAbiertosPedJSON: Aplicado filtro whereIn programa_derivado.");
                 break;
             case 'indicadores-eje1-ped':
@@ -2204,6 +2203,17 @@ class IndicadorController extends Controller
         }
 
         return response()->json($programas);
+    }
+
+    private function applyDerivedProgramFilter($query): void
+    {
+        $query->where(function ($query) {
+            $query->whereHasMorph('indicadorable', [
+                CatProgramaDerivadoSectorial::class,
+                CatProgramaDerivadoEspecial::class,
+                CatProgramaDerivadoRegional::class,
+            ])->orWhereHas('programasInstitucionales');
+        });
     }
 
     private function getProgramaModelClass($type)

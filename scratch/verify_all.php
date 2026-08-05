@@ -49,7 +49,7 @@ foreach ($programas as $p) {
 }
 
 echo "\n--- 4. Testing Dashboard Queries (\$planId = 3) ---\n";
-$planId = 3;
+$planId = (int) config('sped.active_plan_id', 3);
 $indicadoresPlan = Indicador::where(function ($query) use ($planId) {
     $query->whereHasMorph('indicadorable', [CatEje::class], function ($q) use ($planId) {
         $q->where('plan_id', $planId);

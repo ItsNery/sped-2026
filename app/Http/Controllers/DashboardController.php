@@ -16,6 +16,7 @@ use App\Models\CatProgramaDerivadoSectorial;
 use App\Services\PedMetricsService;
 use App\Services\PedTrendService;
 use App\Services\DashboardFilterService;
+use App\Services\ActivePlanResolver;
 
 /**
  * Gestiona las vistas y métricas principales del panel de control.
@@ -30,7 +31,8 @@ class DashboardController extends Controller
     public function __construct(
         private PedMetricsService $pedMetrics,
         private PedTrendService $pedTrend,
-        private DashboardFilterService $dashboardFilters
+        private DashboardFilterService $dashboardFilters,
+        private ActivePlanResolver $activePlan
     ) {}
 
     /**
@@ -62,15 +64,8 @@ class DashboardController extends Controller
         );
 
         $filters = $this->dashboardFilters->normalize($request);
-        $planes = CatPlanEstatalDesarrollo::query()
-            ->orderByDesc('id')
-            ->get(['id', 'nombre']);
-        $plan = $planes->firstWhere('id', $filters['plan_id']) ?? $planes->first();
-
-        if (!$plan) {
-            abort(404, 'No hay un plan estatal disponible.');
-        }
-
+        $plan = $this->activePlan->get();
+        $planes = collect([$plan]);
         $filters['plan_id'] = $plan->id;
         $soloValidados = $filters['solo_validados'];
         $indicadoresPlan = $this->dashboardFilters
@@ -333,7 +328,8 @@ class DashboardController extends Controller
             abort(404, "Categoría no válida");
         }
 
-        $indicadores = Indicador::with('datosAnuales')
+        $indicadores = Indicador::forPlan($this->activePlan->id())
+            ->with('datosAnuales')
             ->get()
             ->filter(function ($indicador) use ($categoria, $categoriasValidas) {
                 $semaforo = $indicador->semaforizacion;

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Indicador;
 use App\Http\Requests\Api\IndicadorIndexRequest;
 use App\Http\Resources\IndicadorResource;
+use App\Services\ActivePlanResolver;
 use Illuminate\Support\Facades\Log;
 
 class IndicadorApiController extends Controller
@@ -16,7 +17,7 @@ class IndicadorApiController extends Controller
      * @param  Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index(IndicadorIndexRequest $request)
+    public function index(IndicadorIndexRequest $request, ActivePlanResolver $activePlan)
     {
         Log::info('IndicadorApiController@index: Consulta iniciada.', $request->only(['institucion_id', 'ods_id', 'buscar', 'programa_derivado']));
 
@@ -35,7 +36,7 @@ class IndicadorApiController extends Controller
             if (in_array('datos_anuales', $include, true)) {
                 $relations['datosAnuales'] = fn ($q) => $q->where('validado', 1)->orderBy('anio');
             }
-            $query = Indicador::with($relations);
+            $query = Indicador::forPlan($activePlan->id())->with($relations);
 
             if ($request->filled('institucion_id')) {
                 $query->where('id_institucion', $request->integer('institucion_id'));
@@ -97,12 +98,12 @@ class IndicadorApiController extends Controller
      * @param  string  $id_or_slug
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show($id_or_slug)
+    public function show($id_or_slug, ActivePlanResolver $activePlan)
     {
         Log::info('IndicadorApiController@show: Consulta iniciada.', ['id_or_slug' => $id_or_slug]);
 
         try {
-            $indicador = Indicador::with([
+            $indicador = Indicador::forPlan($activePlan->id())->with([
                 'institucion:id,nombre,titular',
                 'ods:id,nombre',
                 'datosAnuales' => function ($q) {

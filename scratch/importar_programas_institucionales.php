@@ -13,7 +13,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 
 $dryRun = !in_array('--execute', $argv, true);
 $filePath = public_path('Relacion nuevis derivados indicadr.ods');
-$planId = 3;
+$planId = (int) config('sped.active_plan_id', 3);
 $pivotTable = 'programa_institucional_indicador';
 
 if (!is_file($filePath)) {

@@ -45,16 +45,10 @@
                 </div>
                 <div class="exec-options__body">
                     <form class="exec-filters" method="GET" action="{{ route('dashboard') }}">
-                        <label class="exec-filter-field exec-filter-field--plan">
-                            <span>Plan estatal</span>
-                            <select name="plan_id" aria-label="Seleccionar plan">
-                                @foreach ($planes as $optionPlan)
-                                    <option value="{{ $optionPlan->id }}" @selected($optionPlan->id === $plan->id)>
-                                        {{ $optionPlan->nombre }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </label>
+                        <div class="exec-filter-field exec-filter-field--plan">
+                            <span>Plan estatal activo</span>
+                            <strong>{{ $plan->nombre }}</strong>
+                        </div>
                         <label class="exec-filter-field">
                             <span>Datos</span>
                             <select name="solo_validados" aria-label="Seleccionar estado de datos">
@@ -81,7 +75,7 @@
                     </form>
                     <div class="exec-options__tools">
                         <div class="exec-options__tool-group">
-                            <a class="exec-clear-filters" href="{{ route('dashboard', ['plan_id' => $plan->id]) }}">
+                            <a class="exec-clear-filters" href="{{ route('dashboard') }}">
                                 <span aria-hidden="true">×</span> Limpiar
                             </a>
                             <button type="button" class="exec-more-filters" data-bs-toggle="offcanvas" data-bs-target="#dashboardFilters" aria-controls="dashboardFilters">

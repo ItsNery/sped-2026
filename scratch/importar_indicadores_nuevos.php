@@ -14,7 +14,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 
 $dryRun = !in_array('--execute', $argv, true);
 $filePath = public_path('Indicadores nuevos para carga en el SPED.xlsx');
-$planId = 3;
+$planId = (int) config('sped.active_plan_id', 3);
 
 if (!is_file($filePath)) {
     exit("No se encontro el archivo: {$filePath}\n");

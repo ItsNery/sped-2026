@@ -20,10 +20,14 @@ class DashboardFilterService
         'institucionales' => CatProgramaDerivadoInstitucional::class,
     ];
 
+    public function __construct(private ActivePlanResolver $activePlan)
+    {
+    }
+
     public function normalize(Request $request): array
     {
         return [
-            'plan_id' => $request->filled('plan_id') ? (int) $request->input('plan_id') : null,
+            'plan_id' => $this->activePlan->id(),
             'solo_validados' => $request->boolean('solo_validados', true),
             'anio_desde' => $request->filled('anio_desde') ? (int) $request->input('anio_desde') : null,
             'anio_hasta' => $request->filled('anio_hasta') ? (int) $request->input('anio_hasta') : null,
@@ -45,15 +49,7 @@ class DashboardFilterService
 
     public function queryForPlan(int $planId, array $filters, bool $soloValidados): \Illuminate\Database\Eloquent\Builder
     {
-        $query = Indicador::where(function ($query) use ($planId) {
-            $query->whereHasMorph('indicadorable', [CatEje::class], fn ($q) => $q->where('plan_id', $planId))
-                ->orWhereHasMorph('indicadorable', [
-                    CatProgramaDerivadoSectorial::class,
-                    CatProgramaDerivadoEspecial::class,
-                    CatProgramaDerivadoRegional::class,
-                ], fn ($q) => $q->where('plan_estatal', $planId))
-                ->orWhereHas('programasInstitucionales', fn ($q) => $q->where('plan_estatal', $planId));
-        });
+        $query = Indicador::forPlan($planId);
 
         if ($filters['eje_id']) {
             $query->whereHasMorph('indicadorable', CatEje::class, fn ($q) => $q->whereIn('id', $filters['eje_id']));

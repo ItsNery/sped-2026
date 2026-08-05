@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -84,7 +85,7 @@ class Indicador extends Model
         'cobertura',
         'tendencia',
         'fecha_actualizacion', // Fecha de actualización inicial del indicador
-        // 'resultados', 
+        'resultados',
         'formula',
         'indicador_validado',
         'indicadorable_id',
@@ -111,14 +112,59 @@ class Indicador extends Model
     {
         parent::boot();
 
-        // Genera el slug a partir del nombre antes de guardar el indicador.
         static::creating(function ($indicador) {
-            $indicador->slug = Str::slug($indicador->nombre);
+            $indicador->slug = static::uniqueSlug($indicador->nombre);
         });
 
         static::updating(function ($indicador) {
-            $indicador->slug = Str::slug($indicador->nombre);
+            if ($indicador->isDirty('nombre')) {
+                $indicador->slug = static::uniqueSlug($indicador->nombre, $indicador->id);
+            }
         });
+    }
+
+    /**
+     * Limita los indicadores a un plan mediante sus relaciones actuales.
+     */
+    public function scopeForPlan(Builder $query, int $planId): Builder
+    {
+        return $query->where(function (Builder $query) use ($planId) {
+            $query->whereHasMorph(
+                'indicadorable',
+                [CatEje::class],
+                fn (Builder $parent) => $parent->where('plan_id', $planId)
+            )->orWhereHasMorph(
+                'indicadorable',
+                [
+                    CatProgramaDerivadoSectorial::class,
+                    CatProgramaDerivadoEspecial::class,
+                    CatProgramaDerivadoRegional::class,
+                ],
+                fn (Builder $parent) => $parent->where('plan_estatal', $planId)
+            )->orWhereHas(
+                'programasInstitucionales',
+                fn (Builder $program) => $program->where('plan_estatal', $planId)
+            );
+        });
+    }
+
+    private static function uniqueSlug(string $name, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($name) ?: 'indicador';
+        $slug = $base;
+        $suffix = 1;
+
+        while (static::query()
+            ->where('slug', $slug)
+            ->when(
+                $ignoreId !== null,
+                fn (Builder $query) => $query->where($query->getModel()->getKeyName(), '!=', $ignoreId)
+            )
+            ->exists()) {
+            $slug = $base . '-' . $suffix++;
+        }
+
+        return $slug;
     }
 
     /**

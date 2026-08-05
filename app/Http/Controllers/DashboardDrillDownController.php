@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CatEje;
 use App\Models\Indicador;
+use App\Services\ActivePlanResolver;
 use App\Services\DashboardFilterService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -12,7 +13,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class DashboardDrillDownController extends Controller
 {
     public function __construct(
-        private DashboardFilterService $dashboardFilters
+        private DashboardFilterService $dashboardFilters,
+        private ActivePlanResolver $activePlan
     ) {}
 
     public function index(Request $request)
@@ -26,13 +28,7 @@ class DashboardDrillDownController extends Controller
         );
 
         $filters = $this->dashboardFilters->normalize($request);
-        $plan = \App\Models\CatPlanEstatalDesarrollo::query()
-            ->orderByDesc('id')
-            ->get(['id', 'nombre'])
-            ->firstWhere('id', $filters['plan_id'])
-            ?? \App\Models\CatPlanEstatalDesarrollo::query()->orderByDesc('id')->first(['id', 'nombre']);
-
-        abort_unless($plan, 404, 'Plan no encontrado.');
+        $plan = $this->activePlan->get();
 
         $indicadores = $this->dashboardFilters
             ->queryForPlan($plan->id, $filters, $filters['solo_validados'])

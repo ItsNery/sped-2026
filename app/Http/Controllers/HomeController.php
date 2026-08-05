@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Indicador;
 use App\Models\CatEje;
-use App\Models\CatPlanEstatalDesarrollo;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\CatRegion;
@@ -16,6 +15,7 @@ use App\Models\CatProgramaDerivadoInstitucional;
 use App\Models\CatProgramaDerivadoEspecial;
 use App\Models\CatProgramaDerivadoRegional;
 use App\Services\PedMetricsService;
+use App\Services\ActivePlanResolver;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Spatie\Browsershot\Browsershot;
@@ -28,7 +28,10 @@ use Spatie\Browsershot\Browsershot;
  */
 class HomeController extends Controller
 {
-    public function __construct(private PedMetricsService $pedMetrics)
+    public function __construct(
+        private PedMetricsService $pedMetrics,
+        private ActivePlanResolver $activePlan
+    )
     {
     }
 
@@ -601,29 +604,13 @@ class HomeController extends Controller
      */
     public function mostrarCarrusel()
     {
-        // Plan Estatal por defecto: ID 3 (2024-2030)
-        $planId = 3;
-        $plan = CatPlanEstatalDesarrollo::find($planId);
-        if (!$plan) {
-            $plan = CatPlanEstatalDesarrollo::where('nombre', 'like', '%2024-2030%')->first();
-            if ($plan) $planId = $plan->id;
-        }
+        $plan = $this->activePlan->get();
+        $planId = $plan->id;
 
         $soloValidados = true; // Vista pública siempre usa validados
 
-        $indicadoresPlan = Indicador::where(function ($query) use ($planId) {
-            $query->whereHasMorph('indicadorable', [CatEje::class], function ($q) use ($planId) {
-                $q->where('plan_id', $planId);
-            })->orWhereHasMorph('indicadorable', [
-                CatProgramaDerivadoSectorial::class,
-                CatProgramaDerivadoEspecial::class,
-                CatProgramaDerivadoRegional::class
-            ], function ($q) use ($planId) {
-                $q->where('plan_estatal', $planId);
-            })->orWhereHas('programasInstitucionales', function ($q) use ($planId) {
-                $q->where('plan_estatal', $planId);
-            });
-        })->with(['datosAnuales' => function ($query) use ($soloValidados) {
+        $indicadoresPlan = Indicador::forPlan($planId)
+            ->with(['datosAnuales' => function ($query) use ($soloValidados) {
             if ($soloValidados) {
                 $query->where('validado', true);
             }

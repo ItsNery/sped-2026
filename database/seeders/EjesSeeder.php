@@ -12,10 +12,7 @@ class EjesSeeder extends Seeder
      */
     public function run(): void
     {
-        $plan = \App\Models\CatPlanEstatalDesarrollo::find(3);
-        if (!$plan) {
-            $plan = \App\Models\CatPlanEstatalDesarrollo::where('nombre', 'like', '%2024-2030%')->first();
-        }
+        $plan = \App\Models\CatPlanEstatalDesarrollo::find((int) config('sped.active_plan_id', 3));
         if (!$plan) {
             return;
         }
