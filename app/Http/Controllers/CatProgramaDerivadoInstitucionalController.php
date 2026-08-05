@@ -45,8 +45,9 @@ class CatProgramaDerivadoInstitucionalController extends Controller
             'grupo' => 'nullable|string|max:255',
             'siglas' => 'nullable|string|max:20',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'descripcion' => 'required|string',
+            'descripcion' => 'nullable|string',
             'color' => 'required|string|max:7',
+            'icono' => ['required', 'string', 'max:50', 'regex:/^fa-[a-z0-9-]+$/'],
             'plan_estatal' => 'required|exists:cat_planes_estatales_desarrollo,id',
             'documento' => 'required|url',
         ]);
@@ -105,8 +106,9 @@ class CatProgramaDerivadoInstitucionalController extends Controller
             'grupo' => 'nullable|string|max:255',
             'siglas' => 'nullable|string|max:20',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'descripcion' => 'required|string',
+            'descripcion' => 'nullable|string',
             'color' => 'required|string|max:7',
+            'icono' => ['required', 'string', 'max:50', 'regex:/^fa-[a-z0-9-]+$/'],
             'plan_estatal' => 'required|exists:cat_planes_estatales_desarrollo,id',
             'documento' => 'required|url',
         ]);

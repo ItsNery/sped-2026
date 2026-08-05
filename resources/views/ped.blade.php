@@ -111,10 +111,72 @@
                         </div>
                     </article>
                     <article class="ped-dashboard__methodology-item">
-                        <i class="fas fa-traffic-light"></i>
                         <div>
                             <h3>Semáforo de cumplimiento</h3>
-                            <p>Menos de 71% indica rezago; de 71% a 90.9% está en proceso; de 91% a 109.9% es aceptable; y 110% o más supera la meta.</p>
+                            <div class="ped-dashboard__semaforo-table-wrapper">
+                                <table class="ped-dashboard__semaforo-table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Rango</th>
+                                            <th scope="col">Resultado</th>
+                                            <th scope="col">Interpretación</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>X ≥ 110%</td>
+                                            <td><span class="ped-dashboard__semaforo-result ped-dashboard__semaforo-result--excedido">Excedido</span></td>
+                                            <td>
+                                                <p>
+                                                    El valor logrado del indicador supera a la meta, lo que puede interpretarse como una falla en el proceso de planeación o influencia de factores externos.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>91% ≤ X &lt; 110%</td>
+                                            <td><span class="ped-dashboard__semaforo-result ped-dashboard__semaforo-result--aceptable">Aceptable</span></td>
+                                            <td>
+                                                <p>
+                                                    El valor logrado del indicador se encuentra entre -9% y +10% por debajo o por encima de la meta; es decir, da cumplimiento a la meta del PED.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>71% ≤ X &lt; 91%</td>
+                                            <td><span class="ped-dashboard__semaforo-result ped-dashboard__semaforo-result--moderado">Moderado</span></td>
+                                            <td>
+                                                <p>
+                                                    El valor logrado del indicador es menor que la meta; representa un avance significativo, pero deficiente para alcanzar la meta.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>X &lt; 71%</td>
+                                            <td><span class="ped-dashboard__semaforo-result ped-dashboard__semaforo-result--insuficiente">Insuficiente</span></td>
+                                            <td>
+                                                <p>
+                                                    El valor alcanzado del indicador está muy por debajo de la meta y representa un incumplimiento, por lo que se sugiere revisar y analizar las estrategias propuestas para alcanzar el objetivo.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>NE</td>
+                                            <td><span class="ped-dashboard__semaforo-result ped-dashboard__semaforo-result--no-evaluable">No Evaluable</span></td>
+                                            <td>
+                                                <p>
+                                                    No es posible determinar el nivel de avance del indicador en el periodo de seguimiento debido a que no se cuenta con información actualizada, comparable y validada respecto de la meta.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="ped-dashboard__semaforo-note">
+                                <strong>Nota:</strong>  Resultados superiores a 110% no deben interpretarse automáticamente como 
+un desempeño favorable dado que pueden reflejar una meta subestimada, una 
+modificación en la programación, una variación extraordinaria o un cambio en el 
+método de cálculo; por ello, deben contar con una justificación técnica.
+                            </p>
                         </div>
                     </article>
                 </div>
@@ -122,6 +184,10 @@
                 <p class="ped-dashboard__methodology-note">
                     La vista pública utiliza información validada. Los porcentajes reflejan el último dato disponible de cada indicador y pueden corresponder a distintos años de referencia.
                 </p>
+                <a href="{{ asset('docs/normatividad/nota-metodologica-semaforizacion.pdf') }}"
+                    class="ped-dashboard__methodology-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-pdf me-1"></i>Consultar la nota metodológica completa
+                </a>
             </section>
 
             <div class="ped-dashboard__tabs" role="tablist" aria-label="Contenido del Plan Estatal de Desarrollo">

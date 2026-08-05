@@ -230,7 +230,7 @@
             <div class="row g-4 mb-5">
                 <!-- Ya Caducados -->
                 <div class="col-md-4">
-                    <div class="card card-modern border-start border-danger border-4">
+                    <div class="card card-modern">
                         <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between">
                                 <div class="d-flex align-items-center">
@@ -252,7 +252,7 @@
                             <div class="collapse mt-3" id="listCaducados">
                                 <div class="alert-scroll-container pe-2">
                                     @foreach($indicadoresCaducados as $ind)
-                                    <div class="alert-item-compact shadow-sm" style="border-left-color: #dc3545;">
+                                    <div class="alert-item-compact shadow-sm">
                                         <a href="{{ route('panel-indicadores.show', $ind->id) }}" class="text-decoration-none text-dark">
                                             <div class="fw-bold">{{ Str::limit($ind->nombre, 50) }}</div>
                                             <small class="text-muted d-block">{{ $ind->institucion->nombre ?? 'N/A' }}</small>
@@ -271,7 +271,7 @@
 
                 <!-- Próximos a Caducar -->
                 <div class="col-md-4">
-                    <div class="card card-modern border-start border-warning border-4">
+                    <div class="card card-modern">
                         <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between">
                                 <div class="d-flex align-items-center">
@@ -293,7 +293,7 @@
                             <div class="collapse mt-3" id="listProximos">
                                 <div class="alert-scroll-container pe-2">
                                     @foreach($indicadoresProximos as $ind)
-                                    <div class="alert-item-compact shadow-sm" style="border-left-color: #ffc107;">
+                                    <div class="alert-item-compact shadow-sm">
                                         <a href="{{ route('panel-indicadores.show', $ind->id) }}" class="text-decoration-none text-dark">
                                             <div class="fw-bold">{{ Str::limit($ind->nombre, 50) }}</div>
                                             <small class="text-muted d-block">{{ $ind->institucion->nombre ?? 'N/A' }}</small>
@@ -311,7 +311,7 @@
 
                 <!-- Pendientes a Tiempo -->
                 <div class="col-md-4">
-                    <div class="card card-modern border-start border-success border-4">
+                    <div class="card card-modern">
                         <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between">
                                 <div class="d-flex align-items-center">
@@ -333,7 +333,7 @@
                             <div class="collapse mt-3" id="listATiempo">
                                 <div class="alert-scroll-container pe-2">
                                     @foreach($indicadoresATiempo as $ind)
-                                    <div class="alert-item-compact shadow-sm" style="border-left-color: #198754;">
+                                    <div class="alert-item-compact shadow-sm">
                                         <a href="{{ route('panel-indicadores.show', $ind->id) }}" class="text-decoration-none text-dark">
                                             <div class="fw-bold">{{ Str::limit($ind->nombre, 50) }}</div>
                                             <small class="text-muted d-block">{{ $ind->institucion->nombre ?? 'N/A' }}</small>
@@ -403,7 +403,7 @@
                         </span>
                         <div class="scroll-container-modern d-flex flex-column gap-2" style="max-height: 400px; overflow-y: auto;">
                             @foreach ($indicadoresRecientes as $indicador)
-                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded shadow-sm border-start border-primary border-4">
+                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded shadow-sm">
                                 <a href="{{ route('panel-indicadores.show', $indicador['id']) }}" class="text-dark fw-medium text-decoration-none">
                                     {{ Str::limit($indicador['nombre'], 70) }}
                                 </a>

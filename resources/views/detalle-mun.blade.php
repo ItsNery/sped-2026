@@ -46,157 +46,67 @@
         </div>
     </section>
     <main class="municipales__main">
-    <div class="row contenido" style="margin-left: auto; margin-right: auto;">
-        <div class="col-md-1"></div>
-        <div class="col-md-3 objetivo">
-            <img class="img-fluid" src="{{ asset($municipio->icono) }}" width="70%" />
-        </div>
-        <div class="col-md-7 objetivo">
-            <h2 style="color:#691C32">Objetivo</h2>
-            <p>
-                {{ $municipio->objetivo ?? 'No disponible' }}
-            </p>
-            <a target="_blank" href="{{ asset($municipio->convenio) }}" class="a-simple">
-                @php
-                    $color = '#C1B999';
-                @endphp
-                @include('layouts.boton-documento')
-            </a>
-        </div>
-        <div class="col-md-1"></div>
-    </div>
-    <br>
-    &nbsp;
-    <div class="row ficha" style="background-color:rgba(207, 199, 186, 0.4)">
-        <div class="container">
-            <h2 style="color:#691C32">{{ $totalIndicadores }} INDICADORES</h2> <br>
-            @foreach ($indicadores as $indicador)
-                <div class="row" style="margin-left: auto; margin-right: auto;">
-                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 mb-3">
-                        <div class="card overflow-hidden">
-                            <div class="card-content card_indicador">
-                                <div class="card-body">
-                                    <a href="{{ route('mostrarFicha', $indicador->id) }}" style="text-decoration:none;">
-                                        <div class="row">
-                                            <div class="col-xs-12 col-sm-12 col-md-10">
-                                                <div class="titulo">
-                                                    {{ $indicador->indicador }}
-                                                </div>
-                                            </div>
-                                            <div class="col-xs-12 col-sm-12 col-md-2">
-                                                <div class="ultimo" style="">
-                                                    Resultado
-                                                    {{ $indicador->aniomasreciente }}
-                                                </div>
-                                                <div class="datos_eje1">
-                                                    {{ $indicador->datoaniomasreciente }}
-                                                </div>
-                                            </div>
-                                            <div class="col-xs-12 col-sm-12 col-md-12">
-                                                <div class="align-self-left" style="text-align: left">
-                                                    @foreach ($indicador->ods->unique('id') as $ods)
-                                                        <img src="{{ asset('/img/Icons_ODS/' . $ods->id . '.png') }}"
-                                                            alt="Imagen de ODS {{ $ods->id }}" class="hvr-wobble-top"
-                                                            style="width:60px; border-radius: 5px 5px 5px 5px;">
-                                                    @endforeach
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <div class="municipales-detalle__container">
+            <section class="municipales-detalle__overview" aria-labelledby="municipal-objetivo-title">
+                <div class="municipales-detalle__municipio-icon">
+                    <img src="{{ asset($municipio->icono) }}" alt="{{ $municipio->municipio->nombre }}">
                 </div>
-                <div class="row" style="margin-left: auto; margin-right: auto;">
-                    <div class="col-xl-3 col-xs-12 col-sm-12 col-12 hvr-grow">
-                        <div class="card">
-                            <div class="card-content card_indicador1">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-xl-12 col-xs-12 col-sm-12 col-12 col-md-12 datos" style="">
-                                            Unidad de Medida
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-xl-12 col-xs-12 col-sm-12 col-12 col-md-12 datos_eje2">
-                                            {{ $indicador->unidad_medida }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-xs-12 col-sm-12 col-12 hvr-grow">
-                        <div class="card">
-                            <div class="card-content card_indicador1">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-xl-12 col-xs-12 col-sm-12 col-12 col-md-12 datos" style="">
-                                            Tendencia<br>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-xl-12 col-xs-12 col-sm-12 col-12 col-md-12 datos_eje2">
-                                            {{ $indicador->tendencia }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-xs-12 col-sm-12 col-12 hvr-grow">
-                        <div class="card">
-                            <div class="card-content card_indicador1">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-xl-12 col-xs-12 col-sm-12 col-12 col-md-12 datos" style="">
-                                            Línea Base {{ $indicador->linea_base }}
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-xl-12 col-xs-12 col-sm-12 col-12 col-md-12 datos_eje2">
-                                            {{ $indicador->dato_linea }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-xs-12 col-sm-12 col-12 hvr-grow">
-                        <div class="card">
-                            <div class="card-content card_indicador1">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-xl-12 col-xs-12 col-sm-12 col-12 col-md-12 datos" style="">
-                                            Meta 2027
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-xl-12 col-xs-12 col-sm-12 col-12 col-md-12 datos_eje2">
-                                            {{ $indicador->meta_2024 }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="municipales-detalle__overview-content">
+                    <span class="municipales__hero-tag">Seguimiento municipal</span>
+                    <h2 id="municipal-objetivo-title">Objetivo</h2>
+                    <p>{{ $municipio->objetivo ?? 'No disponible' }}</p>
+                    <a target="_blank" href="{{ asset($municipio->convenio) }}" class="municipales-detalle__document">
+                        <i class="fas fa-file-arrow-down"></i> Consultar convenio
+                    </a>
                 </div>
-                &nbsp;
-            @endforeach
+            </section>
 
+            <section class="municipales-detalle__indicators" aria-labelledby="municipal-indicators-title">
+                <div class="municipales-detalle__section-heading">
+                    <div>
+                        <span class="municipales__hero-tag">Datos disponibles</span>
+                        <h2 id="municipal-indicators-title">{{ $totalIndicadores }} indicadores</h2>
+                    </div>
+                    <span class="municipales-detalle__section-icon"><i class="fas fa-chart-line"></i></span>
+                </div>
+
+                <div class="municipales-detalle__list">
+                    @foreach ($indicadores as $indicador)
+                        <article class="municipales-indicador-card">
+                            <a href="{{ route('mostrarFicha', ['indicador' => $indicador->slug]) }}" class="municipales-indicador-card__main">
+                                <div class="municipales-indicador-card__heading">
+                                    <h3>{{ $indicador->indicador }}</h3>
+                                </div>
+                                <div class="municipales-indicador-card__result">
+                                    <span>Resultado {{ $indicador->aniomasreciente }}</span>
+                                    <strong>{{ $indicador->datoaniomasreciente ?? 'N/D' }}</strong>
+                                </div>
+                                <i class="fas fa-arrow-up-right-from-square municipales-indicador-card__arrow"></i>
+                            </a>
+
+                            <div class="municipales-indicador-card__ods">
+                                @foreach ($indicador->ods->unique('id') as $ods)
+                                    <img src="{{ asset('/img/Icons_ODS/' . $ods->id . '.png') }}"
+                                        alt="ODS {{ $ods->id }}">
+                                @endforeach
+                            </div>
+
+                            <div class="municipales-indicador-card__metrics">
+                                <div><span>Unidad de medida</span><strong>{{ $indicador->unidad_medida ?? 'N/D' }}</strong></div>
+                                <div><span>Tendencia</span><strong>{{ $indicador->tendencia ?? 'N/D' }}</strong></div>
+                                <div><span>Línea base {{ $indicador->linea_base }}</span><strong>{{ $indicador->dato_linea ?? 'N/D' }}</strong></div>
+                                <div><span>Meta 2027</span><strong>{{ $indicador->meta_2024 ?? 'N/D' }}</strong></div>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+
+                <p class="municipales__note">
+                    <i class="fas fa-circle-info"></i>
+                    La información contenida en esta sección es responsabilidad de los municipios, de acuerdo con lo establecido en sus Planes Municipales de Desarrollo.
+                </p>
+            </section>
         </div>
-        &nbsp;
-        <div class="row">
-            <p style="font-size:15px;">
-                Nota: La información contenida en esta sección es responsabilidad de los municipios de acuerdo a
-                lo establecido en sus Planes Municipales de Desarrollo.
-            </p>
-        </div>
-    </div>
-
-
-    </div>
     </main>
 </div>
 

@@ -1,7 +1,7 @@
 @php
     $programas = $programas ?? collect();
     $tipoNombre = $tipoNombre ?? 'Programas derivados';
-    $colorTema = $colorTema ?? '#691A32';
+    $colorTema = $colorTema ?? '#0c312d';
     $descripcion = $descripcion ?? '';
     $grupos = $grupos ?? collect();
 @endphp
@@ -47,15 +47,23 @@
                     @foreach($programas as $programa)
                         @php
                             $nombre = $programa->nombre;
-                            $siglas = $programa->siglas ?? strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $nombre), 0, 3));
                             $grupo = $programa->grupo ?? $tipoNombre;
+                            $iconoPorTipo = [
+                                'sectoriales' => 'fa-industry',
+                                'especiales' => 'fa-star',
+                                'regionales' => 'fa-map-location-dot',
+                                'institucionales' => 'fa-building',
+                            ];
+                            $icono = $programa->icono ?? ($iconoPorTipo[$tipoSlug] ?? 'fa-layer-group');
                         @endphp
                         <div class="derivados-dashboard__item" data-nombre="{{ strtolower($nombre) }}"
                             data-grupo="{{ Illuminate\Support\Str::slug($grupo) }}">
                             <a href="{{ url('/ped-programas/' . $tipoSlug . '/' . Illuminate\Support\Str::slug($nombre)) }}"
                                 class="derivados-dashboard__card" style="--programa-color: {{ $colorTema }};"
                                 title="{{ $nombre }}">
-                                <span class="derivados-dashboard__siglas">{{ $siglas }}</span>
+                                <span class="derivados-dashboard__icon" aria-hidden="true">
+                                    <i class="fas {{ $icono }}"></i>
+                                </span>
                                 <span class="derivados-dashboard__body">
                                     <span class="derivados-dashboard__name">{{ $nombre }}</span>
                                     <span class="derivados-dashboard__tag">{{ $grupo }}</span>

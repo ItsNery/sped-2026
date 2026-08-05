@@ -94,16 +94,19 @@
                     <div class="col-md-6">
                         <div class="mb-4">
                             <label class="form-label custom-section-title" for="descripcion">
-                                <i class="fa-solid fa-file-signature"></i> Descripción
+                                <i class="fa-solid fa-file-signature"></i> Descripción (opcional)
                             </label>
                             <textarea name="descripcion" id="descripcion" rows="4"
-                                class="form-control @error('descripcion') is-invalid @enderror" required>{{ old('descripcion', $programa->descripcion ?? '') }}</textarea>
+                                class="form-control @error('descripcion') is-invalid @enderror">{{ old('descripcion', $programa->descripcion ?? '') }}</textarea>
                             @error('descripcion')
                                 <small class="invalid-feedback">
                                     <strong>{{ $message }}</strong>
                                 </small>
                             @enderror
                         </div>
+                    </div>
+                    <div class="col-md-6">
+                        @include('partials.form-icono-programa', ['defaultIcono' => 'fa-building'])
                     </div>
                     <div class="col-md-6">
                         <div class="mb-4">
@@ -122,7 +125,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label custom-section-title" for="imagen">
-                            <i class="fa-solid fa-file-signature"></i> Imagen de Portada
+                            <i class="fa-solid fa-file-signature"></i> Imagen de Portada (opcional)
                         </label>
                         @if ($isEdit && !empty($programa->imagen))
                             <div class="mb-2">

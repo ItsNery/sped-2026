@@ -10,7 +10,9 @@
     min-height: 430px;
     padding: 5rem 0;
     align-items: center;
-    background-image: linear-gradient(rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.72)), url('../img/puebla_hero_bg.png');
+    background-image:
+        linear-gradient(rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.72)),
+        url("../img/puebla_hero_bg.png");
     background-attachment: fixed;
     background-position: center;
     background-repeat: no-repeat;
@@ -36,7 +38,7 @@
     border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 5px;
     color: var(--arena);
-    font-family: 'Gilroy-SemiBold', sans-serif;
+    font-family: "Gilroy-SemiBold", sans-serif;
     font-size: 1.1rem;
     font-weight: 600;
 }
@@ -44,7 +46,7 @@
 .municipales__hero-title {
     margin-bottom: 1.25rem;
     color: var(--color-eje2);
-    font-family: 'Gilroy-Bold', 'Corra-Montserra-Bold', sans-serif;
+    font-family: "Gilroy-Bold", "Corra-Montserra-Bold", sans-serif;
     font-size: 3rem;
     line-height: 1.2;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
@@ -54,14 +56,14 @@
     max-width: 700px;
     margin: 0;
     color: #dfebe9;
-    font-family: 'Gilroy-Medium', 'Corra-Montserra-Medium', sans-serif;
+    font-family: "Gilroy-Medium", "Corra-Montserra-Medium", sans-serif;
     font-size: 1.15rem;
     line-height: 1.6;
     text-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
 }
 
 .municipales__main {
-    padding: 4rem 0;
+    padding: 3rem 0;
     background: var(--bg-content);
 }
 
@@ -89,13 +91,14 @@
     align-items: center;
     gap: 1rem;
     padding: 1rem;
-    border-left: 5px solid var(--color1-2024);
     border-radius: 12px;
     background: var(--whiteColor);
     box-shadow: 0 2px 14px rgba(44, 62, 80, 0.07);
     color: var(--color-texto-principal-ultimos);
     text-decoration: none;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
 }
 
 .municipales__card:hover {
@@ -132,7 +135,7 @@
     margin: 0 0 0.4rem;
     overflow: hidden;
     color: var(--color-texto-principal-ultimos);
-    font-family: 'Gilroy-Bold', sans-serif;
+    font-family: "Gilroy-Bold", sans-serif;
     font-size: 0.98rem;
     line-height: 1.3;
     -webkit-box-orient: vertical;
@@ -151,7 +154,6 @@
 .municipales__note {
     margin: 2rem 0 0;
     padding: 1rem 1.25rem;
-    border-left: 4px solid var(--color4-2024);
     border-radius: 8px;
     background: rgba(199, 155, 102, 0.12);
     color: var(--color-5);
@@ -173,7 +175,7 @@
 .municipales-detalle .objetivo h2,
 .municipales-detalle .ficha h2 {
     color: var(--color1-2024) !important;
-    font-family: 'Gilroy-Bold', sans-serif;
+    font-family: "Gilroy-Bold", sans-serif;
 }
 
 .municipales-detalle .objetivo p {
@@ -199,7 +201,6 @@
 }
 
 .municipales-detalle .card_indicador {
-    border-left: 5px solid var(--color4-2024) !important;
     border-top: 0 !important;
 }
 
@@ -226,6 +227,316 @@
 .municipales-detalle .ficha .row > .row {
     margin-right: 0 !important;
     margin-left: 0 !important;
+}
+
+.municipales-detalle__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem 4rem;
+}
+
+.municipales-detalle__overview {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: 2rem;
+    align-items: center;
+    padding: 3rem 0;
+}
+
+.municipales-detalle__municipio-icon {
+    display: flex;
+    width: 150px;
+    height: 150px;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid rgba(12, 49, 45, 0.12);
+    border-radius: 0.375rem;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.municipales-detalle__municipio-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.municipales-detalle__overview-content .municipales__hero-tag,
+.municipales-detalle__section-heading .municipales__hero-tag {
+    margin-bottom: 0.65rem;
+    border-color: rgba(12, 49, 45, 0.2);
+    color: var(--color1-2024);
+    font-size: 0.89rem;
+}
+
+.municipales-detalle__overview h2,
+.municipales-detalle__section-heading h2 {
+    margin: 0 0 0.75rem;
+    color: var(--color1-2024);
+    font-family: "Gilroy-Bold", sans-serif;
+    font-size: clamp(1.6rem, 3vw, 2.25rem);
+}
+
+.municipales-detalle__overview p {
+    max-width: 800px;
+    margin: 0 0 1.25rem;
+    color: var(--color-5);
+    font-size: 1.05rem;
+    line-height: 1.7;
+    font-family: Corra-Montserra-Regular, "sans-serif";
+}
+
+.municipales-detalle__document {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.7rem 1.1rem;
+    border-radius: 999px;
+    background: var(--color1-2024);
+    color: #fff;
+    font-family: "Gilroy-Bold", sans-serif;
+    font-size: 0.85rem;
+    text-decoration: none;
+}
+
+.municipales-detalle__document:hover {
+    background: var(--color2-2024);
+    color: #fff;
+    text-decoration: none;
+}
+
+.municipales-detalle__indicators {
+    padding: 2rem;
+    border: 1px solid rgba(12, 49, 45, 0.1);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 5px 24px rgba(0, 0, 0, 0.06);
+}
+
+.municipales-detalle__section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.municipales-detalle__section-icon {
+    display: inline-flex;
+    width: 48px;
+    height: 48px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: var(--color1-2024);
+    color: #fff;
+    font-size: 1.25rem;
+}
+
+.municipales-detalle__list {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.municipales-indicador-card {
+    overflow: hidden;
+    border: 1px solid #e8eceb;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(12, 49, 45, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.municipales-indicador-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(12, 49, 45, 0.14);
+}
+
+.municipales-indicador-card__main {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 170px 22px;
+    gap: 1.25rem;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, #fff, rgba(36, 98, 87, 0.06));
+    color: var(--color-texto-principal-ultimos);
+    text-decoration: none;
+    transition: background 0.2s ease;
+}
+
+.municipales-indicador-card__main:hover {
+    background: #fbfdfc;
+    color: var(--color-texto-principal-ultimos);
+}
+
+.municipales-indicador-card__eyebrow {
+    color: var(--color1-2024);
+    font-family: "Gilroy-SemiBold", sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+}
+
+.municipales-indicador-card__heading h3 {
+    margin: 0.3rem 0 0;
+    font-family: "Gilroy-Bold", sans-serif;
+    font-size: 1.1rem;
+    line-height: 1.3;
+}
+
+.municipales-indicador-card__result {
+    padding-left: 1rem;
+    text-align: right;
+}
+
+.municipales-indicador-card__result span,
+.municipales-indicador-card__metrics span {
+    display: block;
+    color: var(--color-5);
+    font-size: 0.72rem;
+    line-height: 1.3;
+}
+
+.municipales-indicador-card__result strong {
+    display: block;
+    margin-top: 0.2rem;
+    color: var(--color1-2024);
+    font-family: "Gilroy-Bold", sans-serif;
+    font-size: 1.25rem;
+}
+
+.municipales-indicador-card__arrow {
+    color: var(--color2-2024);
+    font-size: 0.95rem;
+}
+
+.municipales-indicador-card__ods {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    padding: 0 1.5rem 0.85rem;
+}
+
+.municipales-indicador-card__ods img {
+    width: 42px;
+    height: 42px;
+    border-radius: 7px;
+    object-fit: cover;
+}
+
+.municipales-indicador-card__metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+    padding: 1rem 1.5rem 1.25rem;
+    border-top: 1px solid #edf0f2;
+    background: #fbfdfc;
+}
+
+.municipales-indicador-card__metrics strong {
+    display: block;
+    margin-top: 0.3rem;
+    color: var(--color-texto-principal-ultimos);
+    font-family: "Gilroy-SemiBold", sans-serif;
+    font-size: 0.86rem;
+    line-height: 1.3;
+}
+
+.municipales-ficha .ficha-page {
+    --ficha-accent: #246257;
+}
+
+.municipales-ficha .ficha-page::before {
+    background: rgba(36, 98, 87, 0.08);
+}
+
+.municipales-ficha .ficha-hero {
+    background: linear-gradient(
+        135deg,
+        rgba(12, 49, 45, 0.98),
+        rgba(36, 98, 87, 0.94)
+    );
+}
+
+.municipales-ficha .ficha-section-title {
+    color: var(--color1-2024) !important;
+}
+
+.municipales-ficha__fields {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.municipales-ficha__field {
+    min-width: 0;
+    padding: 0.85rem 1rem;
+    border-radius: 9px;
+    background: #fbfdfc;
+}
+
+.municipales-ficha__field--wide {
+    grid-column: span 2;
+}
+
+.municipales-ficha__field .ficha-value {
+    display: block;
+    margin-top: 0.35rem;
+    color: var(--color-texto-principal-ultimos);
+       font-family: Corra-Montserra-Regular, 'sans-serif';
+    font-size: 1rem;
+    line-height: 1.45;
+}
+
+.municipales-ficha__result {
+    margin: 0;
+    padding: 1.25rem;
+    border-radius: 8px;
+    background: #fbfdfc;
+    color: var(--color-5);
+    font-size: 1rem;
+    line-height: 1.7;
+}
+
+.municipales-ficha__history {
+    margin-top: 0.25rem;
+}
+
+.municipales-ficha__history .table-datos {
+    overflow-x: auto;
+}
+
+.municipales-ficha__history .table-historicos {
+    min-width: 0;
+    font-size: 0.78rem;
+}
+
+.municipales-ficha__history .table-historicos th {
+    background-color: var(--ficha-accent) !important;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.municipales-ficha__history .table-historicos td {
+    color: var(--color-texto-principal-ultimos);
+    font-weight: 600;
+    white-space: nowrap;
+    font-family: Corra-Montserra-Regular, 'sans-serif';
+}
+
+.municipales-ficha__chart {
+    width: 100%;
+    min-height: 340px;
+}
+
+.municipales-ficha__source {
+    margin: 1rem 0 0;
+    color: var(--color-5);
+    font-size: 0.78rem;
+    text-align: right;
+    font-family: Corra-Montserra-Regular, 'sans-serif';
 }
 
 @media (max-width: 991.98px) {
@@ -264,5 +575,82 @@
     .municipales-detalle .contenido {
         padding-right: 1rem;
         padding-left: 1rem;
+    }
+
+    .municipales-detalle__container {
+        padding-right: 1rem;
+        padding-left: 1rem;
+    }
+
+    .municipales-detalle__overview {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .municipales-detalle__municipio-icon {
+        margin: 0 auto;
+    }
+
+    .municipales-detalle__overview p {
+        margin-right: auto;
+        margin-left: auto;
+    }
+
+    .municipales-detalle__section-heading {
+        align-items: flex-start;
+    }
+
+    .municipales-indicador-card__main {
+        grid-template-columns: minmax(0, 1fr) 150px 20px;
+    }
+
+    .municipales-indicador-card__metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .municipales-ficha__fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 575.98px) {
+    .municipales-detalle__indicators {
+        padding: 1.25rem;
+    }
+
+    .municipales-detalle__section-heading h2 {
+        font-size: 1.5rem;
+    }
+
+    .municipales-indicador-card__main {
+        grid-template-columns: 1fr 20px;
+        gap: 0.75rem;
+        padding: 1rem;
+    }
+
+    .municipales-indicador-card__result {
+        grid-column: 1 / -1;
+        padding: 0.75rem 0 0;
+        border-top: 1px solid #e8eceb;
+        border-left: 0;
+        text-align: left;
+    }
+
+    .municipales-indicador-card__ods,
+    .municipales-indicador-card__metrics {
+        padding-right: 1rem;
+        padding-left: 1rem;
+    }
+
+    .municipales-ficha__fields {
+        grid-template-columns: 1fr;
+    }
+
+    .municipales-ficha__field--wide {
+        grid-column: auto;
+    }
+
+    .municipales-ficha__source {
+        text-align: left;
     }
 }

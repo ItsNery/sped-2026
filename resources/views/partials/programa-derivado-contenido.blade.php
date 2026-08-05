@@ -1,6 +1,6 @@
 @php
     $descFinal = $descripcion ?? ($programaData->descripcion ?? '');
-    $programaColor = $programa->color ?? '#691A32';
+    $programaColor = $programa->color ?? '#0c312d';
     $colorGaugeGeneral = '#adb5bd';
     if (($avancePrograma ?? 0) >= 110) {
         $colorGaugeGeneral = '#0d6efd';
@@ -58,13 +58,31 @@
         </div>
         <div class="eje-dashboard__toolbar ocultar_impresion">
             <span class="eje-dashboard__toolbar-label">Visualización</span>
-            <div class="btn-group btn-group-sm border rounded overflow-hidden">
-                <button type="button" class="btn btn-sm px-3 btn-toggle-vista active" data-view="lista" data-target="contenedor-programa">
-                    <i class="fas fa-list"></i><span class="visually-hidden">Vista de lista</span>
-                </button>
-                <button type="button" class="btn btn-sm px-3 btn-toggle-vista" data-view="grid" data-target="contenedor-programa">
-                    <i class="fas fa-th-large"></i><span class="visually-hidden">Vista de cuadrícula</span>
-                </button>
+            <div class="eje-dashboard__view-controls">
+                <div class="btn-group btn-group-sm border rounded overflow-hidden">
+                    <button type="button" class="btn btn-sm px-3 btn-toggle-vista active" data-view="lista" data-target="contenedor-programa">
+                        <i class="fas fa-list"></i><span class="visually-hidden">Vista de lista</span>
+                    </button>
+                    <button type="button" class="btn btn-sm px-3 btn-toggle-vista" data-view="grid" data-target="contenedor-programa">
+                        <i class="fas fa-th-large"></i><span class="visually-hidden">Vista de cuadrícula</span>
+                    </button>
+                </div>
+                <div class="dropdown">
+                    <button type="button" class="btn btn-sm eje-dashboard__filter-toggle dropdown-toggle"
+                        data-bs-toggle="dropdown" aria-expanded="false" data-target="contenedor-programa">
+                        <i class="fas fa-filter me-1"></i>
+                        <span data-filter-label>Semaforización</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end p-2">
+                        <li><button type="button" class="dropdown-item active" data-semaforo-filter="all">Todas</button></li>
+                        <li><button type="button" class="dropdown-item" data-semaforo-filter="excedido">Excedido</button></li>
+                        <li><button type="button" class="dropdown-item" data-semaforo-filter="aceptable">Aceptable</button></li>
+                        <li><button type="button" class="dropdown-item" data-semaforo-filter="moderado">Moderado</button></li>
+                        <li><button type="button" class="dropdown-item" data-semaforo-filter="insuficiente">Insuficiente</button></li>
+                        <li><button type="button" class="dropdown-item" data-semaforo-filter="solo-linea-base">Solo línea base</button></li>
+                        <li><button type="button" class="dropdown-item" data-semaforo-filter="no-clasificado">No clasificado</button></li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
@@ -73,6 +91,7 @@
     @forelse ($indicadores as $indicador)
     @php
     $semText = $indicador->semaforizacion_validada ?: 'No Clasificado';
+    $semKey = \Illuminate\Support\Str::slug($semText);
     $colorSemaforo = '#6c757d';
     $bgBadge = 'bg-secondary';
     $esDatoLineaBase = false;
@@ -91,12 +110,12 @@
     $avanceVal = $indicador->avance_validado ?: 0;
     $chartVal = $avanceVal > 100 ? 100 : $avanceVal;
     @endphp
-    <div class="container">
-        <div class="card shadow-sm mb-4 border-0 rounded-4 card-indicador" style="--semaforo-color: {{ $colorSemaforo }}; border-left: 6px solid {{ $colorSemaforo }}; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+    <div class="container" data-filter-item data-semaforo="{{ $semKey }}">
+        <div class="card shadow-sm mb-4 border-0 rounded-4 card-indicador" style="--semaforo-color: {{ $colorSemaforo }}; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
             <div class="card-body p-4">
                 <div class="row align-items-center">
 
-                    <div class="col-12 col-lg-4 mb-4 mb-lg-0 pe-lg-4 border-end-lg" style="border-color: #eee !important;">
+                    <div class="col-12 col-lg-4 mb-4 mb-lg-0 pe-lg-4 border-end-lg eje-indicador__identity" style="border-color: #eee !important;">
                         <a href="{{ route('ficha-tecnica.show', $indicador) }}" class="text-decoration-none fw-bold fs-5 d-block mb-3" style="color: {{ $programaColor }}; line-height: 1.3;">
                             {{ $indicador->nombre }}
                         </a>
@@ -109,7 +128,7 @@
                         @endif
                     </div>
 
-                    <div class="col-6 col-md-4 col-lg-4 text-center px-lg-4 mb-4 mb-md-0 border-end-lg" style="border-color: #eee !important;">
+                    <div class="col-6 col-md-4 col-lg-4 text-center px-lg-4 mb-4 mb-md-0 border-end-lg eje-indicador__metrics" style="border-color: #eee !important;">
                         <div class="row g-3">
                             <div class="col-6">
                                 <div class="small text-muted mb-1">Unidad de medida</div>
@@ -133,7 +152,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-6 col-md-4 col-lg-2 text-center mb-4 mb-md-0 border-end-md" style="border-color: #eee !important;">
+                    <div class="col-6 col-md-4 col-lg-2 text-center mb-4 mb-md-0 border-end-md eje-indicador__status" style="border-color: #eee !important;">
                         <div class="text-uppercase small fw-semibold text-muted mb-1">Resultado {{ $indicador->anio_reciente_validado ?? '' }}</div>
                         <div class="fs-2 fw-bold" style="color: {{ $colorSemaforo }};">
                             {{ isset($indicador->dato_reciente_validado) ? number_format((float)str_replace(',', '', $indicador->dato_reciente_validado), $indicador->id == 100 ? 6 : 2, '.', ',') : 'N/D' }}
@@ -141,7 +160,7 @@
                         <span class="badge rounded-pill {{ $bgBadge }} px-3 py-1 mt-1 fw-normal shadow-sm" style="cursor: help;" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Estado: {{ $semText }}" data-bs-content="{{ $explicacionDetallada }}">{{ $semText }}</span>
                     </div>
 
-                    <div class="col-12 col-md-4 col-lg-2 text-center d-flex flex-column align-items-center justify-content-center">
+                    <div class="col-12 col-md-4 col-lg-2 text-center d-flex flex-column align-items-center justify-content-center eje-indicador__progress">
                         @if($esDatoLineaBase)
                         <i class="fas fa-clock text-muted opacity-50 mb-2" style="font-size: 3rem;"></i>
                         <div class="small text-muted mt-2 fw-semibold text-center">Medición Pendiente</div>
@@ -191,6 +210,43 @@
                 } else {
                     container.classList.remove('modo-grid');
                 }
+            });
+        });
+
+        document.querySelectorAll('.eje-dashboard__filter-toggle').forEach(function(toggle) {
+            var toolbar = toggle.closest('.eje-dashboard__toolbar');
+            var target = document.getElementById(toggle.dataset.target);
+
+            if (!toolbar || !target) return;
+
+            toolbar.querySelectorAll('[data-semaforo-filter]').forEach(function(filterButton) {
+                filterButton.addEventListener('click', function() {
+                    var filter = this.dataset.semaforoFilter;
+                    var visibleItems = 0;
+
+                    target.querySelectorAll('[data-filter-item]').forEach(function(item) {
+                        var visible = filter === 'all' || item.dataset.semaforo === filter;
+                        item.hidden = !visible;
+                        if (visible) visibleItems++;
+                    });
+
+                    var emptyState = target.querySelector('[data-filter-empty]');
+                    if (!emptyState) {
+                        emptyState = document.createElement('div');
+                        emptyState.className = 'eje-dashboard__filter-empty';
+                        emptyState.dataset.filterEmpty = 'true';
+                        emptyState.textContent = 'No hay indicadores con esta semaforización.';
+                        target.appendChild(emptyState);
+                    }
+                    emptyState.hidden = visibleItems > 0;
+
+                    toolbar.querySelectorAll('[data-semaforo-filter]').forEach(function(button) {
+                        button.classList.toggle('active', button === filterButton);
+                    });
+                    toolbar.querySelector('[data-filter-label]').textContent =
+                        filter === 'all' ? 'Semaforización' : this.textContent;
+                    toggle.classList.toggle('has-filter', filter !== 'all');
+                });
             });
         });
 

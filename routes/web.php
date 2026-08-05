@@ -138,7 +138,8 @@ Route::get('/ficha-tecnica/{indicador}/descargar', [HomeController::class, 'down
     ->name('ficha-tecnica.download');
 Route::get('/ficha-tecnica/{indicador}', [HomeController::class, 'show'])
     ->name('ficha-tecnica.show');
-Route::get('/ficha-tecnica-municipal/{id}', [IndicadorMunicipalController::class, 'mostrarFicha'])->name('mostrarFicha');
+Route::get('/ficha-tecnica-municipal/{indicador}/descargar', [IndicadorMunicipalController::class, 'descargarFicha'])->name('mostrarFicha.download');
+Route::get('/ficha-tecnica-municipal/{indicador}', [IndicadorMunicipalController::class, 'mostrarFicha'])->name('mostrarFicha');
 Route::get('/ficha-tecnica/generar/{id}', [HomeController::class, 'generarFicha'])->name('generarFicha');
 
 /*

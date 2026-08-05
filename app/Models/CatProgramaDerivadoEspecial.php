@@ -16,6 +16,7 @@ class CatProgramaDerivadoEspecial extends Model
         'imagen',
         'descripcion',
         'color',
+        'icono',
         'plan_estatal',
         'documento',
     ];

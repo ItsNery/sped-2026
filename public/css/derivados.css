@@ -122,7 +122,6 @@
     min-height: 108px;
     gap: 1rem;
     padding: 1rem;
-    border-left: 5px solid var(--programa-color);
     border-radius: 10px;
     background: #fff;
     box-shadow: 0 2px 12px rgba(44, 62, 80, 0.07);
@@ -138,7 +137,7 @@
     box-shadow: 0 9px 20px rgba(44, 62, 80, 0.12);
 }
 
-.derivados-dashboard__siglas {
+.derivados-dashboard__icon {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -148,8 +147,7 @@
     border-radius: 50%;
     background: var(--programa-color);
     color: #fff;
-    font-family: 'Gilroy-Bold', sans-serif;
-    font-size: 0.95rem;
+    font-size: 1.35rem;
 }
 
 .derivados-dashboard__body {

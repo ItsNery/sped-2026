@@ -59,22 +59,23 @@
     <section class="inicio-dashboard" id="avance-general">
         <div class="inicio-dashboard__container">
             <div class="row align-items-center g-5">
-                {{-- Columna Izquierda: Logo + Ejes + CTA (Estilo MIDE Jalisco) --}}
+                {{-- Columna Izquierda: Logo + Ejes + CTA --}}
                 <div class="col-lg-5 col-md-12 text-center text-lg-start border-end-lg">
                     <div class="inicio-dashboard__brand-block">
                         <img src="{{ asset('img/imagotipo-logo-ped.png') }}" alt="Plan Estatal de Desarrollo 2024-2030"
                             class="inicio-dashboard__mide-logo">
                         <h2 class="inicio-dashboard__mide-title">Plan Estatal de Desarrollo 2024–2030</h2>
 
-                        {{-- Ejes Navigation (Pills debajo del logo como MIDE) --}}
+                        {{-- Ejes Navigation --}}
                         <div class="inicio-dashboard__mide-ejes-wrapper">
-                            <span class="inicio-dashboard__mide-ejes-label">Ejes del Desarrollo:</span>
+                            <span class="inicio-dashboard__mide-ejes-label">Ejes:</span>
                             <div class="inicio-dashboard__mide-ejes">
                                 @foreach ($ejesData as $eje)
                                     <a href="#eje-{{ $eje['numero'] }}" class="inicio-eje-pill"
                                         style="background-color: var(--color-eje{{ $eje['numero'] }});"
                                         title="Eje {{ $eje['numero'] }} — {{ $eje['nombre'] }}">
-                                        {{ $eje['numero'] }}
+                                        <img src="{{ asset('img/iconos/eje-' . $eje['numero'] . '.png') }}"
+                                            alt="Icono del Eje {{ $eje['numero'] }}">
                                     </a>
                                 @endforeach
                             </div>
@@ -84,13 +85,13 @@
                         <div class="mt-4">
                             <a href="https://ped2024-2030.puebla.gob.mx/" target="_blank" rel="noopener noreferrer"
                                 class="inicio-dashboard__cta">
-                                Consulta el Plan Estatal aquí <i class="fas fa-external-link-alt ms-1"></i>
+                                Consulta el Plan Estatal <i class="fas fa-external-link-alt ms-1"></i>
                             </a>
                         </div>
                     </div>
                 </div>
 
-                {{-- Columna Derecha: Indicadores y Avance (Estilo MIDE Jalisco) --}}
+                {{-- Columna Derecha: Indicadores y Avance --}}
                 <div class="col-lg-7 col-md-12">
                     <div class="inicio-dashboard__stats-block">
                         <div
@@ -111,9 +112,6 @@
                                 <p class="inicio-dashboard__stats-subtitle">
                                     Avance promedio de indicadores evaluables
                                 </p>
-                                <h4 class="inicio-dashboard__stats-percentage" style="color: {{ $colorPlan }};">
-                                    {{ number_format($avancePlan, 2) }}% Avance Promedio
-                                </h4>
                                 <p class="mb-0 text-muted small">
                                     {{ $metricasPlan['total_evaluables'] }} evaluables ·
                                     {{ number_format($metricasPlan['cobertura_evaluacion'], 2) }}% de cobertura
@@ -242,8 +240,8 @@
 
                 {{-- Cabecera del Reporte de Ejes --}}
                 <div class="inicio-cumplimiento__header">
-                    <h3>Cumplimiento promedio de indicadores por Eje de Desarrollo</h3>
-                    <span class="inicio-cumplimiento__header-sub">Indicadores por rango de cumplimiento</span>
+                    <h3>Cumplimiento por Eje</h3>
+                    <span class="inicio-cumplimiento__header-sub">Distribución de indicadores por rango de cumplimiento</span>
                 </div>
 
                 {{-- Cuerpo de Ejes --}}
@@ -307,8 +305,7 @@
                 @if ($programasData->count() > 0)
                     <div class="inicio-cumplimiento__header inicio-cumplimiento__header--programas">
                         <h3>Avance por Programas Derivados</h3>
-                        <span class="inicio-cumplimiento__header-sub">Cumplimiento promedio de indicadores por tipo de
-                            programa</span>
+                        <span class="inicio-cumplimiento__header-sub">Indicadores agrupados por tipo de programa</span>
                     </div>
 
                     <div class="inicio-cumplimiento__body">
@@ -383,9 +380,9 @@
                                                 class="inicio-programa-card"
                                                 data-nombre="{{ strtolower($programa['nombre']) }}"
                                                 @if ($tipo === 'Institucionales') data-grupo="{{ Illuminate\Support\Str::slug($programa['grupo'] ?? '') }}" @endif
-                                                style="border-left-color: {{ $programa['color'] ?? '#691A32' }};">
+                                                 style="border-left-color: {{ $programa['color'] ?? '#0c312d' }};">
                                                 <div class="inicio-programa-card__indicator"
-                                                    style="background-color: {{ $programa['color'] ?? '#691A32' }};">
+                                                     style="background-color: {{ $programa['color'] ?? '#0c312d' }};">
                                                     {{ $programa['id'] }}
                                                 </div>
                                                 <div class="inicio-programa-card__body">

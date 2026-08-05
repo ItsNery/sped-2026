@@ -60,9 +60,13 @@ class HomeController extends Controller
     {
         $nombre = Str::slug($indicador->nombre ?: 'indicador');
         $html = view('ficha-tecnica-pdf', $this->fichaPdfData($indicador))->render();
+        $footer = '<div style="width: 100vw; margin: 0; padding: 0; color: #706b72; font: 9px Arial, sans-serif; text-align: center;">'
+            . 'Hoja <span class="pageNumber"></span> de <span class="totalPages"></span></div>';
         $pdf = Browsershot::html($html)
             ->format('a4')
-            ->margins(5, 5, 5, 5)
+            ->margins(5, 5, 16, 5)
+            ->showBrowserHeaderAndFooter()
+            ->footerHtml($footer)
             ->timeout(120)
             ->protocolTimeout(120)
             ->showBackground()
@@ -94,7 +98,7 @@ class HomeController extends Controller
 
         // --- LÓGICA DE COLORES ---
         $colorFinal = null;
-        $colorPorDefectoGeneral = '#691A32';
+        $colorPorDefectoGeneral = '#0c312d';
 
         // A. INTENTO 1: Obtener color directamente de la relación polimórfica
         if ($indicador->indicadorable && isset($indicador->indicadorable->color)) {
@@ -494,7 +498,7 @@ class HomeController extends Controller
 
         if (!$programa) abort(404, 'Programa no encontrado');
 
-        $color = $programa->color ?? '#691A32';
+            $color = $programa->color ?? '#0c312d';
         $descripcion = $programa->descripcion ?? 'Sin descripción';
         $imagen = $programa->imagen ?? 'img/pleca-pajaro-2.png';
         $programaData = $programa;
@@ -522,7 +526,7 @@ class HomeController extends Controller
 
         if (!$programa) abort(404, 'Programa no encontrado');
 
-        $color = $programa->color ?? '#691A32';
+            $color = $programa->color ?? '#0c312d';
         $descripcion = $programa->descripcion ?? 'Sin descripción';
         $imagen = $programa->imagen ?? 'img/pleca-pajaro-2.png';
         $programaData = $programa;
@@ -578,7 +582,7 @@ class HomeController extends Controller
 
         if (!$programa) abort(404, 'Programa no encontrado');
 
-        $color = $programa->color ?? '#691A32';
+            $color = $programa->color ?? '#0c312d';
         $descripcion = $programa->descripcion ?? 'Sin descripción';
         $imagen = $programa->imagen ?? 'img/pleca-pajaro-2.png';
         $programaData = $programa;
@@ -867,7 +871,7 @@ class HomeController extends Controller
 
         if (!$programa) abort(404, 'Programa no encontrado');
 
-        $color = $programa->color ?? '#691A32';
+            $color = $programa->color ?? '#0c312d';
         $descripcion = $programa->descripcion ?? 'Sin descripción';
         $imagen = $programa->imagen ?? 'img/pleca-pajaro-2.png';
         $programaData = $programa;
@@ -912,7 +916,7 @@ class HomeController extends Controller
         };
 
         $colorFinal = null;
-        $colorPorDefectoGeneral = '#691A32';
+        $colorPorDefectoGeneral = '#0c312d';
 
         switch ($indicador->programa_derivado) {
             case 'Programa Especial':

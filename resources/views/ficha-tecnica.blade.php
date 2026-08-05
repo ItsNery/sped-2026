@@ -60,7 +60,7 @@
         'tipoNav' => $tipoNav,
         'itemActivo'=> $itemActivo,
         'bannerImg' => $bannerImg,
-        'colorTema' => $indicador->color ?? '#691A32'
+        'colorTema' => $indicador->color ?? '#0c312d'
         ])
 
         <div class="ficha-background">
@@ -114,7 +114,7 @@
                                         @foreach($indicador->programasInstitucionales as $progInst)
                                             <a href="{{ url('/ped-programas/institucionales/' . Illuminate\Support\Str::slug($progInst->nombre)) }}" 
                                             class="badge text-white px-3 py-2 rounded-pill text-decoration-none shadow-sm transition" 
-                                            style="background-color: {{ $progInst->color ?? '#691A32' }}; font-size: 0.8rem;"
+                                            style="background-color: {{ $progInst->color ?? '#0c312d' }}; font-size: 0.8rem;"
                                             data-bs-toggle="tooltip" 
                                             data-bs-placement="top"
                                             title="{{ $progInst->nombre }}">

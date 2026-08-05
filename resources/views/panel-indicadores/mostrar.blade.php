@@ -261,7 +261,7 @@
                     <div class="d-flex flex-wrap gap-2 pt-1 pb-3">
                         @foreach($indicador->programasInstitucionales as $progInst)
                             <span class="badge text-white px-3 py-2 rounded-pill shadow-sm" 
-                                  style="background-color: {{ $progInst->color ?? '#691A32' }}; font-size: 0.85rem;"
+                                  style="background-color: {{ $progInst->color ?? '#0c312d' }}; font-size: 0.85rem;"
                                   title="{{ $progInst->nombre }}">
                                 <strong>{{ $progInst->siglas }}</strong> - {{ $progInst->nombre }}
                             </span>

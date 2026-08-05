@@ -19,7 +19,7 @@
 }
 
 * {
-    --color-sped: #691A32;
+    --color-sped: #0c312d;
     --sombra-caja: rgba(80, 79, 79, 0.1) 0px 0px 16px;
     --gris-sped: #FAFAFA;
     --bg-badge-excedido: #3A93F0;
@@ -1335,8 +1335,6 @@ body {
     font-weight: 700;
     color: #1e293b;
     margin-bottom: 1.5rem;
-    border-left: 4px solid #3b82f6;
-    padding-left: 1rem;
 }
 
 .alert-scroll-container {
@@ -1365,7 +1363,6 @@ body {
     border-radius: 8px;
     background: white;
     margin-bottom: 0.5rem;
-    border-left: 3px solid transparent;
     transition: all 0.2s ease;
 }
 

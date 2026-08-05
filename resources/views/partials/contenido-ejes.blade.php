@@ -34,7 +34,7 @@
             <span class="eje-dashboard__eyebrow">Seguimiento del PED 2024-2030</span>
             <h1 class="eje-dashboard__title">{{ $etiquetaEje }}</h1>
             <p class="eje-dashboard__intro-text">
-                Consulta el avance de los indicadores y el enfoque estratégico de este eje de desarrollo.
+                Consulta el avance de los indicadores y el enfoque estratégico de este eje.
             </p>
         </div>
     </section>
@@ -64,18 +64,37 @@
                 <p class="eje-dashboard__list-description">Revisa los resultados, metas y avances registrados para este eje.</p>
             </div>
             <div class="eje-dashboard__toolbar ocultar_impresion">
-            <span class="eje-dashboard__toolbar-label">Visualización de indicadores</span>
-            <div class="btn-group btn-group-sm border rounded overflow-hidden">
-                <button type="button" class="btn btn-sm px-3 btn-toggle-vista active" data-view="lista"
-                    data-target="contenedor-eje-{{ $numEje }}">
-                    <i class="fas fa-list"></i><span class="visually-hidden">Vista de lista</span>
-                </button>
-                <button type="button" class="btn btn-sm px-3 btn-toggle-vista" data-view="grid"
-                    data-target="contenedor-eje-{{ $numEje }}">
-                    <i class="fas fa-th-large"></i><span class="visually-hidden">Vista de cuadrícula</span>
-                </button>
+                <span class="eje-dashboard__toolbar-label">Visualización de indicadores</span>
+                <div class="eje-dashboard__view-controls">
+                    <div class="btn-group btn-group-sm border rounded overflow-hidden">
+                        <button type="button" class="btn btn-sm px-3 btn-toggle-vista active" data-view="lista"
+                            data-target="contenedor-eje-{{ $numEje }}">
+                            <i class="fas fa-list"></i><span class="visually-hidden">Vista de lista</span>
+                        </button>
+                        <button type="button" class="btn btn-sm px-3 btn-toggle-vista" data-view="grid"
+                            data-target="contenedor-eje-{{ $numEje }}">
+                            <i class="fas fa-th-large"></i><span class="visually-hidden">Vista de cuadrícula</span>
+                        </button>
+                    </div>
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-sm eje-dashboard__filter-toggle dropdown-toggle"
+                            data-bs-toggle="dropdown" aria-expanded="false"
+                            data-target="contenedor-eje-{{ $numEje }}">
+                            <i class="fas fa-filter me-1"></i>
+                            <span data-filter-label>Semaforización</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end p-2">
+                            <li><button type="button" class="dropdown-item active" data-semaforo-filter="all">Todas</button></li>
+                            <li><button type="button" class="dropdown-item" data-semaforo-filter="excedido">Excedido</button></li>
+                            <li><button type="button" class="dropdown-item" data-semaforo-filter="aceptable">Aceptable</button></li>
+                            <li><button type="button" class="dropdown-item" data-semaforo-filter="moderado">Moderado</button></li>
+                            <li><button type="button" class="dropdown-item" data-semaforo-filter="insuficiente">Insuficiente</button></li>
+                            <li><button type="button" class="dropdown-item" data-semaforo-filter="solo-linea-base">Solo línea base</button></li>
+                            <li><button type="button" class="dropdown-item" data-semaforo-filter="no-clasificado">No clasificado</button></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
-        </div>
         </div>
 
         <div class="eje-dashboard__indicators row indicador_{{ $numEje }}" id="contenedor-eje-{{ $numEje }}">
@@ -91,6 +110,7 @@
             @php
 
             $semText = $indicador->semaforizacion_validada ?: 'No Clasificado';
+            $semKey = \Illuminate\Support\Str::slug($semText);
             $colorSemaforo = '#6c757d'; // Gris por defecto
             $bgBadge = 'bg-secondary';
             $esDatoLineaBase = false;
@@ -131,7 +151,7 @@
 
             {{-- 2. TARJETA COMPACTA DEL INDICADOR --}}
             <div class="card shadow-sm mb-4 border-0 rounded-4 card-indicador"
-                style="--semaforo-color: {{ $colorSemaforo }}; border-left: 6px solid {{ $colorSemaforo }};">
+                data-filter-item data-semaforo="{{ $semKey }}" style="--semaforo-color: {{ $colorSemaforo }};">
                 <div class="card-body p-4">
                     <div class="row align-items-center">
 
@@ -297,6 +317,43 @@
                 } else {
                     container.classList.remove('modo-grid');
                 }
+            });
+        });
+
+                document.querySelectorAll('.eje-dashboard__filter-toggle').forEach(function(toggle) {
+            var toolbar = toggle.closest('.eje-dashboard__toolbar');
+            var target = document.getElementById(toggle.dataset.target);
+
+            if (!toolbar || !target) return;
+
+            toolbar.querySelectorAll('[data-semaforo-filter]').forEach(function(filterButton) {
+                filterButton.addEventListener('click', function() {
+                    var filter = this.dataset.semaforoFilter;
+                    var visibleItems = 0;
+
+                    target.querySelectorAll('[data-filter-item]').forEach(function(item) {
+                        var visible = filter === 'all' || item.dataset.semaforo === filter;
+                        item.hidden = !visible;
+                        if (visible) visibleItems++;
+                    });
+
+                    var emptyState = target.querySelector('[data-filter-empty]');
+                    if (!emptyState) {
+                        emptyState = document.createElement('div');
+                        emptyState.className = 'eje-dashboard__filter-empty';
+                        emptyState.dataset.filterEmpty = 'true';
+                        emptyState.textContent = 'No hay indicadores con esta semaforización.';
+                        (target.querySelector('.container') || target).appendChild(emptyState);
+                    }
+                    emptyState.hidden = visibleItems > 0;
+
+                    toolbar.querySelectorAll('[data-semaforo-filter]').forEach(function(button) {
+                        button.classList.toggle('active', button === filterButton);
+                    });
+                    toolbar.querySelector('[data-filter-label]').textContent =
+                        filter === 'all' ? 'Semaforización' : this.textContent;
+                    toggle.classList.toggle('has-filter', filter !== 'all');
+                });
             });
         });
 

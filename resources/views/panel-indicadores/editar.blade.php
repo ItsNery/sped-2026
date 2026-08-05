@@ -221,7 +221,7 @@
                                                 value="{{ $progInst->id }}" id="prog_inst_{{ $progInst->id }}"
                                                 {{ in_array($progInst->id, $linkedIds) ? 'checked' : '' }}>
                                             <label class="form-check-label text-muted" for="prog_inst_{{ $progInst->id }}" style="font-size: 0.9rem;">
-                                                <span class="badge text-white mr-1" style="background-color: {{ $progInst->color ?? '#691A32' }};">{{ $progInst->siglas }}</span>
+                                                <span class="badge text-white mr-1" style="background-color: {{ $progInst->color ?? '#0c312d' }};">{{ $progInst->siglas }}</span>
                                                 {{ $progInst->nombre }}
                                             </label>
                                         </div>

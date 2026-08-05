@@ -12,7 +12,13 @@
 
 <body class="ficha-pdf__document">
     <main class="ficha-pdf__sheet">
-        <img class="ficha-pdf__logos" src="{{ $pdfAsset('img/Cadena_SPED_.png') }}" alt="Gobierno de Puebla">
+        <img class="ficha-pdf__logos" src="{{ $pdfAsset('img/Cadena_SPED_.png') }}" alt="Gobierno de Puebla"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <div class="ficha-pdf__logos-fallback">
+            Gobierno del Estado de Puebla<br>
+            Secretaría de Planeación, Finanzas y Administración<br>
+            Sistema Estatal de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo.
+        </div>
         <h2 class="ficha-pdf__subtitle">Ficha técnica del indicador</h2>
         <h1 class="ficha-pdf__title">{{ $indicador->nombre }}</h1>
 
@@ -36,6 +42,14 @@
                     <div class="ficha-pdf__label">Temática</div>
                     <div class="ficha-pdf__value">{{ $indicador->tematica }}</div>
                 </div>
+                @if ($indicador->programasInstitucionales && $indicador->programasInstitucionales->isNotEmpty())
+                    <div class="ficha-pdf__item">
+                        <div class="ficha-pdf__label">Vinculado a Programas Institucionales</div>
+                        <div class="ficha-pdf__value">
+                            {{ $indicador->programasInstitucionales->map(fn ($programa) => $programa->siglas ?: $programa->nombre)->join(', ') }}
+                        </div>
+                    </div>
+                @endif
             </article>
             <article class="ficha-pdf__panel">
                 <h2 class="ficha-pdf__heading">Detalles técnicos</h2>
@@ -113,9 +127,16 @@
                         </thead>
                         <tbody>
                             @foreach($indicador->datos_anuales_validados->sortBy('anio') as $dato)
+                                @php
+                                    $valorHistorico = filter_var(
+                                        $dato->valor_dato,
+                                        FILTER_SANITIZE_NUMBER_FLOAT,
+                                        FILTER_FLAG_ALLOW_FRACTION | FILTER_FLAG_ALLOW_THOUSAND,
+                                    );
+                                @endphp
                                 <tr>
                                     <td>{{ $dato->anio }}</td>
-                                    <td>{{ $dato->valor_dato }}</td>
+                                    <td>{{ is_numeric($valorHistorico) ? number_format((float) str_replace(',', '', $valorHistorico), 2, '.', ',') : $dato->valor_dato }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -125,6 +146,10 @@
             </article>
         </section>
     </main>
+
+    <div class="ficha-pdf__footer-pleca" aria-hidden="true">
+        <img src="{{ $pdfAsset('img/pleca-nueva.png') }}" alt="">
+    </div>
 
     <script>{!! $pdfEcharts !!}</script>
     <script>

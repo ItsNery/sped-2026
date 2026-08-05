@@ -42,9 +42,10 @@ class CatProgramaDerivadoEspecialController extends Controller
     {
         $request->validate([
             'nombre' => 'required|string|max:255',
-            'imagen' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'descripcion' => 'required|string',
+            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'descripcion' => 'nullable|string',
             'color' => 'required|string|max:7',
+            'icono' => ['required', 'string', 'max:50', 'regex:/^fa-[a-z0-9-]+$/'],
             'plan_estatal' => 'required|exists:cat_planes_estatales_desarrollo,id',
             'documento' => 'required|url',
         ]);
@@ -83,8 +84,9 @@ class CatProgramaDerivadoEspecialController extends Controller
         $request->validate([
             'nombre' => 'required|string|max:255',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'descripcion' => 'required|string',
+            'descripcion' => 'nullable|string',
             'color' => 'required|string|max:7',
+            'icono' => ['required', 'string', 'max:50', 'regex:/^fa-[a-z0-9-]+$/'],
             'plan_estatal' => 'required|exists:cat_planes_estatales_desarrollo,id',
             'documento' => 'required|url',
         ]);

@@ -24,7 +24,7 @@
             </li>
 
             <li
-                class="nav-item dropdown {{ request()->is('normatividad', 'datos-abiertos*') ? 'active' : '' }}">
+                class="nav-item dropdown {{ request()->is('normatividad', 'datos-abiertos*', 'informacion-general/*') ? 'active' : '' }}">
                 <a class="nav-link dropdown-toggle" href="#" id="mobileInicioDropdownTrigger" role="button"
                     data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside"> Datos generales
                 </a>
@@ -85,7 +85,7 @@
                 </div>
             </li>
 
-            <li class="nav-item {{ request()->is('pm*') ? 'active' : '' }}">
+            <li class="nav-item {{ request()->is('pm*', 'ficha-tecnica-municipal/*') ? 'active' : '' }}">
                 <a class="nav-link" href="{{ url('/pm') }}">Planes Municipales de Desarrollo</a>
             </li>
 

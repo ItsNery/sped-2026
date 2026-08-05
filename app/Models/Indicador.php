@@ -323,7 +323,7 @@ class Indicador extends Model
         if ($tendencia === "mayor es mejor") {
             return ($valor / $meta) * 100;
         } elseif ($tendencia === "menor es mejor") {
-            return max(0, 100 - ((($valor - $meta) / $meta) * 100));
+            return  (($meta / $valor) * 100);
         } elseif ($tendencia === "constante") {
             return ($valor / $meta) * 100;
         }

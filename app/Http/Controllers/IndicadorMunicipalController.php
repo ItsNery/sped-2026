@@ -14,6 +14,8 @@ use App\Models\MunicipioConvenio;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
+use Spatie\Browsershot\Browsershot;
 
 
 class IndicadorMunicipalController extends Controller
@@ -430,20 +432,66 @@ class IndicadorMunicipalController extends Controller
 
     /**
      * Genera una ficha técnica pública para un indicador municipal.
-     * @param  int $id
+     * @param  IndicadorMunicipal $indicador
      * @return \Illuminate\View\View
      */
-    public function mostrarFicha($id)
+    public function mostrarFicha(IndicadorMunicipal $indicador)
     {
-        // Obtener el indicador
-        $indicador = IndicadorMunicipal::findOrFail($id);
+        return view('ficha-tecnica-municipal', $this->datosFichaPublica($indicador));
+    }
 
+    /**
+     * Descarga una ficha técnica municipal en PDF.
+     */
+    public function descargarFicha(IndicadorMunicipal $indicador)
+    {
+        $html = view('ficha-tecnica-municipal-pdf', [
+            ...$this->datosFichaPublica($indicador),
+            'pdfAsset' => fn (string $path): string => $this->inlinePublicAsset($path),
+            'pdfEcharts' => file_get_contents(public_path('js/echarts.min.js')),
+        ])->render();
+
+        $footer = '<div style="position: relative; top: -6mm; z-index: 20; width: 100vw; margin: 0; padding: 0; background: #fff; color: #706b72; font: 9px Arial, sans-serif; text-align: center;">'
+            . 'Hoja <span class="pageNumber"></span> de <span class="totalPages"></span></div>';
+
+        $pdf = Browsershot::html($html)
+            ->paperSize(210, 297, 'mm')
+            ->margins(5, 5, 16, 5)
+            ->scale(1)
+            ->showBrowserHeaderAndFooter()
+            ->footerHtml($footer)
+            ->showBackground()
+            ->setOption('viewport', [
+                'width' => 1240,
+                'height' => 1754,
+                'deviceScaleFactor' => 2,
+            ])
+            ->setOption('args', [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--font-render-hinting=none',
+            ])
+            ->waitForFunction('window.pdfReady === true', null, 110000)
+            ->pdf();
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="ficha-tecnica-municipal-' . Str::slug($indicador->indicador ?: 'indicador') . '.pdf"',
+        ]);
+    }
+
+    private function datosFichaPublica(IndicadorMunicipal $indicador): array
+    {
         // Acceder a los resultados relacionados con el indicador
         $resultados = $indicador->resultados;
 
-        // Rango de años que queremos verificar (por ejemplo, de 2015 a 2024)
-        $anioActual= now()->year;
-        $años = range(2015, $anioActual);
+        $anioActual = now()->year;
+        $aniosIniciales = array_filter([
+            $indicador->linea_base ? (int) $indicador->linea_base : null,
+            $resultados->min('año'),
+        ]);
+        $anioInicio = min($aniosIniciales ?: [2015]);
+        $años = range($anioInicio, $anioActual);
 
         // Iterar sobre los años y agregar atributos dinámicos
         foreach ($años as $año) {
@@ -483,6 +531,19 @@ class IndicadorMunicipalController extends Controller
 
         $municipio = MunicipioConvenio::where('id_municipio', $indicador->id_municipio)->first();
 
-        return view('ficha-tecnica-municipal', compact('indicador', 'municipio'));
+        return compact('indicador', 'municipio');
+    }
+
+    private function inlinePublicAsset(string $path): string
+    {
+        $assetPath = public_path(ltrim($path, '/'));
+
+        if (!is_file($assetPath)) {
+            return asset($path);
+        }
+
+        $mime = mime_content_type($assetPath) ?: 'application/octet-stream';
+
+        return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($assetPath));
     }
 }
