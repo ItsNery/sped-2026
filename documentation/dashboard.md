@@ -20,7 +20,7 @@ Todas las métricas administrativas parten del mismo universo:
 - Programas derivados del plan.
 - Programas institucionales vinculados al plan.
 
-El plan se selecciona mediante `plan_id`. Si no se envía, se utiliza el plan más reciente por identificador.
+El plan se selecciona mediante `plan_id`. Si no se envía, se utiliza el plan definido en `SPED_ACTIVE_PLAN_ID`.
 
 ## Filtros
 

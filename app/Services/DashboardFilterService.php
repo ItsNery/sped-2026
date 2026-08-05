@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CatEje;
+use App\Models\CatPlanEstatalDesarrollo;
 use App\Models\CatProgramaDerivadoEspecial;
 use App\Models\CatProgramaDerivadoInstitucional;
 use App\Models\CatProgramaDerivadoRegional;
@@ -26,8 +27,17 @@ class DashboardFilterService
 
     public function normalize(Request $request): array
     {
+        $requestedPlanId = $request->filled('plan_id')
+            ? (int) $request->input('plan_id')
+            : null;
+        $planId = $this->activePlan->id();
+
+        if ($requestedPlanId && CatPlanEstatalDesarrollo::whereKey($requestedPlanId)->exists()) {
+            $planId = $requestedPlanId;
+        }
+
         return [
-            'plan_id' => $this->activePlan->id(),
+            'plan_id' => $planId,
             'solo_validados' => $request->boolean('solo_validados', true),
             'anio_desde' => $request->filled('anio_desde') ? (int) $request->input('anio_desde') : null,
             'anio_hasta' => $request->filled('anio_hasta') ? (int) $request->input('anio_hasta') : null,

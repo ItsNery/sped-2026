@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CatEje;
+use App\Models\CatPlanEstatalDesarrollo;
 use App\Models\Indicador;
 use App\Services\ActivePlanResolver;
 use App\Services\DashboardFilterService;
@@ -28,7 +29,7 @@ class DashboardDrillDownController extends Controller
         );
 
         $filters = $this->dashboardFilters->normalize($request);
-        $plan = $this->activePlan->get();
+        $plan = CatPlanEstatalDesarrollo::find($filters['plan_id']) ?? $this->activePlan->get();
 
         $indicadores = $this->dashboardFilters
             ->queryForPlan($plan->id, $filters, $filters['solo_validados'])

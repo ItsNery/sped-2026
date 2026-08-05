@@ -64,8 +64,10 @@ class DashboardController extends Controller
         );
 
         $filters = $this->dashboardFilters->normalize($request);
-        $plan = $this->activePlan->get();
-        $planes = collect([$plan]);
+        $planes = CatPlanEstatalDesarrollo::query()
+            ->orderByDesc('id')
+            ->get(['id', 'nombre']);
+        $plan = $planes->firstWhere('id', $filters['plan_id']) ?? $this->activePlan->get();
         $filters['plan_id'] = $plan->id;
         $soloValidados = $filters['solo_validados'];
         $indicadoresPlan = $this->dashboardFilters
