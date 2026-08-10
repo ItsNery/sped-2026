@@ -159,9 +159,10 @@ class IndicadorController extends Controller
         $instituciones = Institucion::where('id', '!=', 1)->get();
 
         $planes = collect([$this->activePlan->get()]);
+        $metaAnioSugerido = $this->activePlan->id() === 3 ? 2030 : 2024;
         $programasInstitucionales = CatProgramaDerivadoInstitucional::all();
 
-        return view('panel-indicadores.crear', compact('pds', 'instituciones', 'usuarios', 'odses', 'periodicidades', 'coberturas', 'tendencias', 'planes', 'programasInstitucionales'));
+        return view('panel-indicadores.crear', compact('pds', 'instituciones', 'usuarios', 'odses', 'periodicidades', 'coberturas', 'tendencias', 'planes', 'programasInstitucionales', 'metaAnioSugerido'));
     }
 
     /**
@@ -181,7 +182,8 @@ class IndicadorController extends Controller
             'linea_base',
             'dato_linea_base',
             'periodo',
-            'meta_2024',
+            'meta_anio',
+            'meta',
             'unidad_medida',
             'id_institucion',
             'id_usuario',
@@ -217,7 +219,8 @@ class IndicadorController extends Controller
             'linea_base' => 'required|integer|digits:4',
             'dato_linea_base' => 'required|string|max:255',
             // 'periodo' => 'nullable|string|max:255',
-            'meta_2024' => 'required|string|max:255',
+            'meta_anio' => 'required|integer|min:1900|max:2100',
+            'meta' => 'required|string|max:255',
             'unidad_medida' => 'required|string|max:255',
             'id_institucion' => 'nullable|integer|exists:instituciones,id',
             'id_usuario' => 'nullable|integer|exists:users,id',
@@ -249,7 +252,9 @@ class IndicadorController extends Controller
             'tematica.required' => 'La temática es obligatoria.',
             'linea_base.required' => 'El año de la linea base es obligatorio.',
             'dato_linea_base.required' => 'El dato de la linea base es obligatorio.',
-            'meta_2024.required' => 'La Meta 2030 es obligatoria.',
+            'meta_anio.required' => 'El año de la meta es obligatorio.',
+            'meta_anio.integer' => 'El año de la meta debe ser un número entero.',
+            'meta.required' => 'La meta es obligatoria.',
             'unidad_medida.required' => 'La unidad de medida es obligatoria.',
             'periodicidad.required' => 'El programa derivado es obligatorio.',
             'odses.required' => 'Debe seleccionar al menos un ODS.',
@@ -305,7 +310,8 @@ class IndicadorController extends Controller
                 'linea_base' => $validatedData['linea_base'],
                 'dato_linea_base' => $validatedData['dato_linea_base'],
                 // 'periodo' => $validatedData['periodo'],
-                'meta_2024' => $validatedData['meta_2024'],
+                'meta_anio' => $validatedData['meta_anio'],
+                'meta' => $validatedData['meta'],
                 'unidad_medida' => $validatedData['unidad_medida'],
                 'id_institucion' => $validatedData['id_institucion'],
                 'id_usuario' => $validatedData['id_usuario'],
@@ -408,12 +414,17 @@ class IndicadorController extends Controller
      * @param  int $id
      * @return \Illuminate\View\View
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
         /** @var User */
         $user = auth()->user();
+        $planId = $this->activePlan->id();
 
-        $indicador = Indicador::forPlan($this->activePlan->id())
+        if (($user->isAdministrator() || $user->can('ver-panel-avance-general')) && $request->filled('plan_id')) {
+            $planId = CatPlanEstatalDesarrollo::find($request->integer('plan_id'))?->id ?? $planId;
+        }
+
+        $indicador = Indicador::forPlan($planId)
             ->with(['datosAnuales', 'ods', 'programasInstitucionales'])
             ->findOrFail($id);
 
@@ -542,7 +553,8 @@ class IndicadorController extends Controller
             'tematica' => 'required|string|max:255',
             'linea_base' => 'required|integer|digits:4',
             'dato_linea_base' => 'required|string|max:255',
-            'meta_2024' => 'required|string|max:255',
+            'meta_anio' => 'required|integer|min:1900|max:2100',
+            'meta' => 'required|string|max:255',
             'unidad_medida' => 'required|string|max:255',
             'id_usuario' => 'nullable|integer|exists:users,id',
             'id_institucion' => 'nullable|integer|exists:instituciones,id',
@@ -600,9 +612,11 @@ class IndicadorController extends Controller
             'dato_linea_base.string' => 'El valor de la línea base debe ser texto o número.',
             'dato_linea_base.max' => 'El valor de la línea base no debe exceder los 255 caracteres.',
 
-            'meta_2024.required' => 'La meta 2024 es obligatoria.',
-            'meta_2024.string' => 'La meta 2024 debe ser texto o número.',
-            'meta_2024.max' => 'La meta 2024 no debe exceder los 255 caracteres.',
+            'meta_anio.required' => 'El año de la meta es obligatorio.',
+            'meta_anio.integer' => 'El año de la meta debe ser un número entero.',
+            'meta.required' => 'La meta es obligatoria.',
+            'meta.string' => 'La meta debe ser texto o número.',
+            'meta.max' => 'La meta no debe exceder los 255 caracteres.',
 
             'unidad_medida.required' => 'La unidad de medida es obligatoria.',
             'unidad_medida.string' => 'La unidad de medida debe ser texto.',
@@ -1227,7 +1241,8 @@ class IndicadorController extends Controller
             'linea_base',
             'dato_linea_base',
             'unidad_medida',
-            'meta_2024',
+            'meta_anio',
+            'meta',
             'fuente',
             'liga',
             'descripcion',
@@ -1324,7 +1339,8 @@ class IndicadorController extends Controller
                 'linea_base',
                 'dato_linea_base',
                 'unidad_medida',
-                'meta_2024',
+                'meta_anio',
+                'meta',
                 'fuente',
                 'liga',
                 'descripcion',
@@ -1358,7 +1374,7 @@ class IndicadorController extends Controller
                 $sheet->setCellValue("F{$fila}", $indicadorDataRow['linea_base']);
                 $sheet->setCellValue("G{$fila}", $indicadorDataRow['dato_linea_base']);
                 $sheet->setCellValue("H{$fila}", $indicadorDataRow['unidad_medida']);
-                $sheet->setCellValue("I{$fila}", $indicadorDataRow['meta_2024']);
+                $sheet->setCellValue("I{$fila}", $indicadorDataRow['meta']);
                 $sheet->setCellValue("J{$fila}", $indicadorDataRow['fuente']);
                 $sheet->setCellValue("K{$fila}", $indicadorDataRow['liga']);
                 $sheet->setCellValue("L{$fila}", $indicadorDataRow['descripcion']);
@@ -1433,7 +1449,8 @@ class IndicadorController extends Controller
             'linea_base',
             'dato_linea_base',
             'unidad_medida',
-            'meta_2024',
+            'meta_anio',
+            'meta',
             'fuente',
             'liga',
             'descripcion',
@@ -1514,7 +1531,8 @@ class IndicadorController extends Controller
             $fila['Linea Base (Año)'] = $indicador->linea_base;
             $fila['Linea Base (Dato)'] = $indicador->dato_linea_base;
             $fila['Unidad de Medida'] = $indicador->unidad_medida;
-            $fila['Meta 2030'] = $indicador->meta_2024;
+            $fila['Año Meta'] = $indicador->meta_anio;
+            $fila['Meta'] = $indicador->meta;
             $fila['Fuente'] = $indicador->fuente;
             $fila['Enlace'] = $indicador->liga;
             $fila['Descripción'] = $indicador->descripcion;
@@ -1584,7 +1602,8 @@ class IndicadorController extends Controller
             'linea_base',
             'dato_linea_base',
             'unidad_medida',
-            'meta_2024',
+            'meta_anio',
+            'meta',
             'fuente',
             'liga',
             'descripcion',
@@ -1904,7 +1923,8 @@ class IndicadorController extends Controller
                     'linea_base'         => $row[9] ?? null,
                     'dato_linea_base'    => $row[10] ?? null,
                     'unidad_medida'      => $row[11] ?? null,
-                    'meta_2024'          => $row[12] ?? null,
+                    'meta_anio'         => $planObj->id === 3 ? 2030 : 2024,
+                    'meta'              => $row[12] ?? null,
                     'fuente'             => $row[13] ?? null,
                     'liga'               => $row[14] ?? null,
                     'descripcion'        => $row[15] ?? null,
@@ -1924,7 +1944,8 @@ class IndicadorController extends Controller
                     'linea_base' => 'required|integer|digits:4',
                     'dato_linea_base' => 'required',
                     'unidad_medida' => 'required|string|max:255',
-                    'meta_2024' => 'required',
+                    'meta_anio' => 'required|integer|min:1900|max:2100',
+                    'meta' => 'required',
                     'periodicidad' => 'required|string|max:255',
                     'cobertura' => 'required|string|max:255',
                     'tendencia' => 'required|string|max:255',

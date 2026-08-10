@@ -36,22 +36,33 @@
                     <span class="exec-eyebrow">Detalle operativo</span>
                     <h2>Indicadores y responsables</h2>
                 </div>
-                <form method="GET" class="exec-sort-form">
-                    @foreach (request()->except(['sort', 'direction', 'page']) as $key => $value)
+                <form method="GET" class="exec-drill-controls">
+                    @foreach (request()->except(['buscar', 'sort', 'direction', 'page']) as $key => $value)
                         @if (is_array($value))
                             @foreach ($value as $item)<input type="hidden" name="{{ $key }}[]" value="{{ $item }}">@endforeach
                         @else
                             <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                         @endif
                     @endforeach
-                    <label>Ordenar
-                        <select name="sort" onchange="this.form.submit()">
+                    <div class="exec-drill-controls__search">
+                        <label for="drill-down-search">Buscar en el universo</label>
+                        <div class="exec-drill-controls__search-row">
+                            <input id="drill-down-search" type="search" name="buscar" value="{{ $filters['buscar'] ?? '' }}" placeholder="Indicador, temática o descripción">
+                            <button type="submit" class="exec-filter-button">Buscar</button>
+                            @if ($filters['buscar'])
+                                <a class="exec-drill-controls__clear" href="{{ request()->fullUrlWithQuery(['buscar' => null, 'page' => null]) }}">Limpiar</a>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="exec-drill-controls__sort">
+                        <label for="drill-down-sort">Ordenar por</label>
+                        <select id="drill-down-sort" name="sort" onchange="this.form.submit()">
                             <option value="prioridad" @selected(request('sort', 'prioridad') === 'prioridad')>Prioridad</option>
                             <option value="nombre" @selected(request('sort') === 'nombre')>Indicador</option>
                             <option value="institucion" @selected(request('sort') === 'institucion')>Institución</option>
                             <option value="avance" @selected(request('sort') === 'avance')>Avance</option>
                         </select>
-                    </label>
+                    </div>
                 </form>
             </div>
             <div class="exec-priority-table-wrap">
@@ -61,13 +72,13 @@
                     <tbody>
                         @forelse ($rows as $row)
                             <tr>
-                                <td data-label="Indicador"><a class="exec-table__indicator" href="{{ route('panel-indicadores.show', $row['id']) }}">{{ Str::limit($row['nombre'], 72) }}</a></td>
+                                <td data-label="Indicador"><a class="exec-table__indicator" href="{{ route('panel-indicadores.show', ['indicador' => $row['id'], 'plan_id' => $plan->id]) }}">{{ Str::limit($row['nombre'], 72) }}</a></td>
                                 <td data-label="Institución">{{ Str::limit($row['institucion'], 30) }}</td>
                                 <td data-label="Responsable">{{ Str::limit($row['usuario'], 26) }}</td>
                                 <td data-label="Eje / programa"><small>{{ Str::limit($row['eje'], 24) }}</small><small class="d-block text-muted">{{ Str::limit($row['programa'], 30) }}</small></td>
                                 <td data-label="Estado"><span class="exec-status exec-status--{{ $row['prioridad'] === 1 ? 'red' : ($row['prioridad'] === 2 ? 'sand' : 'green') }}">{{ $row['motivo'] }}</span></td>
                                 <td data-label="Avance" class="exec-table__number">{{ $row['avance'] !== null ? number_format($row['avance'], 1) . '%' : 'N/D' }}</td>
-                                <td data-label="Acción" class="text-end"><a class="exec-table__action" href="{{ route('panel-indicadores.show', $row['id']) }}">Abrir <span aria-hidden="true">→</span></a></td>
+                                <td data-label="Acción" class="text-end"><a class="exec-table__action" href="{{ route('panel-indicadores.show', ['indicador' => $row['id'], 'plan_id' => $plan->id]) }}">Abrir <span aria-hidden="true">→</span></a></td>
                             </tr>
                         @empty
                             <tr><td colspan="7"><div class="exec-empty">No hay indicadores que coincidan con estos filtros.</div></td></tr>

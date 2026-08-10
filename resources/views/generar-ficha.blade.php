@@ -276,10 +276,10 @@
                                 <div class="row">
                                     <div class="col-xs-12 col-sm-12 col-md-12 ficha_titulo"
                                         style="color:{{ $indicador->color }};">
-                                        Meta 2030
+                                        Meta {{ $indicador->meta_anio }}
                                     </div>
                                     <div class="col-xs-12 col-sm-12 col-md-12 ficha_datos">
-                                        {{ $indicador->meta_2024 }}
+                                        {{ $indicador->meta_anio }}: {{ $indicador->meta }}
                                     </div>
                                 </div>
                             </div>

@@ -12,7 +12,7 @@
                             <div class="card overflow-hidden">
                                 <div class="card-content card_indicador">
                                     <div class="card-body">
-                                        <a href="{{ route('ficha-tecnica.show', $indicador->id) }}"
+                                        <a href="{{ route('ficha-tecnica.show', $indicador) }}"
                                             style="text-decoration:none;">
                                             <div class="row">
                                                 <div class="col-xs-12 col-sm-12 col-md-10">
@@ -106,12 +106,12 @@
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-xl-12 col-xs-12 col-sm-12 col-12 col-md-12 datos">
-                                                Meta 2024
+                                                Meta {{ $indicador->meta_anio }}
                                             </div>
                                         </div>
                                         <div class="row">
                                             <div class="col-xl-12 col-xs-12 col-sm-12 col-12 col-md-12 datos_eje2">
-                                                {{ $indicador->meta_2024 }}
+                                                {{ $indicador->meta }}
                                             </div>
                                         </div>
                                     </div>

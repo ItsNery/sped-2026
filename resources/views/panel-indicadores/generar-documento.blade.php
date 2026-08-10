@@ -84,8 +84,8 @@
                         <span class="value"> {{ $indicador->dato_linea_base }}</span>
                     </div>
                     <div class="info-item">
-                        <span class="label">Meta 2030:</span>
-                        <span class="value font-weight-bold">{{ $indicador->meta_2024 }}</span>
+                        <span class="label">Meta {{ $indicador->meta_anio }}:</span>
+                        <span class="value font-weight-bold">{{ $indicador->meta_anio }}: {{ $indicador->meta }}</span>
                     </div>
                 </div>
 
@@ -174,7 +174,10 @@
                         <th>
                             2029</th>
                         <th>
-                            Meta 2030
+                            Año meta
+                        </th>
+                        <th>
+                            Meta
                         </th>
                     </tr>
                 </thead>
@@ -205,7 +208,8 @@
                         <td>{{ $indicador->getValorDatoAnual(2027) ?? 'N/A' }}</td>
                         <td>{{ $indicador->getValorDatoAnual(2028) ?? 'N/A' }}</td>
                         <td>{{ $indicador->getValorDatoAnual(2029) ?? 'N/A' }}</td>
-                        <td>{{ $indicador->meta_2024 }}</td>
+                        <td>{{ $indicador->meta_anio }}</td>
+                        <td>{{ $indicador->meta }}</td>
                     </tr>
                     @endforeach
                 </tbody>

@@ -79,8 +79,8 @@
                         <div class="ficha-pdf__value">{{ $indicador->tendencia }}</div>
                     </div>
                     <div class="ficha-pdf__metric">
-                        <div class="ficha-pdf__label">Meta 2030</div>
-                        <div class="ficha-pdf__value">{{ $indicador->meta_2024 ?? 'N/D' }}</div>
+                        <div class="ficha-pdf__label">Meta {{ $indicador->meta_anio }}</div>
+                        <div class="ficha-pdf__value">{{ $indicador->meta ?? 'N/D' }}</div>
                     </div>
                 </div>
                 @php

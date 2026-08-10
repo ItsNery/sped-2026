@@ -22,7 +22,9 @@ use Illuminate\Support\Str;
  * @property int|null $id_institucion
  * @property int|null $linea_base
  * @property float|string|null $dato_linea_base
- * @property float|string|null $meta_2024
+ * @property int|null $meta_anio
+ * @property float|string|null $meta
+ * @property float|string|null $meta_2024 Legacy target column.
  * @property string|null $unidad_medida
  * @property int|null $id_usuario
  * @property string|null $fuente
@@ -74,7 +76,9 @@ class Indicador extends Model
         'id_institucion',
         'linea_base',       // Año de la línea base, ej: 2015
         'dato_linea_base',  // Valor de la línea base
-        'meta_2024',        // El dato de la meta, se quedó en meta_2024, pero puede ser 2030, 2036,etc. 
+        'meta_anio',
+        'meta',
+        'meta_2024',        // Legacy mirror kept during the transition.
         'unidad_medida',
         'id_usuario',
         'fuente',
@@ -111,6 +115,14 @@ class Indicador extends Model
     protected static function boot()
     {
         parent::boot();
+
+        static::saving(function (Indicador $indicador) {
+            if ($indicador->isDirty('meta')) {
+                $indicador->meta_2024 = $indicador->meta;
+            } elseif ($indicador->isDirty('meta_2024')) {
+                $indicador->meta = $indicador->meta_2024;
+            }
+        });
 
         static::creating(function ($indicador) {
             $indicador->slug = static::uniqueSlug($indicador->nombre);
@@ -340,7 +352,7 @@ class Indicador extends Model
     {
         if ($ultimoDato['valor'] === null) return null;
 
-        $metaLimpia = $this->meta_2024 !== null ? str_replace(',', '', (string)$this->meta_2024) : null;
+        $metaLimpia = $this->meta !== null ? str_replace(',', '', (string)$this->meta) : null;
         if (!is_numeric($metaLimpia) || $metaLimpia == 0) return null;
         $meta = (float)$metaLimpia;
 

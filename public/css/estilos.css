@@ -6646,7 +6646,7 @@ nav {
    5. VISIÓN ESTRATÉGICA (Parallax Oscuro)
    ============================================================ */
 .inicio-vision {
-     background-image: linear-gradient(rgba(12, 49, 45, 0.75), rgba(36, 98, 87, 0.75)), url('../img/puebla_hero_bg.png');
+     background-image: linear-gradient(rgba(12, 49, 45, 0.75), rgba(36, 98, 87, 0.75)), url('../img/fondo-about.webp');
     background-attachment: fixed;
     background-position: center;
     background-repeat: no-repeat;
@@ -6895,7 +6895,7 @@ nav {
 .inicio-fuentes__item {
     flex-shrink: 0;
     width: 160px;
-    height: 80px;
+    height: 120px;
     background: var(--whiteColor);
     border: 1px solid #e9ecef;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);

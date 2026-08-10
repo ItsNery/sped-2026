@@ -343,14 +343,25 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+                    <div class="col-md-2 mb-2">
+                        <div class="custom-section-title"><i class="fa-solid fa-bullseye"></i>
+                            Año meta: <span class="text-danger">*</span>
+                        </div>
+                        <input type="number" min="1900" max="2100" class="form-control @error('meta_anio') is-invalid @enderror"
+                            id="meta_anio" name="meta_anio"
+                            value="{{ old('meta_anio', $indicador->meta_anio) }}">
+                        @error('meta_anio')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
                     <div class="col-md-4 mb-2">
                         <div class="custom-section-title"><i class="fa-solid fa-bullseye"></i>
-                            Meta 2030: <span class="text-danger">*</span>
+                            Meta: <span class="text-danger">*</span>
                         </div>
-                        <input type="number" class="form-control @error('meta_2024') is-invalid @enderror"
-                            id="meta_2024" name="meta_2024"
-                            value="{{ old('meta_2024', $indicador->meta_2024) }}">
-                        @error('meta_2024')
+                        <input type="text" class="form-control @error('meta') is-invalid @enderror"
+                            id="meta" name="meta"
+                            value="{{ old('meta', $indicador->meta) }}">
+                        @error('meta')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>

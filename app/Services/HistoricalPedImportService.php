@@ -9,6 +9,7 @@ use App\Models\CatProgramaDerivadoRegional;
 use App\Models\CatProgramaDerivadoSectorial;
 use App\Models\DatoAnual;
 use App\Models\Indicador;
+use App\Models\Institucion;
 use App\Models\Odses;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -49,6 +50,16 @@ class HistoricalPedImportService
             ],
             'annual_values' => 0,
             'invalid_ods' => [],
+            'field_issues' => [
+                'unidad_medida' => [],
+                'cobertura' => [],
+                'tendencia' => [],
+            ],
+            'field_warnings' => [
+                'cobertura' => [],
+            ],
+            'unresolved_institutions' => [],
+            'unresolved_institution_indicators' => [],
             'errors' => [],
             'created' => [
                 'ejes' => 0,
@@ -81,12 +92,50 @@ class HistoricalPedImportService
         $normalizedRows = [];
         $catalogKeys = [];
         $validOds = Odses::query()->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $axisNumbers = [];
 
         foreach ($rows as $index => $row) {
             try {
                 $normalized = $this->normalizeRow($row, $validOds);
+                if ($normalized['type'] === self::PLAN_TYPE) {
+                    $axisKey = $this->key($normalized['parent_name']);
+                    if (!isset($axisNumbers[$axisKey])) {
+                        $axisNumbers[$axisKey] = count($axisNumbers) + 1;
+                    }
+                    $normalized['axis_number'] = $normalized['axis_number'] ?: $axisNumbers[$axisKey];
+                }
                 $normalized['source_row'] = $index + 2;
                 $normalizedRows[] = $normalized;
+
+                $this->recordFieldIssue(
+                    $report['field_issues']['unidad_medida'],
+                    'unidad_medida',
+                    $row['unidaddemedida'] ?? $row['unidadmedida'] ?? null,
+                    $normalized
+                );
+                $this->recordFieldIssue(
+                    $report['field_issues']['cobertura'],
+                    'cobertura',
+                    $row['cobertura'] ?? null,
+                    $normalized
+                );
+                $this->recordFieldIssue(
+                    $report['field_issues']['tendencia'],
+                    'tendencia',
+                    $row['tendencia'] ?? null,
+                    $normalized
+                );
+
+                if ($this->key((string) ($row['cobertura'] ?? '')) === 'quinquenal') {
+                    $report['field_warnings']['cobertura'][] = [
+                        'source_row' => $normalized['source_row'],
+                        'indicator' => $normalized['name'],
+                        'type' => $normalized['type'],
+                        'program' => $normalized['parent_name'],
+                        'periodicity' => $this->text($row['periodicidad'] ?? null),
+                        'value' => $this->text($row['cobertura'] ?? null),
+                    ];
+                }
 
                 $report['rows_by_type'][$normalized['type']] = ($report['rows_by_type'][$normalized['type']] ?? 0) + 1;
                 $report['annual_values'] += count($normalized['annual_values']);
@@ -100,6 +149,25 @@ class HistoricalPedImportService
                 foreach ($normalized['invalid_ods'] as $invalidOds) {
                     $report['invalid_ods'][$invalidOds] = ($report['invalid_ods'][$invalidOds] ?? 0) + 1;
                 }
+
+                $institutionName = $normalized['institution_name'];
+                $institution = $institutionName !== '' ? $this->resolveInstitution($institutionName) : null;
+
+                if (!$institution) {
+                    $reportInstitution = $institutionName !== ''
+                        ? $institutionName
+                        : 'No especificada en el archivo';
+                    $report['unresolved_institutions'][$reportInstitution] =
+                        ($report['unresolved_institutions'][$reportInstitution] ?? 0) + 1;
+                    $report['unresolved_institution_indicators'][] = [
+                        'source_row' => $normalized['source_row'],
+                        'indicator' => $normalized['name'],
+                        'institution' => $reportInstitution,
+                        'type' => $normalized['type'],
+                        'program' => $normalized['parent_name'],
+                        'tematica' => $normalized['tematica'],
+                    ];
+                }
             } catch (Throwable $exception) {
                 $report['invalid_rows']++;
                 $report['errors'][] = 'Fila ' . ($index + 2) . ': ' . $exception->getMessage();
@@ -111,6 +179,7 @@ class HistoricalPedImportService
         $report['unique_catalogs']['programas'] = count($catalogKeys['programas'] ?? []);
         ksort($report['rows_by_type']);
         ksort($report['invalid_ods']);
+        ksort($report['unresolved_institutions']);
 
         if (!$execute || $report['errors']) {
             return $report;
@@ -176,7 +245,10 @@ class HistoricalPedImportService
         }
 
         $parentName = $type === 'Programa Regional'
-            ? $this->text($row['tematica'] ?? null)
+            ? $this->resolveRegionalName(
+                $this->text($row['tematica'] ?? null),
+                $this->text($row['indicador'] ?? null)
+            )
             : $this->resolveParentName($left, $right, $type);
         if ($parentName === '') {
             throw new RuntimeException('El eje o programa relacionado esta vacio.');
@@ -226,8 +298,8 @@ class HistoricalPedImportService
             'tematica' => $this->requiredText($row['tematica'] ?? null),
             'linea_base' => $this->requiredText($row['lineabase'] ?? null),
             'dato_linea_base' => $this->requiredText($row['datolineabase'] ?? $row['datolinea'] ?? null),
-            'unidad_medida' => $this->requiredText($row['unidadmedida'] ?? null),
-            'meta_2024' => $this->requiredText($row['meta2024'] ?? null),
+            'unidad_medida' => $this->requiredText($row['unidaddemedida'] ?? $row['unidadmedida'] ?? null),
+            'meta' => $this->requiredText($row['meta2024'] ?? null),
             'fuente' => $this->nullableText($row['fuente'] ?? null),
             'liga' => $this->nullableText($row['link'] ?? $row['url'] ?? $row['liga'] ?? null),
             'descripcion' => $this->nullableText($row['descripcion'] ?? null),
@@ -241,6 +313,7 @@ class HistoricalPedImportService
             'invalid_ods' => array_values(array_unique($invalidOds)),
             'annual_values' => $annualValues,
             'axis_number' => $this->axisNumber($row['tematica'] ?? null),
+            'institution_name' => $this->text($row['institucionresponsable'] ?? $row['institucion'] ?? null),
         ];
     }
 
@@ -261,6 +334,7 @@ class HistoricalPedImportService
         $catalogIds = [];
         $catalogCache = [];
         $indicatorCache = [];
+        $institutionCache = [];
 
         foreach ($rows as $row) {
             $catalogKey = $row['type'] . '|' . $this->key($row['parent_name']);
@@ -277,7 +351,7 @@ class HistoricalPedImportService
                 }
             }
 
-            $indicatorKey = $catalogKey . '|' . $this->key($row['name']);
+            $indicatorKey = $catalogKey . '|' . $this->key($row['tematica']) . '|' . $this->key($row['name']);
             $indicator = $indicatorCache[$indicatorKey] ?? null;
             if (!$indicator) {
                 $indicator = $this->findExistingIndicator($row, $catalog);
@@ -290,7 +364,8 @@ class HistoricalPedImportService
                 'tematica' => $row['tematica'],
                 'linea_base' => $row['linea_base'],
                 'dato_linea_base' => $row['dato_linea_base'],
-                'meta_2024' => $row['meta_2024'],
+                'meta_anio' => $planId === 3 ? 2030 : 2024,
+                'meta' => $row['meta'],
                 'unidad_medida' => $row['unidad_medida'],
                 'fuente' => $row['fuente'],
                 'liga' => $row['liga'],
@@ -303,6 +378,13 @@ class HistoricalPedImportService
                 'formula' => $row['formula'],
                 'indicador_validado' => true,
             ];
+
+            if ($row['institution_name'] !== '') {
+                if (!array_key_exists($row['institution_name'], $institutionCache)) {
+                    $institutionCache[$row['institution_name']] = $this->resolveInstitution($row['institution_name']);
+                }
+                $attributes['id_institucion'] = $institutionCache[$row['institution_name']]?->id;
+            }
 
             if ($row['type'] === 'Programa Institucional') {
                 $attributes['indicadorable_type'] = null;
@@ -422,7 +504,8 @@ class HistoricalPedImportService
 
     private function findExistingIndicator(array $row, $catalog): ?Indicador
     {
-        $query = Indicador::where('nombre', $row['name']);
+        $query = Indicador::where('nombre', $row['name'])
+            ->where('tematica', $row['tematica']);
 
         if ($row['type'] === 'Programa Institucional') {
             return $query->whereHas(
@@ -439,18 +522,23 @@ class HistoricalPedImportService
     private function resolveType(string $left, string $right): ?string
     {
         foreach (array_keys(self::PROGRAM_TYPES) as $type) {
-            if ($this->key($left) === $this->key($type)) {
+            if ($this->typeKey($left) === $this->typeKey($type)) {
                 return $type;
             }
-            if ($this->key($right) === $this->key($type)) {
+            if ($this->typeKey($right) === $this->typeKey($type)) {
                 return $type;
             }
         }
 
-        return $this->key($left) === $this->key(self::PLAN_TYPE)
-            || $this->key($right) === $this->key(self::PLAN_TYPE)
+        return $this->typeKey($left) === $this->typeKey(self::PLAN_TYPE)
+            || $this->typeKey($right) === $this->typeKey(self::PLAN_TYPE)
             ? self::PLAN_TYPE
             : null;
+    }
+
+    private function typeKey(string $value): string
+    {
+        return preg_replace('/2$/', '', $this->key($value));
     }
 
     private function resolveParentName(string $left, string $right, string $type): string
@@ -465,6 +553,46 @@ class HistoricalPedImportService
             : null;
     }
 
+    private function resolveRegionalName(string $theme, string $indicatorName): string
+    {
+        $themeKey = $this->key($theme);
+
+        if ($theme !== '' && !in_array($themeKey, ['regional', 'desarrolloregional'], true)) {
+            return trim(preg_replace('/^regi[oó]n\s+/iu', '', $theme));
+        }
+
+        if (preg_match('/regi[oó]n\s+(.+)$/iu', $indicatorName, $matches)) {
+            return trim(preg_replace('/^regi[oó]n\s+/iu', '', $matches[1]));
+        }
+
+        return $theme;
+    }
+
+    private function resolveInstitution(string $name): ?Institucion
+    {
+        $sourceKey = $this->key($name);
+        if ($sourceKey === '') {
+            return null;
+        }
+
+        $institutions = Institucion::query()->orderBy('id')->get(['id', 'nombre']);
+
+        foreach ($institutions as $institution) {
+            if ($this->key($institution->nombre) === $sourceKey) {
+                return $institution;
+            }
+        }
+
+        foreach ($institutions as $institution) {
+            $institutionKey = $this->key($institution->nombre);
+            if (str_contains($institutionKey, $sourceKey) || str_contains($sourceKey, $institutionKey)) {
+                return $institution;
+            }
+        }
+
+        return null;
+    }
+
     private function normalizeTrend($value): string
     {
         $key = $this->key((string) $value);
@@ -473,8 +601,24 @@ class HistoricalPedImportService
             'mayoresmejor' => 'Mayor es Mejor',
             'menoresmejor' => 'Menor es Mejor',
             'constante' => 'Constante',
+            'ascendente' => 'Mayor es Mejor',
             default => 'No definida',
         };
+    }
+
+    private function recordFieldIssue(array &$issues, string $field, $value, array $row): void
+    {
+        if (!$this->isMissingText($value)) {
+            return;
+        }
+
+        $issues[] = [
+            'source_row' => $row['source_row'],
+            'indicator' => $row['name'],
+            'type' => $row['type'],
+            'program' => $row['parent_name'],
+            'value' => trim((string) $value) ?: 'Vacio',
+        ];
     }
 
     private function numeric($value): ?string
@@ -521,7 +665,12 @@ class HistoricalPedImportService
     private function nullableText($value): ?string
     {
         $value = trim((string) $value);
-        return $value === '' || in_array($this->key($value), ['nd', 'na', 'n/a'], true) ? null : $value;
+        return $value === '' || in_array($this->key($value), ['nd', 'na', 'n/a', 'null'], true) ? null : $value;
+    }
+
+    private function isMissingText($value): bool
+    {
+        return $this->nullableText($value) === null;
     }
 
     private function text($value): string

@@ -160,8 +160,8 @@ class PedMetricsService
             return 'sin_datos';
         }
 
-        $meta = $indicador->meta_2024 !== null
-            ? str_replace(',', '', (string) $indicador->meta_2024)
+        $meta = $indicador->meta !== null
+            ? str_replace(',', '', (string) $indicador->meta)
             : null;
 
         if (!is_numeric($meta) || (float) $meta === 0.0) {

@@ -198,8 +198,8 @@
                                 </p>
                             </div>
                             <div class="col-md-3">
-                                <div class="custom-section-title"><i class="fa-solid fa-bullseye"></i>Meta 2030</div>
-                                <p> {{ number_format($indicador->meta_2024, 2, '.', ',') }}</p>
+                                <div class="custom-section-title"><i class="fa-solid fa-bullseye"></i>Meta {{ $indicador->meta_anio }}</div>
+                                <p> Año {{ $indicador->meta_anio }}: {{ number_format((float) $indicador->meta, 2, '.', ',') }}</p>
                             </div>
                             <div class="col-md-3">
                                 <div class="custom-section-title"><i class="fa-solid fa-chart-area"></i>Cobertura

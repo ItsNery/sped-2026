@@ -174,11 +174,14 @@ class HomeController extends Controller
         $valorLB = $indicador->dato_linea_base !== null
             ? (float) preg_replace('/[^0-9.-]/', '', (string) $indicador->dato_linea_base)
             : null;
-        $valorMeta = $indicador->meta_2024 !== null
-            ? (float) preg_replace('/[^0-9.-]/', '', (string) $indicador->meta_2024)
+        $valorMeta = $indicador->meta !== null
+            ? (float) preg_replace('/[^0-9.-]/', '', (string) $indicador->meta)
             : null;
 
-        for ($year = $anioInicio; $year <= 2030; $year++) {
+        $anioMeta = (int) ($indicador->meta_anio ?? 2030);
+        $anioFin = max(2030, $anioMeta);
+
+        for ($year = $anioInicio; $year <= $anioFin; $year++) {
             $categorias[] = (string) $year;
             $dato = $indicador->datos_anuales_validados->firstWhere('anio', $year);
             $valor = $dato && trim((string) $dato->valor_dato) !== ''
@@ -186,7 +189,7 @@ class HomeController extends Controller
                 : null;
             $datos[] = is_numeric($valor) ? (float) $valor : null;
             $lineaBase[] = $year == (int) $indicador->linea_base ? $valorLB : null;
-            $meta[] = $year === 2030 ? $valorMeta : null;
+            $meta[] = $year === $anioMeta ? $valorMeta : null;
         }
 
         $avance = (float) ($indicador->avance_validado ?? $indicador->avance ?? 0);

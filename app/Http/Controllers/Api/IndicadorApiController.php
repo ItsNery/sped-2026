@@ -138,6 +138,8 @@ class IndicadorApiController extends Controller
                 'tematica' => $indicador->tematica,
                 'linea_base' => $indicador->linea_base,
                 'dato_linea_base' => $indicador->dato_linea_base,
+                'meta_anio' => $indicador->meta_anio,
+                'meta' => $indicador->meta,
                 'meta_2024' => $indicador->meta_2024,
                 'unidad_medida' => $indicador->unidad_medida,
                 'fuente' => $indicador->fuente,

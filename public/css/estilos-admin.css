@@ -2187,20 +2187,65 @@ body {
     font-family: "Corra-Montserra-Bold", sans-serif;
     font-size: clamp(1.5rem, 2.4vw, 2.2rem);
 }
-.exec-sort-form label {
+.exec-drill-controls {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: end;
+    gap: 0.75rem;
+    max-width: 820px;
+    padding: 0.7rem;
+    border: 1px solid #dfe7e3;
+    border-radius: 0.8rem;
+    background: #f7faf8;
+}
+.exec-drill-controls__search {
+    display: grid;
+    flex: 1 1 360px;
+    min-width: 0;
+    gap: 0.28rem;
+}
+.exec-drill-controls__search > label,
+.exec-drill-controls__sort > label {
+    color: #687773;
+    font-size: 0.68rem;
+    font-weight: 800;
+}
+.exec-drill-controls__search-row {
     display: flex;
     align-items: center;
     gap: 0.45rem;
-    color: #687773;
-    font-size: 0.72rem;
-    font-weight: 700;
 }
-.exec-sort-form select {
-    padding: 0.55rem 1.8rem 0.55rem 0.65rem;
+.exec-drill-controls__search input,
+.exec-drill-controls__sort select {
+    min-height: 38px;
+    padding: 0.55rem 0.65rem;
     border: 1px solid #d5dfdb;
     border-radius: 0.45rem;
     color: #21312f;
     font-size: 0.78rem;
+}
+.exec-drill-controls__search input {
+    width: 100%;
+    min-width: 0;
+    background: #fff;
+}
+.exec-drill-controls__sort {
+    display: grid;
+    flex: 0 0 auto;
+    gap: 0.28rem;
+    padding-left: 0.75rem;
+    border-left: 1px solid #dfe7e3;
+}
+.exec-drill-controls__sort select {
+    min-width: 135px;
+    padding-right: 1.8rem;
+    background: #fff;
+}
+.exec-drill-controls__clear {
+    color: var(--exec-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    white-space: nowrap;
 }
 .exec-detail-table td small {
     display: block;
@@ -2929,6 +2974,27 @@ body {
         align-items: flex-start;
         flex-direction: column;
         gap: 0.35rem;
+    }
+    .exec-drill-controls {
+        width: 100%;
+        max-width: none;
+        align-items: stretch;
+        flex-direction: column;
+    }
+    .exec-drill-controls__search-row {
+        flex-wrap: wrap;
+    }
+    .exec-drill-controls__search-row .exec-filter-button {
+        width: auto;
+    }
+    .exec-drill-controls__sort {
+        padding-top: 0.65rem;
+        padding-left: 0;
+        border-top: 1px solid #dfe7e3;
+        border-left: 0;
+    }
+    .exec-drill-controls__sort select {
+        width: 100%;
     }
     .exec-trend-summary {
         grid-template-columns: repeat(2, minmax(0, 1fr));

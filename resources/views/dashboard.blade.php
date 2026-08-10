@@ -197,7 +197,7 @@
                             @foreach ($actionQueue->take(12) as $item)
                                 <tr>
                                     <td data-label="Indicador">
-                                        <a href="{{ route('panel-indicadores.show', $item['id']) }}" class="exec-table__indicator">
+                                        <a href="{{ route('panel-indicadores.show', ['indicador' => $item['id'], 'plan_id' => $plan->id]) }}" class="exec-table__indicator">
                                             {{ Str::limit($item['nombre'], 72) }}
                                         </a>
                                     </td>
@@ -207,7 +207,7 @@
                                         {{ $item['avance'] !== null ? number_format($item['avance'], 1) . '%' : 'N/D' }}
                                     </td>
                                     <td data-label="Último dato">{{ $item['fecha_dato'] }}{{ $item['anio'] ? ' · ' . $item['anio'] : '' }}</td>
-                                    <td data-label="Acción" class="text-end"><a href="{{ route('panel-indicadores.show', $item['id']) }}" class="exec-table__action">Revisar <span aria-hidden="true">→</span></a></td>
+                                    <td data-label="Acción" class="text-end"><a href="{{ route('panel-indicadores.show', ['indicador' => $item['id'], 'plan_id' => $plan->id]) }}" class="exec-table__action">Revisar <span aria-hidden="true">→</span></a></td>
                                 </tr>
                             @endforeach
                         </tbody>

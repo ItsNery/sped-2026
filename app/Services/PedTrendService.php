@@ -108,7 +108,7 @@ class PedTrendService
 
     private function calcularAvance($indicador, float $valor): ?float
     {
-        $meta = str_replace(',', '', (string) $indicador->meta_2024);
+        $meta = str_replace(',', '', (string) $indicador->meta);
         if (!is_numeric($meta) || (float) $meta === 0.0) {
             return null;
         }

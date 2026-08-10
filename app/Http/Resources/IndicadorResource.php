@@ -21,6 +21,8 @@ class IndicadorResource extends JsonResource
             'tematica' => $this->tematica,
             'linea_base' => $this->linea_base,
             'dato_linea_base' => $this->dato_linea_base,
+            'meta_anio' => $this->meta_anio,
+            'meta' => $this->meta,
             'meta_2024' => $this->meta_2024,
             'unidad_medida' => $this->unidad_medida,
             'fuente' => $this->fuente,

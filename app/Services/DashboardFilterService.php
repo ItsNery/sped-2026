@@ -123,7 +123,7 @@ class DashboardFilterService
                 : 'No clasificado';
             $datos = $indicador->datosAnuales->filter(fn ($dato) => $dato->valor_dato !== null && trim((string) $dato->valor_dato) !== '');
             $tieneDato = $datos->isNotEmpty();
-            $sinMeta = !is_numeric(str_replace(',', '', (string) $indicador->meta_2024)) || (float) $indicador->meta_2024 === 0.0;
+            $sinMeta = !is_numeric(str_replace(',', '', (string) $indicador->meta)) || (float) $indicador->meta === 0.0;
             $sinTendencia = !in_array(strtolower(trim((string) $indicador->tendencia)), ['mayor es mejor', 'menor es mejor', 'constante'], true);
             $calidad = [];
             if (!$tieneDato) $calidad[] = 'sin_datos';

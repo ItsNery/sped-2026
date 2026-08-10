@@ -218,9 +218,9 @@
                         <div class="ficha-metric-card">
                             <div class="ficha-metric-card__icon"><i class="fas fa-bullseye"></i></div>
                             <div>
-                                <div class="ficha-label">Meta 2030</div>
+                            <div class="ficha-label">Meta {{ $indicador->meta_anio }}</div>
                                 <div class="ficha-metric-card__value" style="color: {{ $indicador->color ?? '#2b2b2b' }};">
-                                    {{ isset($indicador->meta_2024) ? number_format((float)str_replace(',', '', $indicador->meta_2024), $indicador->id == 100 ? 6 : 2, '.', ',') : 'N/D' }}
+                                    {{ isset($indicador->meta) ? number_format((float)str_replace(',', '', $indicador->meta), $indicador->id == 100 ? 6 : 2, '.', ',') : 'N/D' }}
                                 </div>
                             </div>
                         </div>
@@ -315,7 +315,7 @@
                                         $minHistorico = $indicador->datos_anuales_validados->min('anio');
                                         $minLB = $indicador->linea_base ? (int)$indicador->linea_base : 2015;
                                         $anioInicio = min($minLB, $minHistorico ?: 2015);
-                                        $anioFin = 2030;
+                 $anioFin = max(2030, (int) ($indicador->meta_anio ?? 2030));
                                         @endphp
                                         @for ($year = $anioInicio; $year <= $anioActual; $year++)
                                             @php $valorDato=$indicador->getValorDatoAnual($year, 'N/D', true); @endphp
@@ -340,14 +340,14 @@
                                                 @endif
                                             @endfor
 
-                                            @if(isset($indicador->meta_2024))
+                                            @if(isset($indicador->meta))
                                                 <tr class="table-info-meta">
                                                     <td class="fw-bold d-flex justify-content-between align-items-center">
-                                                        <span>2030</span>
+                                                        <span>{{ $indicador->meta_anio }}</span>
                                                         <span class="badge rounded-pill bg-danger badge-meta-2030">META</span>
                                                     </td>
                                                     <td class="fw-bold text-danger">
-                                                        {{ isset($indicador->meta_2024) ? number_format((float)str_replace(',', '', $indicador->meta_2024), $indicador->id == 100 ? 6 : 2, '.', ',') : 'N/D' }}
+                                                        {{ isset($indicador->meta) ? number_format((float)str_replace(',', '', $indicador->meta), $indicador->id == 100 ? 6 : 2, '.', ',') : 'N/D' }}
                                                     </td>
                                                 </tr>
                                             @endif
@@ -386,8 +386,8 @@
                 ? (float) preg_replace('/[^0-9.-]/', '', $indicador->dato_linea_base)
                 : null;
 
-                $valorMeta = !empty(trim((string)$indicador->meta_2024))
-                ? (float) preg_replace('/[^0-9.-]/', '', $indicador->meta_2024)
+                 $valorMeta = !empty(trim((string)$indicador->meta))
+                 ? (float) preg_replace('/[^0-9.-]/', '', $indicador->meta)
                 : null;
 
                 $categoriasEjeX_php = [];
@@ -408,7 +408,7 @@
 
                     $datosLineaBasePunto_php[] = ($year == $anioLB) ? $valorLB : null;
 
-                    $datosMetaPunto_php[] = ($year == 2030) ? $valorMeta : null;
+                     $datosMetaPunto_php[] = ($year == (int) $indicador->meta_anio) ? $valorMeta : null;
                     }
 
                     $nombreIndicadorJS = str_replace(["\r", "\n"], ' ', $indicador->nombre ?? 'Indicador');

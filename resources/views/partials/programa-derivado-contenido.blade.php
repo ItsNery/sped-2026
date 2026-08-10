@@ -145,9 +145,9 @@
                                 </div>
                             </div>
                             <div class="col-6">
-                                <div class="small text-muted mb-1">Meta 2030</div>
+                                <div class="small text-muted mb-1">Meta {{ $indicador->meta_anio }}</div>
                                 <div class="fw-semibold text-dark">
-                                    {{ isset($indicador->meta_2024) ? number_format((float)str_replace(',', '', $indicador->meta_2024), $indicador->id == 100 ? 6 : 2, '.', ',') : 'N/D' }}
+                                    {{ isset($indicador->meta) ? number_format((float)str_replace(',', '', $indicador->meta), $indicador->id == 100 ? 6 : 2, '.', ',') : 'N/D' }}
                                 </div>
                             </div>
                         </div>

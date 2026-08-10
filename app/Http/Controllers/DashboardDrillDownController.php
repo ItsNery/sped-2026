@@ -115,7 +115,7 @@ class DashboardDrillDownController extends Controller
         } elseif (!$ultimoDato) {
             $motivo = 'Sin dato anual';
             $prioridad = 4;
-        } elseif (!is_numeric(str_replace(',', '', (string) $indicador->meta_2024)) || (float) $indicador->meta_2024 === 0.0) {
+        } elseif (!is_numeric(str_replace(',', '', (string) $indicador->meta)) || (float) $indicador->meta === 0.0) {
             $motivo = 'Sin meta válida';
             $prioridad = 5;
         } elseif (!in_array(strtolower(trim((string) $indicador->tendencia)), ['mayor es mejor', 'menor es mejor', 'constante'], true)) {
