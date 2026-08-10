@@ -55,6 +55,19 @@ php artisan db:seed --class=Ped3InstitutionalRelationsSeeder --force
 
 Este seeder usa `public/Relacion nuevis derivados indicadr.ods` como manifiesto de relaciones. Sólo inserta filas faltantes en la tabla pivote; no crea ni actualiza indicadores, metas, datos anuales u ODS. Si encuentra un indicador faltante o ambiguo, aborta antes de insertar cambios.
 
+## Indicadores Nuevos Institucionales
+
+Antes del seeder de relaciones debe ejecutarse el importador del archivo `public/Indicadores nuevos para carga en el SPED.xlsx`:
+
+```bash
+php scratch/importar_indicadores_nuevos.php
+php scratch/importar_indicadores_nuevos.php --execute
+```
+
+El primer comando es un dry-run. El segundo crea los indicadores nuevos, sus datos anuales disponibles y sus relaciones institucionales dentro de una transacción. Es idempotente para indicadores que ya existan.
+
+Actualmente queda pendiente el indicador `Porcentaje de docentes evaluados con nivel de desempeño satisfactorio`, porque aparece en el manifiesto de relaciones pero no en el Excel. El seeder de relaciones lo reporta como pendiente y no bloquea las demás relaciones.
+
 ## Respaldo Productivo
 
 Antes de modificar datos, realizar respaldo de las tablas que correspondan al alcance. Para institucionales e historicos normalmente incluye:
