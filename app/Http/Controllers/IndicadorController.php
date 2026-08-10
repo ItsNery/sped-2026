@@ -424,9 +424,17 @@ class IndicadorController extends Controller
             $planId = CatPlanEstatalDesarrollo::find($request->integer('plan_id'))?->id ?? $planId;
         }
 
-        $indicador = Indicador::forPlan($planId)
-            ->with(['datosAnuales', 'ods', 'programasInstitucionales'])
-            ->findOrFail($id);
+        $query = Indicador::query()
+            ->with(['datosAnuales', 'ods', 'programasInstitucionales']);
+
+        // Los administradores pueden abrir indicadores históricos por ID cuando
+        // el enlace no incluye un plan explícito; los demás usuarios permanecen
+        // limitados al PED activo.
+        if (!$user->isAdministrator() || $request->filled('plan_id')) {
+            $query->forPlan($planId);
+        }
+
+        $indicador = $query->findOrFail($id);
 
         if ($user->hasRole('Enlace')) {
             $institucionesAsignadas = $user->instituciones->pluck('id');
