@@ -397,6 +397,7 @@
     {{-- ============================================================
      5. VISIÓN ESTRATÉGICA
      ============================================================ --}}
+     
     <section class="inicio-vision" id="vision-estrategica">
         <div class="inicio-vision__container">
             <p class="inicio-section-subtitle">Plan Estatal de Desarrollo 2024-2030</p>
