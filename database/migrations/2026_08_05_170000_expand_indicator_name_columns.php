@@ -4,7 +4,6 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use RuntimeException;
 
 return new class extends Migration
 {
@@ -20,7 +19,7 @@ return new class extends Migration
     {
         if (DB::table('indicadors')->whereRaw('CHAR_LENGTH(nombre) > 191')->exists()
             || DB::table('indicadors')->whereRaw('CHAR_LENGTH(slug) > 191')->exists()) {
-            throw new RuntimeException('No se puede reducir nombre o slug mientras existan valores mayores a 191 caracteres.');
+            throw new \RuntimeException('No se puede reducir nombre o slug mientras existan valores mayores a 191 caracteres.');
         }
 
         Schema::table('indicadors', function (Blueprint $table) {
