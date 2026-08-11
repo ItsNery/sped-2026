@@ -844,7 +844,8 @@ class HomeController extends Controller
      */
     public function mostrarListadoRegionales()
     {
-        $regionales = CatProgramaDerivadoRegional::has('indicadores')->get();
+        // $regionales = CatProgramaDerivadoRegional::has('indicadores')->get();
+        $regionales = CatProgramaDerivadoRegional::where('plan_estatal', 3)->get();
         return view('ped-programas-regionales', compact('regionales'));
     }
 
