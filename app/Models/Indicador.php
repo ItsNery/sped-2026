@@ -71,7 +71,7 @@ class Indicador extends Model
         'slug',
         'programa_derivado',
         'programa',
-        // 'cod_tematica', // 
+        'cod_tematica',
         'tematica',
         'id_institucion',
         'linea_base',       // Año de la línea base, ej: 2015

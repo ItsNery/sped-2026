@@ -361,21 +361,22 @@ class HistoricalPedImportService
                 'nombre' => $row['name'],
                 'programa_derivado' => $row['programa_derivado'],
                 'programa' => $row['programa'],
+                'cod_tematica' => '',
                 'tematica' => $row['tematica'],
                 'linea_base' => $row['linea_base'],
                 'dato_linea_base' => $row['dato_linea_base'],
                 'meta_anio' => $planId === 3 ? 2030 : 2024,
                 'meta' => $row['meta'],
                 'unidad_medida' => $row['unidad_medida'],
-                'fuente' => $row['fuente'],
+                'fuente' => $row['fuente'] ?? '',
                 'liga' => $row['liga'],
-                'descripcion' => $row['descripcion'],
+                'descripcion' => $row['descripcion'] ?? '',
                 'periodicidad' => $row['periodicidad'],
                 'cobertura' => $row['cobertura'],
                 'tendencia' => $row['tendencia'],
-                'fecha_actualizacion' => $row['fecha_actualizacion'],
+                'fecha_actualizacion' => $row['fecha_actualizacion'] ?? date('Y-m-d'),
                 'resultados' => $row['resultados'],
-                'formula' => $row['formula'],
+                'formula' => $row['formula'] ?? '',
                 'indicador_validado' => true,
             ];
 
@@ -387,8 +388,8 @@ class HistoricalPedImportService
             }
 
             if ($row['type'] === 'Programa Institucional') {
-                $attributes['indicadorable_type'] = null;
-                $attributes['indicadorable_id'] = null;
+                $attributes['indicadorable_type'] = get_class($catalog);
+                $attributes['indicadorable_id'] = $catalog->id;
             } else {
                 $attributes['indicadorable_type'] = get_class($catalog);
                 $attributes['indicadorable_id'] = $catalog->id;

@@ -185,7 +185,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::resource('panel-indicadores.datos-anuales', DatosAnualesIndicadorController::class)->shallow();
     Route::get('/subir-indicadores-masivo', function () {
         return view('panel-indicadores.prueba');
-    });
+    })->middleware('permission:subida-masiva-indicador');
     // Acciones específicas para Indicadores
     Route::get('/filtrar-indicadores/{institucion}/{programa?}', [IndicadorController::class, 'filtrarIndicadores'])->name('filtrar-indicadores');
     Route::patch('/indicadores/{id}/toggle-validacion', [IndicadorController::class, 'toggleValidacion'])->name('indicadores.toggleValidacion');
@@ -208,12 +208,24 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     // Route::get('/reporte-indicadores-municipales', [IndicadorMunicipalController::class, 'reporteIndicadores'])->name('reporteIndicadoresMunicipales');
 
     // --- Importación/Exportación Masiva (Excel) ---
-    Route::post('import-excel', [IndicadorController::class, 'import'])->name('excel.import');
-    Route::post('/excel/validate-file', [IndicadorController::class, 'validateFile'])->name('excel.validateFile');
-    Route::post('/excel/confirm-import', [IndicadorController::class, 'confirmImport'])->name('excel.confirmImport');
-    Route::get('/excel/download-template', [IndicadorController::class, 'downloadTemplate'])->name('excel.downloadTemplate');
-    Route::get('/excel/download-users', [IndicadorController::class, 'downloadUsuarios'])->name('excel.downloadUsuarios');
-    Route::get('/excel/download-institutions', [IndicadorController::class, 'downloadInstituciones'])->name('excel.downloadInstituciones');
+    Route::post('import-excel', [IndicadorController::class, 'import'])
+        ->middleware('permission:subida-masiva-indicador')
+        ->name('excel.import');
+    Route::post('/excel/validate-file', [IndicadorController::class, 'validateFile'])
+        ->middleware('permission:subida-masiva-indicador')
+        ->name('excel.validateFile');
+    Route::post('/excel/confirm-import', [IndicadorController::class, 'confirmImport'])
+        ->middleware('permission:subida-masiva-indicador')
+        ->name('excel.confirmImport');
+    Route::get('/excel/download-template', [IndicadorController::class, 'downloadTemplate'])
+        ->middleware('permission:subida-masiva-indicador')
+        ->name('excel.downloadTemplate');
+    Route::get('/excel/download-users', [IndicadorController::class, 'downloadUsuarios'])
+        ->middleware('permission:subida-masiva-indicador')
+        ->name('excel.downloadUsuarios');
+    Route::get('/excel/download-institutions', [IndicadorController::class, 'downloadInstituciones'])
+        ->middleware('permission:subida-masiva-indicador')
+        ->name('excel.downloadInstituciones');
 
     // --- APIs Internas y Logs ---
     Route::get('/niveles/{tipoId}', [CatalogoController::class, 'getNiveles']);

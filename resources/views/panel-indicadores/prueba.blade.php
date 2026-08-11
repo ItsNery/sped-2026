@@ -44,10 +44,10 @@
                                     <td><strong>Nombre Indicador</strong><br><small>(Texto)</small></td>
                                     <td class="table-primary"><strong>Plan Estatal</strong><br><small>(Nombre
                                             Exacto)</small></td>
-                                    <td class="table-primary"><strong>Tipo Programa</strong><br><small>(Sectorial,
+                                    <td class="table-primary"><strong>Tipo Programa</strong><br><small>(Eje, Sectorial,
                                             Especial...)</small></td>
-                                    <td class="table-primary"><strong>Nombre Prog. Derivado</strong><br><small>(Nombre
-                                            Exacto)</small></td>
+                                    <td class="table-primary"><strong>Nombre Prog. Derivado</strong><br><small>(No aplica
+                                            para Eje)</small></td>
                                     <td><strong>Eje / Programa</strong><br><small>(Texto)</small></td>
                                     <td>... Resto de datos<br><small>(Temática, Meta, etc.)</small></td>
                                 </tr>
@@ -55,8 +55,8 @@
                         </table>
                         <div class="alert alert-info py-2" style="font-size: 0.9rem;">
                             <i class="fa-solid fa-circle-info"></i> <strong>Nota Importante:</strong> Las columnas
-                            <strong>C, D y E</strong> son obligatorias para asignar correctamente el indicador a su
-                            programa correspondiente.
+                            <strong>C, D y E</strong> son obligatorias para programas derivados; para indicadores de
+                            eje, utiliza <strong>C, D y F</strong>.
                         </div>
                     </div>
 
@@ -218,19 +218,25 @@
                                     .then(response => response.json())
                                     .then(result => {
                                         Swal.close();
-                                        if (result.error) {
-                                            Swal.fire('Error', result.error, 'error')
+                                             if (result.error) {
+                                                 Swal.fire('Error', result.error, 'error')
                                                 .then(() => {
                                                     document.getElementById('error-container')
                                                         .innerHTML =
                                                         `<div class="alert alert-danger text-center mt-2">${result.error}</div>`;
                                                 });
-                                        } else {
-                                            Swal.fire('Éxito', result.message, 'success');
-                                            // Opcional: reiniciar el formulario
-                                            document.getElementById('file-form').reset();
-                                            document.getElementById('file-name').textContent = "";
-                                        }
+                                         } else if (result.success) {
+                                             Swal.fire('Éxito', result.message, 'success');
+                                             // Opcional: reiniciar el formulario
+                                             document.getElementById('file-form').reset();
+                                             document.getElementById('file-name').textContent = "";
+                                         } else {
+                                             Swal.fire({
+                                                 title: result.partial ? 'Importación parcial' : 'Importación no realizada',
+                                                 html: result.message || 'No se pudo completar la importación.',
+                                                 icon: result.partial ? 'warning' : 'error'
+                                             });
+                                         }
                                     })
                                     .catch(err => {
                                         Swal.close();

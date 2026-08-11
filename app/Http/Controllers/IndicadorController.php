@@ -27,6 +27,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use Illuminate\Support\Facades\Log; // Para registrar errores (opcional pero recomendado)
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -1723,6 +1724,17 @@ class IndicadorController extends Controller
      * @param  Request $request
      * @return JsonResponse
      */
+    public function import(Request $request): JsonResponse
+    {
+        $validationResponse = $this->validateFile($request);
+
+        if ($validationResponse->getStatusCode() !== 200) {
+            return $validationResponse;
+        }
+
+        return $this->confirmImport($request);
+    }
+
     public function validateFile(Request $request)
     {
         Log::debug('IndicadorController@validateFile: Iniciado.');
@@ -1749,11 +1761,11 @@ class IndicadorController extends Controller
             $allRowsRaw = $sheet->toArray();
             Log::debug('IndicadorController@validateFile: Todas las filas leídas (raw): ' . count($allRowsRaw) . ' filas.');
 
-            $rows = array_filter($allRowsRaw, function ($row) {
+            $rows = array_values(array_filter($allRowsRaw, function ($row) {
                 return count(array_filter($row, function ($cell) {
                     return trim((string) $cell) !== '';
                 })) > 0;
-            });
+            }));
             Log::info('IndicadorController@validateFile: Filas filtradas (no vacías): ' . count($rows) . ' filas.');
 
             if (empty($rows)) {
@@ -1764,6 +1776,15 @@ class IndicadorController extends Controller
             $headers = array_shift($rows);
             Log::debug('IndicadorController@validateFile: Encabezados extraídos.', ['headers' => $headers]);
 
+            $headerError = $this->validateImportHeaders($headers);
+            if ($headerError) {
+                return response()->json(['error' => $headerError], 422);
+            }
+
+            if (count($rows) > 1000) {
+                return response()->json(['error' => 'El archivo no puede contener más de 1000 indicadores por carga.'], 422);
+            }
+
             if (empty($rows)) {
                 Log::warning('IndicadorController@validateFile: El archivo no contiene datos para procesar después de quitar encabezados.');
                 return response()->json(['error' => 'El archivo no contiene datos para procesar (solo encabezados).'], 422);
@@ -1772,30 +1793,23 @@ class IndicadorController extends Controller
 
             Log::debug('IndicadorController@validateFile: Iniciando validación de campos obligatorios por fila.');
             foreach ($rows as $index => $row) {
-                $nombre = $row[1] ?? null;
-                $plan = $row[2] ?? null;
-                $tipoPrograma = $row[3] ?? null;
-                $nombrePrograma = $row[4] ?? null;
-                $eje = $row[5] ?? null;
-
-                if (
-                    empty(trim((string)$nombre)) ||
-                    empty(trim((string)$plan)) ||
-                    empty(trim((string)$tipoPrograma)) ||
-                    empty(trim((string)$nombrePrograma)) ||
-                    empty(trim((string)$eje))
-                ) {
+                $rowError = $this->validateImportRowShape($row);
+                if ($rowError) {
                     Log::warning('IndicadorController@validateFile: Error de validación en fila.', [
                         'numero_fila_excel' => $index + 2,
                         'contenido_fila' => $row,
-                        'error' => 'Campos obligatorios vacíos (Nombre, Plan, Tipo, Programa o Eje).'
+                        'error' => $rowError,
                     ]);
                     return response()->json([
-                        'error' => "Error en la fila " . ($index + 2) . ": Faltan datos obligatorios (Nombre, Plan, Tipo de Programa, Nombre de Programa o Eje)."
+                        'error' => "Error en la fila " . ($index + 2) . ": {$rowError}"
                     ], 422);
                 }
             }
             Log::info('IndicadorController@validateFile: Validación de campos obligatorios por fila completada exitosamente.');
+
+            if ($oldPath = session('importFilePath')) {
+                Storage::delete($oldPath);
+            }
 
             $path = $file->storeAs('temp_imports', 'import_' . uniqid() . '.' . $file->getClientOriginalExtension());
             session(['importFilePath' => $path]);
@@ -1840,15 +1854,24 @@ class IndicadorController extends Controller
             $sheet = $spreadsheet->getActiveSheet();
 
             $allRowsRaw = $sheet->toArray();
-            $rows = array_filter($allRowsRaw, function ($row) {
+            $rows = array_values(array_filter($allRowsRaw, function ($row) {
                 return count(array_filter($row, function ($cell) {
                     return trim((string) $cell) !== '';
                 })) > 0;
-            });
+            }));
+            $headers = $rows[0] ?? [];
+            $headerError = $this->validateImportHeaders($headers);
+            if ($headerError) {
+                throw new \RuntimeException($headerError);
+            }
             array_shift($rows);
-        } catch (\Exception $e) {
+            if (!$rows) {
+                throw new \RuntimeException('El archivo no contiene datos para procesar.');
+            }
+        } catch (\Throwable $e) {
             Log::error("IndicadorController@confirmImport: Error al releer el archivo: " . $e->getMessage());
-            return response()->json(['error' => 'Error al procesar el archivo temporal.'], 500);
+            $this->forgetImportFile($filePath);
+            return response()->json(['error' => $e->getMessage()], 422);
         }
 
         $columnaInicialDatosAnualesExcel = 22;
@@ -1867,80 +1890,57 @@ class IndicadorController extends Controller
 
             DB::beginTransaction();
             try {
-                $nombreIndicador     = trim($row[1] ?? '');
-                $nombrePlan          = trim($row[2] ?? '');
-                $tipoProgramaRaw     = trim($row[3] ?? '');
-                $nombreProgramaDeriv = trim($row[4] ?? '');
-                $ejePrograma         = trim($row[5] ?? '');
+                $nombreIndicador     = $this->importCell($row, 1) ?? '';
+                $nombrePlan          = $this->importCell($row, 2) ?? '';
+                $tipoProgramaRaw     = $this->importCell($row, 3) ?? '';
+                $nombreProgramaDeriv = $this->importCell($row, 4) ?? '';
+                $ejePrograma         = $this->importCell($row, 5) ?? '';
 
-                $idUsuario           = isset($row[6]) && trim((string)$row[6]) !== '' ? trim((string)$row[6]) : null;
-                $idInstitucion       = isset($row[7]) && trim((string)$row[7]) !== '' ? trim((string)$row[7]) : null;
+                $idUsuario           = $this->importIntegerCell($row, 6, 'Usuario');
+                $idInstitucion       = $this->importIntegerCell($row, 7, 'Institución');
+                $idIndicadorExcel    = $this->importIntegerCell($row, 0, 'Indicador');
 
-                $planObj = CatPlanEstatalDesarrollo::where('nombre', $nombrePlan)->first();
+                $planObj = $this->findImportPlan($nombrePlan);
                 if (!$planObj) {
                     throw new \Exception("El Plan Estatal '{$nombrePlan}' no existe en el catálogo.");
                 }
 
-                $indicadorableId = null;
-                $indicadorableType = null;
-                $programaDerivadoFinal = $nombreProgramaDeriv;
+                $alignment = $this->resolveImportAlignment($tipoProgramaRaw, $nombreProgramaDeriv, $ejePrograma, $planObj);
+                $indicador = $this->findImportIndicator($idIndicadorExcel, $nombreIndicador, $planObj->id, $alignment);
+                $institutionIdForAuthorization = $idInstitucion ?? $indicador?->id_institucion;
+                $this->authorizeImportRow(auth()->user(), $planObj->id, $institutionIdForAuthorization, $indicador);
 
-                $modelClass = null;
-                if (stripos($tipoProgramaRaw, 'Sectorial') !== false) {
-                    $modelClass = CatProgramaDerivadoSectorial::class;
-                } elseif (stripos($tipoProgramaRaw, 'Especial') !== false) {
-                    $modelClass = CatProgramaDerivadoEspecial::class;
-                } elseif (stripos($tipoProgramaRaw, 'Institucional') !== false) {
-                    $modelClass = CatProgramaDerivadoInstitucional::class;
-                } elseif (stripos($tipoProgramaRaw, 'Regional') !== false) {
-                    $modelClass = CatProgramaDerivadoRegional::class;
-                } else {
-                    throw new \Exception("Tipo de programa '{$tipoProgramaRaw}' no reconocido.");
-                }
-
-                if ($modelClass) {
-                    $programaObj = $modelClass::where('nombre', $nombreProgramaDeriv)->first();
-                    if (!$programaObj) {
-                        throw new \Exception("El programa '{$nombreProgramaDeriv}' no encontrado.");
-                    }
-                    if ($modelClass !== CatProgramaDerivadoInstitucional::class) {
-                        $indicadorableId = $programaObj->id;
-                        $indicadorableType = $modelClass;
-                    }
-                    $programaDerivadoFinal = $programaObj->nombre;
-                }
-
-                if ($idUsuario && !User::find($idUsuario)) {
+                if ($idUsuario !== null && !User::whereKey($idUsuario)->exists()) {
                     throw new \Exception("El Usuario con ID '{$idUsuario}' no existe.");
                 }
-                if ($idInstitucion && !Institucion::find($idInstitucion)) {
+                if ($idInstitucion !== null && !Institucion::whereKey($idInstitucion)->exists()) {
                     throw new \Exception("La Institución con ID '{$idInstitucion}' no existe.");
                 }
 
                 $datosIndicador = [
                     'nombre'             => $nombreIndicador,
-                    'programa_derivado'  => $programaDerivadoFinal,
-                    'programa'           => $ejePrograma,
-                    'plan_id'            => $planObj->id,
-                    'indicadorable_id'   => $indicadorableId,
-                    'indicadorable_type' => $indicadorableType,
-                    'id_usuario'         => $idUsuario,
-                    'id_institucion'     => $idInstitucion,
+                    'programa_derivado'  => $alignment['programaDerivado'],
+                    'programa'           => $alignment['programa'],
+                    'indicadorable_id'   => $alignment['id'],
+                    'indicadorable_type' => $alignment['type'],
+                    'id_usuario'         => $idUsuario ?? $indicador?->id_usuario,
+                    'id_institucion'     => $idInstitucion ?? $indicador?->id_institucion,
 
-                    'tematica'           => $row[8] ?? null,
-                    'linea_base'         => $row[9] ?? null,
-                    'dato_linea_base'    => $row[10] ?? null,
-                    'unidad_medida'      => $row[11] ?? null,
-                    'meta_anio'         => $planObj->id === 3 ? 2030 : 2024,
-                    'meta'              => $row[12] ?? null,
-                    'fuente'             => $row[13] ?? null,
-                    'liga'               => $row[14] ?? null,
-                    'descripcion'        => $row[15] ?? null,
-                    'periodicidad'       => $row[16] ?? null,
-                    'cobertura'          => $row[17] ?? null,
-                    'tendencia'          => $row[18] ?? null,
-                    'formula'            => $row[19] ?? null,
-                    'fecha_actualizacion' => $row[21] ?? null,
+                    'tematica'           => $this->importCell($row, 8),
+                    'linea_base'         => $this->importCell($row, 9),
+                    'dato_linea_base'    => $this->importCell($row, 10),
+                    'unidad_medida'      => $this->importCell($row, 11),
+                    'meta_anio'          => $this->importMetaYear($planObj),
+                    'meta'               => $this->importCell($row, 12),
+                    'fuente'             => $this->importCell($row, 13) ?? ($indicador?->fuente ?? ''),
+                    'liga'               => $this->normalizeImportUrl($this->importCell($row, 14)),
+                    'descripcion'        => $this->importCell($row, 15) ?? ($indicador?->descripcion ?? ''),
+                    'periodicidad'       => $this->importCell($row, 16),
+                    'cobertura'          => $this->importCell($row, 17),
+                    'tendencia'          => $this->importCell($row, 18),
+                    'formula'            => $this->importCell($row, 19),
+                    'fecha_actualizacion' => $this->normalizeImportDate($this->importCell($row, 21))
+                        ?? ($indicador?->fecha_actualizacion ?? date('Y-m-d')),
                     'indicador_validado' => false,
                 ];
 
@@ -1950,67 +1950,65 @@ class IndicadorController extends Controller
                     'programa' => 'required|string|max:255',
                     'tematica' => 'required|string|max:255',
                     'linea_base' => 'required|integer|digits:4',
-                    'dato_linea_base' => 'required',
+                    'dato_linea_base' => 'required|string|max:255',
                     'unidad_medida' => 'required|string|max:255',
                     'meta_anio' => 'required|integer|min:1900|max:2100',
-                    'meta' => 'required',
+                    'meta' => 'required|string|max:255',
                     'periodicidad' => 'required|string|max:255',
                     'cobertura' => 'required|string|max:255',
                     'tendencia' => 'required|string|max:255',
                     'formula' => 'required|string',
+                    'liga' => 'nullable|url',
+                    'fecha_actualizacion' => 'required|date',
                 ]);
 
                 if ($validator->fails()) {
                     throw new \Exception("Validación fallida: " . $validator->errors()->first());
                 }
 
-                $idIndicadorExcel = $row[0] ?? null;
-                $indicador = null;
-
-                if (!empty($idIndicadorExcel)) {
-                    $indicador = Indicador::find($idIndicadorExcel);
-                    if ($indicador) {
-                        $indicador->update($datosIndicador);
-                    } else {
-                        $indicador = Indicador::create($datosIndicador);
-                    }
+                if (!$indicador) {
+                    $datosIndicador['cod_tematica'] = '';
+                    $indicador = Indicador::create($datosIndicador);
                 } else {
-                    $indicador = Indicador::updateOrCreate(
-                        [
-                            'nombre' => $datosIndicador['nombre'],
-                            'programa_derivado' => $datosIndicador['programa_derivado']
-                        ],
-                        $datosIndicador
-                    );
+                    $indicador->update($datosIndicador);
                 }
 
-                if ($modelClass === CatProgramaDerivadoInstitucional::class) {
-                    $indicador->programasInstitucionales()->sync([$programaObj->id]);
-                } else {
-                    $indicador->programasInstitucionales()->sync([]);
+                if ($alignment['type'] === CatProgramaDerivadoInstitucional::class) {
+                    $indicador->programasInstitucionales()->sync([$alignment['id']]);
                 }
+
+                $lineaBase = (int) $datosIndicador['linea_base'];
+                $indicador->datosAnuales()->updateOrCreate(
+                    ['anio' => $lineaBase],
+                    [
+                        'valor_dato' => $datosIndicador['dato_linea_base'],
+                        'validado' => true,
+                        'modificado' => false,
+                    ]
+                );
 
                 foreach ($mapeoColumnasAnios as $indiceColumnaExcel => $anio) {
                     if (!array_key_exists($indiceColumnaExcel, $row)) continue;
-                    $valorDatoAnual = $row[$indiceColumnaExcel];
+                    if ($anio === $lineaBase) continue;
+                    $valorDatoAnual = $this->importCell($row, $indiceColumnaExcel);
 
-                    if ($valorDatoAnual !== null && trim((string)$valorDatoAnual) !== '') {
+                    if ($valorDatoAnual !== null) {
+                        if (!is_numeric($valorDatoAnual)) {
+                            throw new \Exception("El valor anual de {$anio} debe ser numérico.");
+                        }
+
                         $indicador->datosAnuales()->updateOrCreate(
                             ['anio' => $anio],
-                            ['valor_dato' => $valorDatoAnual, 'modificado' => false]
+                            ['valor_dato' => $valorDatoAnual, 'validado' => false, 'modificado' => false]
                         );
                     }
                 }
 
-                $odsString = $row[20] ?? null;
-                if (!empty($odsString)) {
-                    $odsIds = array_filter(array_map('trim', explode(',', $odsString)));
-                    $indicador->ods()->sync($odsIds);
-                }
+                $indicador->ods()->sync($this->parseImportOds($this->importCell($row, 20)));
 
                 DB::commit();
                 $indicadoresImportadosExitosamente++;
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 DB::rollBack();
                 $mensajeError = "Fila: " . ($index + 2) . " Error: " . $e->getMessage();
                 Log::error("IndicadorController@confirmImport: " . $mensajeError);
@@ -2028,7 +2026,8 @@ class IndicadorController extends Controller
         if (!empty($erroresEnImportacion)) {
             $htmlErrores = "<ul class='text-start'><li>" . implode("</li><li>", array_map('htmlspecialchars', $erroresEnImportacion)) . "</li></ul>";
             return response()->json([
-                'success' => $indicadoresImportadosExitosamente > 0,
+                'success' => false,
+                'partial' => $indicadoresImportadosExitosamente > 0,
                 'message' => "Proceso finalizado. Importados: {$indicadoresImportadosExitosamente}. Errores: {$htmlErrores}",
                 'errors_list' => $erroresEnImportacion
             ], 207);
@@ -2128,7 +2127,7 @@ class IndicadorController extends Controller
             'ID (Opcional)',
             'Nombre Indicador',
             'Plan Estatal (Exacto)',
-            'Tipo Programa (Sectorial, Especial...)',
+            'Tipo Programa (Eje, Sectorial, Especial...)',
             'Nombre Programa Derivado (Exacto)',
             'Eje / Programa',
             'ID Usuario Responsable',
@@ -2137,7 +2136,7 @@ class IndicadorController extends Controller
             'Línea Base (Año)',
             'Dato Línea Base',
             'Unidad de Medida',
-            'Meta 2030',
+            'Meta',
             'Fuente',
             'Liga',
             'Descripción',
@@ -2232,6 +2231,332 @@ class IndicadorController extends Controller
         }
 
         return response()->json($programas);
+    }
+
+    private function importHeaders(): array
+    {
+        return [
+            'ID (Opcional)',
+            'Nombre Indicador',
+            'Plan Estatal (Exacto)',
+            'Tipo Programa (Eje, Sectorial, Especial...)',
+            'Nombre Programa Derivado (Exacto)',
+            'Eje / Programa',
+            'ID Usuario Responsable',
+            'ID Institución Responsable',
+            'Temática',
+            'Línea Base (Año)',
+            'Dato Línea Base',
+            'Unidad de Medida',
+            'Meta',
+            'Fuente',
+            'Liga',
+            'Descripción',
+            'Periodicidad',
+            'Cobertura',
+            'Tendencia',
+            'Fórmula',
+            'ODS (Sep. comas)',
+            'Fecha Actualización',
+        ];
+    }
+
+    private function normalizeImportHeader($value): string
+    {
+        $value = str_replace("\xEF\xBB\xBF", '', trim((string) $value));
+
+        return mb_strtolower((string) preg_replace('/\s+/u', ' ', $value));
+    }
+
+    private function validateImportHeaders(array $headers): ?string
+    {
+        $expectedHeaders = $this->importHeaders();
+
+        if (count($headers) < count($expectedHeaders)) {
+            return 'La plantilla no contiene todas las columnas obligatorias. Descarga la plantilla actualizada.';
+        }
+
+        foreach ($expectedHeaders as $index => $expectedHeader) {
+            $actual = $this->normalizeImportHeader($headers[$index] ?? '');
+            $allowed = [$this->normalizeImportHeader($expectedHeader)];
+
+            if ($index === 12) {
+                $allowed[] = 'meta 2024';
+                $allowed[] = 'meta 2030';
+            }
+
+            if (!in_array($actual, $allowed, true)) {
+                return "La columna " . chr(65 + $index) . " debe ser '{$expectedHeader}'.";
+            }
+        }
+
+        for ($index = count($expectedHeaders); $index < count($headers); $index++) {
+            $expectedYear = 2015 + ($index - count($expectedHeaders));
+            if ($this->normalizeImportHeader($headers[$index] ?? '') !== (string) $expectedYear) {
+                return "La columna de datos anuales en la posición " . ($index + 1) . " debe corresponder al año {$expectedYear}.";
+            }
+        }
+
+        if (count($headers) > 38) {
+            return 'La plantilla contiene columnas adicionales no soportadas.';
+        }
+
+        return null;
+    }
+
+    private function validateImportRowShape(array $row): ?string
+    {
+        foreach ([1 => 'Nombre del indicador', 2 => 'Plan Estatal', 3 => 'Tipo de programa'] as $index => $label) {
+            if ($this->importCell($row, $index) === null) {
+                return "Falta {$label}.";
+            }
+        }
+
+        $tipo = $this->importCell($row, 3) ?? '';
+        if ($this->isEjeImportType($tipo)) {
+            return $this->importCell($row, 5) === null ? 'Falta el nombre del eje.' : null;
+        }
+
+        if ($this->importCell($row, 4) === null) {
+            return 'Falta el nombre del programa derivado.';
+        }
+
+        if ($this->importCell($row, 5) === null) {
+            return 'Falta el campo Eje / Programa.';
+        }
+
+        return null;
+    }
+
+    private function extractImportRows($spreadsheet): array
+    {
+        $allRows = $spreadsheet->getActiveSheet()->toArray();
+        $rows = array_values(array_filter($allRows, function ($row) {
+            return count(array_filter($row, fn ($cell) => trim((string) $cell) !== '')) > 0;
+        }));
+
+        if (!$rows) {
+            throw new \RuntimeException('El archivo está vacío o no contiene filas con datos.');
+        }
+
+        $headers = array_shift($rows);
+        $headerError = $this->validateImportHeaders($headers);
+        if ($headerError) {
+            throw new \RuntimeException($headerError);
+        }
+
+        if (!$rows) {
+            throw new \RuntimeException('El archivo no contiene datos para procesar (solo encabezados).');
+        }
+
+        return [$headers, $rows];
+    }
+
+    private function importCell(array $row, int $index): ?string
+    {
+        if (!array_key_exists($index, $row) || $row[$index] === null) {
+            return null;
+        }
+
+        $value = trim((string) $row[$index]);
+
+        return $value === '' ? null : $value;
+    }
+
+    private function importIntegerCell(array $row, int $index, string $label): ?int
+    {
+        $value = $this->importCell($row, $index);
+        if ($value === null) {
+            return null;
+        }
+
+        if (!preg_match('/^\d+(?:\.0+)?$/', $value)) {
+            throw new \RuntimeException("El {$label} debe ser un ID entero.");
+        }
+
+        return (int) $value;
+    }
+
+    private function findImportPlan(string $name): ?CatPlanEstatalDesarrollo
+    {
+        $normalized = mb_strtolower(trim($name));
+
+        return CatPlanEstatalDesarrollo::all()->first(
+            fn ($plan) => mb_strtolower(trim($plan->nombre)) === $normalized
+        );
+    }
+
+    private function resolveImportAlignment(string $type, string $programName, string $ejeName, CatPlanEstatalDesarrollo $plan): array
+    {
+        $normalizedType = mb_strtolower(trim($type));
+        $isEje = $this->isEjeImportType($normalizedType);
+
+        if ($isEje) {
+            $name = $ejeName ?: $programName;
+            $eje = CatEje::where('plan_id', $plan->id)->get()->first(
+                fn ($item) => mb_strtolower(trim($item->nombre)) === mb_strtolower(trim($name))
+            );
+
+            if (!$eje) {
+                throw new \RuntimeException("El eje '{$name}' no existe en el plan '{$plan->nombre}'.");
+            }
+
+            return [
+                'id' => $eje->id,
+                'type' => CatEje::class,
+                'programaDerivado' => $plan->nombre,
+                'programa' => $eje->nombre,
+            ];
+        }
+
+        $modelClass = null;
+        foreach ([
+            'sectorial' => CatProgramaDerivadoSectorial::class,
+            'especial' => CatProgramaDerivadoEspecial::class,
+            'regional' => CatProgramaDerivadoRegional::class,
+            'institucional' => CatProgramaDerivadoInstitucional::class,
+        ] as $keyword => $class) {
+            if (str_contains($normalizedType, $keyword)) {
+                $modelClass = $class;
+                break;
+            }
+        }
+
+        if (!$modelClass) {
+            throw new \RuntimeException("Tipo de programa '{$type}' no reconocido.");
+        }
+
+        $program = $modelClass::where('plan_estatal', $plan->id)->get()->first(
+            fn ($item) => mb_strtolower(trim($item->nombre)) === mb_strtolower(trim($programName))
+        );
+
+        if (!$program) {
+            throw new \RuntimeException("El programa '{$programName}' no existe en el plan '{$plan->nombre}'.");
+        }
+
+        return [
+            'id' => $program->id,
+            'type' => $modelClass,
+            'programaDerivado' => $program->nombre,
+            'programa' => $ejeName ?: $program->nombre,
+        ];
+    }
+
+    private function isEjeImportType(string $type): bool
+    {
+        $type = mb_strtolower(trim($type));
+
+        return str_contains($type, 'eje') || str_contains($type, 'plan estatal');
+    }
+
+    private function findImportIndicator(?int $id, string $name, int $planId, array $alignment): ?Indicador
+    {
+        if ($id !== null) {
+            $indicator = Indicador::forPlan($planId)->whereKey($id)->first();
+            if (!$indicator) {
+                throw new \RuntimeException("El indicador con ID {$id} no pertenece al plan indicado o no existe.");
+            }
+
+            return $indicator;
+        }
+
+        $query = Indicador::forPlan($planId)->where('nombre', $name);
+        if ($alignment['type'] === CatProgramaDerivadoInstitucional::class) {
+            $query->whereHas('programasInstitucionales', fn ($program) => $program->whereKey($alignment['id']));
+        } else {
+            $query->where('indicadorable_type', $alignment['type'])
+                ->where('indicadorable_id', $alignment['id']);
+        }
+
+        return $query->first();
+    }
+
+    private function authorizeImportRow(User $user, int $planId, ?int $institutionId, ?Indicador $indicator): void
+    {
+        if ($user->isAdministrator()) {
+            return;
+        }
+
+        if ($planId !== $this->activePlan->id()) {
+            throw new \RuntimeException('Solo puedes importar indicadores del plan activo.');
+        }
+
+        if ($institutionId === null) {
+            throw new \RuntimeException('La institución responsable es obligatoria para tu perfil.');
+        }
+
+        if ($indicator && $indicator->id_institucion && $indicator->id_institucion !== $institutionId) {
+            throw new \RuntimeException('No puedes cambiar la institución responsable de un indicador existente.');
+        }
+
+        if ($user->hasRole('Enlace')) {
+            $allowed = $user->instituciones()->whereKey($institutionId)->exists();
+        } elseif ($user->hasRole(['Enlace dependencia', 'Visualizador'])) {
+            $allowed = (int) $user->id_institucion === $institutionId;
+        } else {
+            $allowed = false;
+        }
+
+        if (!$allowed) {
+            throw new \RuntimeException('No tienes permiso para importar indicadores de esa institución.');
+        }
+    }
+
+    private function importMetaYear(CatPlanEstatalDesarrollo $plan): int
+    {
+        return (int) $plan->id === 3 ? 2030 : 2024;
+    }
+
+    private function normalizeImportUrl(?string $value): ?string
+    {
+        return $value === null ? null : str_replace(' ', '%20', trim($value));
+    }
+
+    private function normalizeImportDate(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        try {
+            if (is_numeric($value) && (float) $value > 20000) {
+                return ExcelDate::excelToDateTimeObject((float) $value)->format('Y-m-d');
+            }
+
+            return \Carbon\Carbon::parse($value)->format('Y-m-d');
+        } catch (\Throwable $e) {
+            throw new \RuntimeException("La fecha '{$value}' no es válida.");
+        }
+    }
+
+    private function parseImportOds(?string $value): array
+    {
+        if ($value === null) {
+            return [];
+        }
+
+        $ids = array_values(array_unique(array_filter(array_map('trim', preg_split('/[,;]+/', $value)))));
+        if (array_filter($ids, fn ($id) => !ctype_digit($id))) {
+            throw new \RuntimeException('La columna ODS solo puede contener IDs numéricos separados por comas.');
+        }
+
+        $ids = array_map('intval', $ids);
+        if (count($ids) !== Odses::whereIn('id', $ids)->count()) {
+            throw new \RuntimeException('Uno o más ODS no existen en el catálogo.');
+        }
+
+        return $ids;
+    }
+
+    private function forgetImportFile(string $filePath): void
+    {
+        try {
+            Storage::delete($filePath);
+        } catch (\Throwable $e) {
+            Log::warning("No se pudo eliminar archivo temporal: {$filePath}");
+        }
+
+        session()->forget('importFilePath');
     }
 
     private function applyDerivedProgramFilter($query): void
