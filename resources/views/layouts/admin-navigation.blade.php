@@ -13,7 +13,7 @@
 <aside class="admin-sidebar" id="adminSidebar">
     <div class="sidebar-header">
         <a href="{{ $sidebarInicio }}" aria-label="Inicio del SPED">
-            <img src="{{ asset('img/logo_sped.png') }}" alt="SPED" height="36">
+            <img src="{{ asset('img/logo-sped-new.png') }}" alt="SPED" height="36">
         </a>
         <button class="sidebar-close d-lg-none" type="button" data-sidebar-toggle aria-label="Cerrar menú">
             <i class="fas fa-times" aria-hidden="true"></i>

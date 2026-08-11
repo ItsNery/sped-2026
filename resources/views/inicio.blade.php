@@ -31,7 +31,7 @@
         @if ($heroVideo)
             <video class="inicio-hero__video" autoplay muted loop playsinline preload="metadata"
                 poster="{{ asset('img/puebla_hero_bg.png') }}" aria-hidden="true">
-                <source src="{{ asset($heroVideo) }}" type="video/mp4">
+                <source src="{{ asset($heroVideo) }}" type="video/webm">
             </video>
         @endif
         <div class="inicio-hero__container">
@@ -52,7 +52,7 @@
             </div>
             <div class="inicio-hero__logo-wrapper">
                 <div class="inicio-hero__logo">
-                    <img src="{{ asset('img/logo_sped.png') }}"
+                    <img src="{{ asset('img/logo-sped-new.png') }}"
                         alt="Logo del Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo">
                 </div>
             </div>

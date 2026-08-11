@@ -33,10 +33,6 @@
             <div class="encabezado-lista">
                 <h2>Detalles del indicador</h2>
             </div>
-            {{-- @php
-            dd($indicador);
-            @endphp --}}
-            {{-- <img src="{{ asset('assets-administrador/img/detalle_indicador.png') }}" alt="" class="w-100"> --}}
 
             <div class="d-flex justify-content-end gap-3 pb-2 mx-2">
                 @can('ver-indicador')
