@@ -22,7 +22,7 @@
     <div class="container mx-0 my-0">
         <div class="left">
             <div class="header">
-                <img src="{{ asset('assets-administrador/img/logo-spf-negativo.png') }}" />
+                <img src="{{ asset('img/cadena-sped-blanco.png') }}" />
                 <h2 class="animation a1">Bienvenido</h2>
                 <h4 class="animation a2">Sistema de Información para el <br>Seguimiento a la Planeación y Evaluación
                     <br>del Desarrollo en el Estado de Puebla

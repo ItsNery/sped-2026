@@ -12,7 +12,7 @@
 
 <body class="ficha-pdf__document">
     <main class="ficha-pdf__sheet">
-        <img class="ficha-pdf__logos" src="{{ $pdfAsset('img/Cadena_SPED_.png') }}" alt="Gobierno de Puebla"
+        <img class="ficha-pdf__logos" src="{{ $pdfAsset('img/Cadena_SPED.png') }}" alt="Gobierno de Puebla"
             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
         <div class="ficha-pdf__logos-fallback">
             Gobierno del Estado de Puebla<br>

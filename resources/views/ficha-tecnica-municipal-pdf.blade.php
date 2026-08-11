@@ -210,7 +210,7 @@
     @endphp
 
     <main class="sheet">
-        <img class="logos" src="{{ $pdfAsset('img/Cadena_SPED_.png') }}" alt="Gobierno de Puebla">
+        <img class="logos" src="{{ $pdfAsset('img/Cadena_SPED.png') }}" alt="Gobierno de Puebla">
 
         <header class="hero">
             <div class="kicker">Ficha técnica municipal</div>

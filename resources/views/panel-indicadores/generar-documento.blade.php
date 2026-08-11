@@ -52,7 +52,7 @@
     </div>
     <div class="hoja">
         <div class="header-section text-center mb-4">
-            <img src="{{ asset('assets-administrador/img/logos_sped.png') }}" alt="Logo Gobierno" class="logo-header mb-3">
+            <img src="{{ asset('img/Cadena_SPED.png') }}" alt="Logo Gobierno" class="logo-header mb-3">
             <h5 class="text-uppercase text-dark font-weight-bold m-0" style="color: var(--colorGobierno);">
                 Reporte de Indicadores
             </h5>
@@ -128,7 +128,7 @@
     <!-- <div class="hoja">
         <div class="container">
             <div class="row justify-content-center align-items-center">
-                <img src="{{ asset('assets-administrador/img/logos_gobierno.png') }}" alt="Logo Gobierno"
+                <img src="{{ asset('img/Cadena_SPED.png') }}" alt="Logo Gobierno"
                     class="w-50">
             </div>
         </div>

@@ -52,7 +52,7 @@
             </div>
             <div class="inicio-hero__logo-wrapper">
                 <div class="inicio-hero__logo">
-                    <img src="{{ asset('img/logo-sped-new.png') }}"
+                    <img src="{{ asset('img/isologo-sped-blanco.png') }}"
                         alt="Logo del Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo">
                 </div>
             </div>
