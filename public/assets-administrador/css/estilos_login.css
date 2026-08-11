@@ -113,6 +113,41 @@ body {
     margin-top: 20px;
 }
 
+.password-field {
+    position: relative;
+    margin-top: 20px;
+}
+
+.password-field .form-field {
+    width: 100%;
+    margin-top: 0;
+    padding-right: 48px;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    display: grid;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    place-items: center;
+    transform: translateY(-50%);
+    background: transparent;
+    color: #64656a;
+    cursor: pointer;
+}
+
+.password-toggle:hover,
+.password-toggle:focus-visible {
+    background: #eeeeee;
+    color: #333333;
+    outline: none;
+}
+
 .form-field:focus {
     border-color: #64656a;
 }

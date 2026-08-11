@@ -143,6 +143,34 @@ Actualmente beta contiene regionales en los tres planes:
 - PED 2: `220` indicadores en `22` programas.
 - PED 3: `7` indicadores en `7` programas.
 
+El comando implementado genera primero un snapshot JSON con la estructura y los registros de programas, indicadores, datos anuales, ODS, carrusel y pivotes. Conserva los archivos fisicos de evidencia:
+
+```bash
+php artisan sped:cleanup-regional --plan=3
+```
+
+Si el dry-run es correcto y existe un respaldo adicional de la base:
+
+```bash
+php artisan sped:cleanup-regional --plan=3 --execute
+```
+
+El comando no elimina programas regionales ni archivos de evidencia. El snapshot se guarda en `storage/app/backups/` o en la ruta indicada con `--backup`.
+
+Como respaldo adicional antes de `--execute`, realizar un dump selectivo de las tablas afectadas:
+
+```bash
+mysqldump --single-transaction --no-tablespaces "$DB_DATABASE" \
+  cat_programas_derivados_regionales \
+  indicadors \
+  datos_anuales \
+  datos_anuales_indicadores \
+  indicador_ods \
+  carrusel_indicadors \
+  programa_institucional_indicador \
+  > backup-regionales-ped3-$(date +%Y%m%d-%H%M%S).sql
+```
+
 Por eso falta confirmar si se eliminaran solamente los regionales del PED 3, todos los regionales de todos los planes, o únicamente un subconjunto.
 
 ## PAE
