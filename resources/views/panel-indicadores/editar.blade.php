@@ -9,14 +9,14 @@
     <div class="container bg-white">
         <div class="form-container py-3">
             @if ($indicador->programa_derivado === 'Programa Sectorial')
-            <img src="{{ asset('assets-administrador/img/editar_sectorial.png') }}" alt="" class="w-100">
+                <img src="{{ asset('assets-administrador/img/editar_sectorial.png') }}" alt="" class="w-100">
             @elseif ($indicador->programa_derivado === 'Programa Especial')
-            <img src="{{ asset('assets-administrador/img/editar_especial.png') }}" alt="" class="w-100">
+                <img src="{{ asset('assets-administrador/img/editar_especial.png') }}" alt="" class="w-100">
             @elseif ($indicador->programa_derivado === 'Programa Institucional')
-            <img src="{{ asset('assets-administrador/img/editar_institucional.png') }}" alt=""
-                class="w-100">
+                <img src="{{ asset('assets-administrador/img/editar_institucional.png') }}" alt=""
+                    class="w-100">
             @elseif ($indicador->programa_derivado === 'Programa Regional')
-            <img src="{{ asset('assets-administrador/img/editar_regional.png') }}" alt="" class="w-100">
+                <img src="{{ asset('assets-administrador/img/editar_regional.png') }}" alt="" class="w-100">
             @endif
             <form action="{{ route('panel-indicadores.update', $indicador) }}" method="POST" novalidate
                 enctype="multipart/form-data">
@@ -35,23 +35,23 @@
                             @enderror
                         </div>
                         @if (auth()->user()->isAdministrator())
-                        <div class="col-md-6 mb-2">
-                            <div class="custom-section-title">
-                                Institución responsable: <span class="text-danger">*</span>
+                            <div class="col-md-6 mb-2">
+                                <div class="custom-section-title">
+                                    Institución responsable: <span class="text-danger">*</span>
+                                </div>
+                                <select name="id_institucion" id="id_institucion" class="form-control">
+                                    <option value="" disabled>Seleccione</option>
+                                    @foreach ($instituciones as $institucion)
+                                    <option value="{{ $institucion->id }}"
+                                        {{ $indicador->id_institucion == $institucion->id ? 'selected' : '' }}>
+                                        {{ $institucion->id }} - {{ $institucion->nombre }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                                @error('id_institucion')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
-                            <select name="id_institucion" id="id_institucion" class="form-control">
-                                <option value="" disabled>Seleccione</option>
-                                @foreach ($instituciones as $institucion)
-                                <option value="{{ $institucion->id }}"
-                                    {{ $indicador->id_institucion == $institucion->id ? 'selected' : '' }}>
-                                    {{ $institucion->id }} - {{ $institucion->nombre }}
-                                </option>
-                                @endforeach
-                            </select>
-                            @error('id_institucion')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
                         @endif
                         @if (auth()->user()->isAdministrator())
                         <div class="col-md-6 mb-2">
@@ -321,7 +321,7 @@
                         @enderror
                     </div>
 
-                    <div class="col-md-4 mb-2">
+                    <div class="col-md-3 mb-2">
                         <div class="custom-section-title"><i class="fa-regular fa-chart-bar"></i>
                             Año de Línea Base: <span class="text-danger">*</span>
                         </div>
@@ -332,7 +332,7 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="col-md-4 mb-2">
+                    <div class="col-md-3 mb-2">
                         <div class="custom-section-title"><i class="fa-solid fa-arrow-up-1-9"></i>
                             Dato de la Línea Base: <span class="text-danger">*</span>
                         </div>
