@@ -459,7 +459,7 @@ class IndicadorMunicipalController extends Controller
         $pdf = Browsershot::html($html)
             ->setNodeBinary(config('browsershot.node_binary', 'node'))
             ->setNodeModulePath(base_path('node_modules'))
-            ->setEnvironmentOptions([
+            ->setNodeEnv([
                 'PUPPETEER_CACHE_DIR' => storage_path('app/puppeteer'),
             ])
             ->paperSize(210, 297, 'mm')
