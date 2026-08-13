@@ -117,11 +117,47 @@ function initFicha() {
             renderer: config.pdfMode ? 'svg' : 'canvas'
         });
         var datosTendencia = calcularTendencia(config.categoriasEjeX, config.datosParaGraficaPrincipal);
+        var indiceReferenciaCompartida = config.datosLineaBasePunto.findIndex(function(value, index) {
+            return value !== null && value !== undefined
+                && config.datosMetaPunto[index] !== null
+                && config.datosMetaPunto[index] !== undefined;
+        });
+
+        function prepararReferencia(datos, tipo) {
+            return datos.map(function(value, index) {
+                if (index !== indiceReferenciaCompartida || value === null || value === undefined) {
+                    return value;
+                }
+
+                var esLineaBase = tipo === 'lineaBase';
+                return {
+                    value: value,
+                    symbolOffset: esLineaBase ? [-10, 0] : [10, 0],
+                    label: {
+                        show: true,
+                        position: esLineaBase ? 'left' : 'right',
+                        distance: 8,
+                        formatter: function(params) {
+                            return formatNumber(params.value);
+                        },
+                        color: esLineaBase ? '#00a878' : '#FF0000',
+                        fontSize: config.pdfMode ? 10 : 11,
+                        fontWeight: 'bold',
+                        backgroundColor: 'rgba(255, 255, 255, 0.94)',
+                        borderColor: esLineaBase ? '#00E396' : '#FF0000',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        padding: config.pdfMode ? [2, 3] : [3, 5]
+                    }
+                };
+            });
+        }
+
         var seriesHistorico = [
             {
                 name: config.nombreSerieLineaBase,
                 type: 'line',
-                data: config.datosLineaBasePunto,
+                data: prepararReferencia(config.datosLineaBasePunto, 'lineaBase'),
                 lineStyle: { type: 'dashed', width: 2 },
                 showSymbol: true,
                 symbol: 'circle',
@@ -162,7 +198,7 @@ function initFicha() {
             {
                 name: 'Meta 2030',
                 type: 'line',
-                data: config.datosMetaPunto,
+                data: prepararReferencia(config.datosMetaPunto, 'meta'),
                 lineStyle: { type: 'dashed', width: 2 },
                 showSymbol: true,
                 symbol: 'circle',

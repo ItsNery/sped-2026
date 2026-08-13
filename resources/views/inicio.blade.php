@@ -38,7 +38,7 @@
             <div class="inicio-hero__content">
                 <span class="inicio-hero__tag">Acerca del SPED</span>
                 <h1 class="inicio-hero__title">
-                    Sistema Estatal de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
+                    Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
                 </h1>
                 <p class="inicio-hero__subtitle">
                     Plataforma oficial e integradora que organiza y difunde el seguimiento puntual al avance de los

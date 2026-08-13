@@ -17,7 +17,7 @@
         <div class="ficha-pdf__logos-fallback">
             Gobierno del Estado de Puebla<br>
             Secretaría de Planeación, Finanzas y Administración<br>
-            Sistema Estatal de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo.
+            Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo.
         </div>
         <h2 class="ficha-pdf__subtitle">Ficha técnica del indicador</h2>
         <h1 class="ficha-pdf__title">{{ $indicador->nombre }}</h1>
