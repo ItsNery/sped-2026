@@ -66,6 +66,11 @@ jobs:
 
           rm -f bootstrap/cache/*.php
           composer install --no-dev --optimize-autoloader
+          [ -f /etc/profile ] && . /etc/profile || true
+          [ -f "$HOME/.profile" ] && . "$HOME/.profile" || true
+          [ -f "$HOME/.bash_profile" ] && . "$HOME/.bash_profile" || true
+          [ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc" || true
+          hash -r
           if ! command -v node >/dev/null 2>&1 || ! node -e "process.exit(Number(process.versions.node.split('.')[0]) >= 22 ? 0 : 1)"; then
             NVM_CANDIDATES="${NVM_DIR:-} $HOME/.nvm /home/user_planeacion/.nvm /root/.nvm"
             for candidate in $NVM_CANDIDATES; do
@@ -161,6 +166,11 @@ jobs:
 
           rm -f bootstrap/cache/*.php
           composer install --no-dev --optimize-autoloader
+          [ -f /etc/profile ] && . /etc/profile || true
+          [ -f "$HOME/.profile" ] && . "$HOME/.profile" || true
+          [ -f "$HOME/.bash_profile" ] && . "$HOME/.bash_profile" || true
+          [ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc" || true
+          hash -r
           if ! command -v node >/dev/null 2>&1 || ! node -e "process.exit(Number(process.versions.node.split('.')[0]) >= 22 ? 0 : 1)"; then
             NVM_CANDIDATES="${NVM_DIR:-} $HOME/.nvm /home/user_planeacion/.nvm /root/.nvm"
             for candidate in $NVM_CANDIDATES; do
