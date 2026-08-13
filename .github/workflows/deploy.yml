@@ -66,6 +66,12 @@ jobs:
 
           rm -f bootstrap/cache/*.php
           composer install --no-dev --optimize-autoloader
+          export NVM_DIR="/home/user_planeacion/.nvm"
+          test -s "$NVM_DIR/nvm.sh"
+          . "$NVM_DIR/nvm.sh"
+          nvm use 24.14.0
+          node --version
+          npm --version
           npm ci --omit=dev --legacy-peer-deps --no-audit --no-fund
           node -e "require.resolve('puppeteer')"
 
@@ -142,6 +148,12 @@ jobs:
 
           rm -f bootstrap/cache/*.php
           composer install --no-dev --optimize-autoloader
+          export NVM_DIR="/home/user_planeacion/.nvm"
+          test -s "$NVM_DIR/nvm.sh"
+          . "$NVM_DIR/nvm.sh"
+          nvm use 24.14.0
+          node --version
+          npm --version
           npm ci --omit=dev --legacy-peer-deps --no-audit --no-fund
           node -e "require.resolve('puppeteer')"
 
