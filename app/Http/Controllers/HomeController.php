@@ -331,39 +331,30 @@ class HomeController extends Controller
      */
     private function consultarIndicadoresPed($num)
     {
-        $programas = [
-            1 => 'Humanismo con Bienestar',
-            2 => 'Prosperidad y Estabilidad Económica',
-            3 => 'Estado de Derecho, Seguridad y Justicia',
-            4 => 'Desarrollo Urbano y Crecimiento Sostenible',
-            5 => 'Gobierno Transformador y de Resultados',
-            6 => 'Por Amor a Puebla',
-        ];
+        $eje = CatEje::where('plan_id', $this->activePlan->id())
+            ->where('numero', $num)
+            ->first();
 
-        if (!array_key_exists($num, $programas)) {
+        if (!$eje) {
             return collect();
         }
 
-        $nombreProgramaFiltrar = $programas[$num];
-        $nombreProgramaFijo = 'Plan Estatal de Desarrollo';
-
-        $query = Indicador::with([
+        $indicadores = $eje->indicadores()
+            ->with([
             'datosAnuales' => function ($q_datos) {
                 $q_datos->where('validado', true)
-                    ->select('id', 'id_indicador', 'anio', 'valor_dato', 'validado' /*, 'resultados', 'observaciones', 'evidencia', 'fecha_actualizacion' */);
+                    ->select('id', 'id_indicador', 'anio', 'valor_dato', 'validado');
             },
-            'ods'
+            'ods',
         ])
-            ->where('programa', $nombreProgramaFiltrar)
-            ->where('programa_derivado', $nombreProgramaFijo)
             ->orderBy('id', 'asc');
 
-        $indicadores = $query->get();
+        $indicadores = $indicadores->get();
 
         if ($indicadores->isEmpty()) {
-            Log::info("HomeController@consultarIndicadoresPed: No se encontraron indicadores para programa_derivado='{$nombreProgramaFiltrar}' y programa='{$nombreProgramaFijo}'.");
+            Log::info("HomeController@consultarIndicadoresPed: El eje {$num} del plan {$eje->plan_id} no tiene indicadores relacionados.");
         } else {
-            Log::info("HomeController@consultarIndicadoresPed: Se encontraron {$indicadores->count()} indicadores para programa_derivado='{$nombreProgramaFiltrar}' y programa='{$nombreProgramaFijo}'.");
+            Log::info("HomeController@consultarIndicadoresPed: Se encontraron {$indicadores->count()} indicadores relacionados con el eje {$num} del plan {$eje->plan_id}.");
         }
 
         return $indicadores;
