@@ -179,6 +179,7 @@
     --color-eje4: #1c645c;
     --color-eje5: #ac243c;
     --color-eje6: #e4b48c;
+    --color-7sei: #E9BC90;
     --color-excedido: #3E8CEE;
     --color-aceptable: #43B383;
     --color-moderado: #F5E35B;
@@ -5394,6 +5395,61 @@ nav {
     }
 }
 
+/* Realce de lectura para los indicadores públicos. */
+.eje-dashboard .card-indicador,
+.card-indicador {
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+}
+
+.eje-dashboard .card-indicador::before,
+.card-indicador::before {
+    position: absolute;
+    right: -28px;
+    bottom: -28px;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--semaforo-color, var(--color1-2024));
+    content: '';
+    opacity: 0.35;
+    transform: scale(0.72);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.eje-dashboard .card-indicador:hover,
+.eje-dashboard .card-indicador:focus-within,
+.card-indicador:hover,
+.card-indicador:focus-within {
+    z-index: 1;
+    background-color: #fff;
+    box-shadow: 0 14px 30px rgba(12, 49, 45, 0.16) !important;
+    transform: translateY(-5px);
+}
+
+.eje-dashboard .card-indicador:hover::before,
+.eje-dashboard .card-indicador:focus-within::before,
+.card-indicador:hover::before,
+.card-indicador:focus-within::before {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.card-indicador .indicador-cifra {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    line-height: 1.1;
+}
+
+.card-indicador .indicador-cifra--larga {
+    font-size: clamp(1.15rem, 2.5vw, 1.65rem) !important;
+}
+
+.card-indicador .indicador-cifra--muy-larga {
+    font-size: clamp(0.9rem, 2vw, 1.3rem) !important;
+}
+
 .card-indicador_info {
     border-color: #eee !important;
 }
@@ -5472,7 +5528,7 @@ nav {
 
 .nav-unificada__tabs {
     align-items: stretch;
-    overflow-x: scroll;
+    overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
@@ -5480,8 +5536,8 @@ nav {
 }
 
 .nav-unificada .nav-item-modern {
-    flex: 1 0 auto;
-    min-width: 120px;
+    flex: 1 1 0;
+    min-width: 0;
     background-color: rgba(36, 157, 129, 0.14);
     border: 1px solid #dee2e6;
     border-top: 0;
@@ -5490,6 +5546,13 @@ nav {
     white-space: nowrap;
     font-size: 1.25rem;
     font-family: 'Gilroy-Bold', sans-serif;
+}
+
+@media (max-width: 767.98px) {
+    .nav-unificada .nav-item-modern {
+        flex: 0 0 auto;
+        min-width: 120px;
+    }
 }
 
 .nav-unificada .nav-item-modern:hover:not(.active) {
@@ -5888,7 +5951,7 @@ nav {
 
 .inicio-hero__logo {
     width: 100%;
-    max-width: 280px;
+    max-width: 300px;
     display: flex;
     justify-content: center;
 }
@@ -5922,7 +5985,7 @@ nav {
     font-size: 3rem;
     margin-bottom: 1.25rem;
     line-height: 1.2;
-    color: var(--color-eje2);
+    color: var(--color-7sei);
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
@@ -5996,17 +6059,9 @@ nav {
 }
 
 .inicio-dashboard__mide-logo {
-    width: 140px;
+    width: min(100%, 360px);
     height: auto;
     margin-bottom: 1.25rem;
-}
-
-.inicio-dashboard__mide-title {
-    font-family: "Gilroy-Bold", sans-serif;
-    font-size: 1.45rem;
-    color: var(--color1-2024);
-    margin-bottom: 1.5rem;
-    line-height: 1.35;
 }
 
 .inicio-dashboard__mide-ejes-wrapper {
@@ -6315,7 +6370,11 @@ nav {
    ============================================================ */
 .inicio-cumplimiento {
     /* background: var(--bg-content); */
-    background-image: url('../img/fondo-pajaro.png');
+    /* background-image: url('../img/fondo-pajaro.png'); */
+     background-image:
+        linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.5)),
+        url('../img/fondo-pajaro.png');
+
     padding: 4.5rem 0;
 }
 
@@ -6616,7 +6675,7 @@ nav {
     justify-content: center;
     color: #fff;
     font-family: "Gilroy-Bold", sans-serif;
-    font-size: 1rem;
+    font-size: 1.4rem;
     flex-shrink: 0;
 }
 
@@ -6746,7 +6805,7 @@ nav {
 }
 
 .inicio-esquema__container {
-    max-width: 1200px;
+    max-width: 1440px;
     margin: 0 auto;
     padding: 0 1.5rem;
 }
@@ -6766,18 +6825,21 @@ nav {
 }
 
 .inicio-esquema__block img {
-    max-width: 100%;
+    display: block;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
     height: auto;
-    /* margin-bottom: 1.5rem; */
-    padding: 1rem;
+    padding: 0.5rem;
     border-radius: 8px;
 }
 
 .inicio-esquema__block p {
     color: var(--color-5);
-    font-size: 0.95rem;
-    line-height: 1.7;
-    margin: 0 auto;
+    max-width: 1240px;
+    margin: 1rem auto 0;
+    font-size: clamp(0.95rem, 0.78rem + 0.35vw, 1.125rem);
+    line-height: 1.65;
     text-align: justify;
     font-family: Corra-Montserra-Regular, 'sans-serif';
 }
@@ -7475,7 +7537,8 @@ nav {
     min-height: 100vh;
     padding-top: 0.1px;
     background-color: #f7f4f0;
-    background-image: url('../img/fondo-pajaro.png');
+    /* background-image: url('../img/fondo-pajaro.png'); */
+    background-image: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.5)), url('../img/fondo-pajaro.png');
     background-position: center top;
     background-repeat: no-repeat;
     /* background-size: cover; */
@@ -7875,7 +7938,11 @@ nav {
     display: flex;
     align-items: center;
     gap: 0.65rem;
-    color: var(--ficha-ink) !important;
+    margin: -1rem -1rem 0.9rem;
+    padding: 0.75rem 1rem;
+    border-radius: 10px 10px 0 0;
+    background: linear-gradient(135deg, rgba(12, 49, 45, 0.96), rgba(12, 49, 45, 0.92));
+    color: #fff !important;
     font-family: 'Gilroy-Bold', sans-serif;
     font-size: 1rem;
     letter-spacing: 0.7px;
@@ -7888,8 +7955,8 @@ nav {
     align-items: center;
     justify-content: center;
     border-radius: 9px;
-    background: rgba(157, 36, 73, 0.12);
-    color: var(--ficha-panel-accent);
+    background: rgba(255, 255, 255, 0.14);
+    color: #e8c99f;
     font-size: 0.78rem;
 }
 
@@ -7980,8 +8047,24 @@ nav {
 }
 
 .ficha-panel--history #grafica-historica {
-    min-height: 350px;
-    padding: 0.35rem;
+    min-height: 430px;
+    padding: 0.35rem 0;
+}
+
+.ficha-history-result__text {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: pre-line;
+}
+
+.ficha-history-result {
+    align-items: flex-start;
+    width: 100%;
+}
+
+.ficha-history-result__content {
+    min-width: 0;
+    flex: 1;
 }
 
 .ficha-actions {
@@ -8517,8 +8600,9 @@ nav {
 
     #imprimir .ficha-panel .ficha-section-title {
         gap: 0.35rem;
+        margin: -0.45rem -0.55rem 0.35rem !important;
         margin-bottom: 0.35rem !important;
-        padding-bottom: 0.2rem !important;
+        padding: 0.3rem 0.55rem !important;
         font-size: 0.7rem !important;
     }
 
@@ -8602,7 +8686,7 @@ nav {
 
     #imprimir .ficha-panel--history #grafica-historica {
         min-height: 0 !important;
-        height: 185px !important;
+        height: 260px !important;
     }
 
     #imprimir .ficha-panel--history .table-historicos th,
@@ -8835,46 +8919,47 @@ nav {
 }
 
 .ficha-pdf__history {
-    display: grid;
-    grid-template-columns: minmax(0, 30%) minmax(0, 1fr);
-    gap: 3mm;
-    align-items: start;
-}
-
-.ficha-pdf__table {
-    border-collapse: collapse;
-    font-size: 6.5pt;
-    height: max-content;
-    table-layout: fixed;
-    width: 100%;
-}
-
-.ficha-pdf__table th:first-child,
-.ficha-pdf__table td:first-child {
-    width: 24%;
-    white-space: nowrap;
-}
-
-.ficha-pdf__table th:last-child,
-.ficha-pdf__table td:last-child {
-    width: 76%;
-}
-
-.ficha-pdf__table th {
-    background: #0c312d;
-    color: #fff;
-    padding: 1mm;
-    text-align: left;
-}
-
-.ficha-pdf__table td {
-    border-bottom: 1px solid #eee8e4;
-    padding: 1mm;
+    display: block;
 }
 
 .ficha-pdf__chart {
     height: 95mm;
     min-width: 0;
+}
+
+.ficha-pdf__result {
+    display: flex;
+    align-items: flex-start;
+    gap: 2.5mm;
+    margin-top: 3mm;
+    padding: 2.5mm;
+    border-radius: 2mm;
+    background: #faf8f6;
+}
+
+.ficha-pdf__result-icon {
+    display: flex;
+    width: 7mm;
+    height: 7mm;
+    flex: 0 0 7mm;
+    align-items: center;
+    justify-content: center;
+    border-radius: 2mm;
+    background: #f1e5e5;
+    color: #9d2449;
+    font-size: 8pt;
+}
+
+.ficha-pdf__result-year {
+    color: #706b72;
+    font-family: 'Gilroy-Regular', Arial, sans-serif;
+    font-size: 7pt;
+}
+
+.ficha-pdf__result-text {
+    margin-top: 1mm;
+    line-height: 1.45;
+    white-space: pre-line;
 }
 
 @media screen {

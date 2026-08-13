@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\CatEje;
 use App\Models\CatProgramaDerivadoEspecial;
 use App\Models\CatProgramaDerivadoInstitucional;
-use App\Models\CatProgramaDerivadoRegional;
 use App\Models\CatProgramaDerivadoSectorial;
 use App\Models\Indicador;
 use App\Services\ActivePlanResolver;
@@ -118,8 +117,7 @@ class DashboardGeneralController extends Controller
         $tipos = [
             ['class' => CatProgramaDerivadoSectorial::class, 'nombre' => 'Sectoriales', 'slug' => 'sectoriales', 'order' => 1],
             ['class' => CatProgramaDerivadoEspecial::class, 'nombre' => 'Especiales', 'slug' => 'especiales', 'order' => 2],
-            ['class' => CatProgramaDerivadoRegional::class, 'nombre' => 'Regionales', 'slug' => 'regionales', 'order' => 3],
-            ['class' => CatProgramaDerivadoInstitucional::class, 'nombre' => 'Institucionales', 'slug' => 'institucionales', 'order' => 4],
+            ['class' => CatProgramaDerivadoInstitucional::class, 'nombre' => 'Institucionales', 'slug' => 'institucionales', 'order' => 3],
         ];
 
         $resultados = [];

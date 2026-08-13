@@ -145,9 +145,15 @@
             break;
             }
 
-            $avanceVal = $indicador->avance_validado ?: 0;
-            $chartVal = $avanceVal > 100 ? 100 : $avanceVal;
-            @endphp
+             $avanceVal = $indicador->avance_validado ?: 0;
+             $chartVal = $avanceVal > 100 ? 100 : $avanceVal;
+             $resultadoTexto = isset($indicador->dato_reciente_validado)
+                 ? number_format($indicador->dato_reciente_validado, 2, '.', ',')
+                 : 'N/D';
+             $resultadoClase = strlen($resultadoTexto) > 16
+                 ? 'indicador-cifra--muy-larga'
+                 : (strlen($resultadoTexto) > 11 ? 'indicador-cifra--larga' : '');
+             @endphp
 
             {{-- 2. TARJETA COMPACTA DEL INDICADOR --}}
             <div class="card shadow-sm mb-4 border-0 rounded-4 card-indicador"
@@ -187,13 +193,13 @@
                                 </div>
                                 <div class="col-6">
                                     <div class="small text-muted mb-1">Línea Base {{ $indicador->linea_base }}</div>
-                                    <div class="fw-semibold text-dark">
+                                     <div class="fw-semibold text-dark indicador-cifra {{ strlen((string) $indicador->dato_linea_base) > 11 ? 'indicador-cifra--larga' : '' }}">
                                         {{ isset($indicador->dato_linea_base) ? number_format($indicador->dato_linea_base, 2, '.', ',') : 'N/D' }}
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="small text-muted mb-1">Meta {{ $indicador->meta_anio }}</div>
-                                    <div class="fw-semibold text-dark">
+                                     <div class="fw-semibold text-dark indicador-cifra {{ strlen((string) $indicador->meta) > 11 ? 'indicador-cifra--larga' : '' }}">
                                         {{ isset($indicador->meta) ? number_format($indicador->meta, 2, '.', ',') : 'N/D' }}
                                     </div>
                                 </div>
@@ -203,12 +209,8 @@
                             <div class="text-uppercase small fw-semibold text-muted mb-1">
                                 Resultado {{ $indicador->anio_reciente_validado ?? '' }}
                             </div>
-                            <div class="fs-2 fw-bold" style="color: {{ $colorSemaforo }};">
-                                @isset($indicador->dato_reciente_validado)
-                                {{ number_format($indicador->dato_reciente_validado, 2, '.', ',') }}
-                                @else
-                                N/D
-                                @endisset
+                             <div class="fs-2 fw-bold indicador-cifra {{ $resultadoClase }}" style="color: {{ $colorSemaforo }};">
+                                 {{ $resultadoTexto }}
                             </div>
                             <span class="badge rounded-pill {{ $bgBadge }} px-3 py-1 mt-1 fw-normal shadow-sm" style="cursor: help;"
                                 data-bs-toggle="popover"
@@ -236,7 +238,7 @@
                                 data-bs-placement="top"
                                 title="Estado: {{ $semText }}"
                                 data-bs-content="{{ $explicacionDetallada }}"></div>
-                            <div class="fw-bold fs-5 text-dark mt-35px">
+                             <div class="fw-bold fs-5 text-dark mt-35px indicador-cifra {{ strlen(number_format($indicador->avance_validado, 2)) > 11 ? 'indicador-cifra--larga' : '' }}">
                                 {{ number_format($indicador->avance_validado, 2) }}%
                             </div>
                             <div class="small text-muted mt-1 fw-semibold">Avance Meta</div>

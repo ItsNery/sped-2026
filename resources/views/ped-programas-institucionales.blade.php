@@ -10,7 +10,7 @@
     @include('partials.programas-derivados-listado', [
         'programas' => $programas,
         'grupos' => $grupos,
-        'tipoNombre' => 'Programas derivados institucionales',
+        'tipoNombre' => 'Programas institucionales',
         'tipoSlug' => 'institucionales',
         'modeloActivo' => 'App\\Models\\CatProgramaDerivadoInstitucional',
         'colorTema' => '#B72D33',

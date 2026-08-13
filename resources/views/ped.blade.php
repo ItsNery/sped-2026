@@ -72,6 +72,87 @@
                 </div>
             </section>
 
+            <section class="ped-dashboard__methodology" id="metodologia" aria-labelledby="ped-methodology-title">
+                <div class="ped-dashboard__section-heading ped-dashboard__section-heading--compact">
+                    <div>
+                        <h2 id="ped-methodology-title" class="ped-dashboard__section-title">Cómo leer este seguimiento</h2>
+                        <p class="ped-dashboard__section-subtitle">Criterios para interpretar correctamente las cifras del tablero.</p>
+                    </div>
+                    <span class="ped-dashboard__methodology-tag"><i class="fas fa-info-circle me-1"></i>Metodología</span>
+                </div>
+
+                <div class="ped-dashboard__methodology-grid">
+                    <article class="ped-dashboard__methodology-item">
+                        <i class="fas fa-chart-line"></i>
+                        <div>
+                            <h3>Avance promedio</h3>
+                            <p>Es el promedio simple del cumplimiento de los indicadores que tienen datos validados y condiciones suficientes para compararse contra su meta.</p>
+                        </div>
+                    </article>
+                    <article class="ped-dashboard__methodology-item">
+                        <i class="fas fa-filter"></i>
+                        <div>
+                            <h3>Indicadores evaluables</h3>
+                            <p>Los indicadores sin datos validados, sin meta o con información insuficiente se reportan por separado y no alteran el promedio.</p>
+                        </div>
+                    </article>
+                    <article class="ped-dashboard__methodology-item">
+                        <div>
+                            <h3>Semáforo de cumplimiento</h3>
+                            <div class="ped-dashboard__semaforo-table-wrapper">
+                                <table class="ped-dashboard__semaforo-table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Rango</th>
+                                            <th scope="col">Resultado</th>
+                                            <th scope="col">Interpretación</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>X &ge; 110%</td>
+                                            <td><span class="ped-dashboard__semaforo-result ped-dashboard__semaforo-result--excedido">Excedido</span></td>
+                                            <td>El valor logrado del indicador supera a la meta, lo que puede interpretarse como una falla en el proceso de planeación o influencia de factores externos.</td>
+                                        </tr>
+                                        <tr>
+                                            <td>91% &le; X &lt; 110%</td>
+                                            <td><span class="ped-dashboard__semaforo-result ped-dashboard__semaforo-result--aceptable">Aceptable</span></td>
+                                            <td>El valor logrado del indicador se encuentra entre -9% y +10% por debajo o por encima de la meta; es decir, da cumplimiento a la meta del PED.</td>
+                                        </tr>
+                                        <tr>
+                                            <td>71% &le; X &lt; 91%</td>
+                                            <td><span class="ped-dashboard__semaforo-result ped-dashboard__semaforo-result--moderado">Moderado</span></td>
+                                            <td>El valor logrado del indicador es menor que la meta; representa un avance significativo, pero deficiente para alcanzar la meta.</td>
+                                        </tr>
+                                        <tr>
+                                            <td>X &lt; 71%</td>
+                                            <td><span class="ped-dashboard__semaforo-result ped-dashboard__semaforo-result--insuficiente">Insuficiente</span></td>
+                                            <td>El valor alcanzado del indicador está muy por debajo de la meta y representa un incumplimiento, por lo que se sugiere revisar y analizar las estrategias propuestas para alcanzar el objetivo.</td>
+                                        </tr>
+                                        <tr>
+                                            <td>NE</td>
+                                            <td><span class="ped-dashboard__semaforo-result ped-dashboard__semaforo-result--no-evaluable">No Evaluable</span></td>
+                                            <td>No es posible determinar el nivel de avance del indicador en el periodo de seguimiento debido a que no se cuenta con información actualizada, comparable y validada respecto de la meta.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="ped-dashboard__semaforo-note">
+                                <strong>Nota:</strong> Los resultados superiores a 110% no deben interpretarse automáticamente como un desempeño favorable, dado que pueden reflejar una meta subestimada, una modificación en la programación, una variación extraordinaria o un cambio en el método de cálculo; por ello, deben contar con una justificación técnica.
+                            </p>
+                        </div>
+                    </article>
+                </div>
+
+                <p class="ped-dashboard__methodology-note">
+                    La vista pública utiliza información validada. Los porcentajes reflejan el último dato disponible de cada indicador y pueden corresponder a distintos años de referencia.
+                </p>
+                <a href="{{ asset('docs/normatividad/nota-metodologica-semaforizacion.pdf') }}"
+                    class="ped-dashboard__methodology-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-pdf me-1"></i>Consultar la nota metodológica completa
+                </a>
+            </section>
+
             <div class="ped-dashboard__tabs" role="tablist" aria-label="Contenido del Plan Estatal de Desarrollo">
                 <button class="ped-dashboard__tab active" id="ped-ejes-tab" data-bs-toggle="pill"
                     data-bs-target="#ped-ejes" type="button" role="tab" aria-controls="ped-ejes" aria-selected="true">
@@ -119,7 +200,7 @@
                     </div>
                     @php
                         $programasAgrupados = $programasData->groupBy('tipo');
-                        $ordenDeseado = ['Sectoriales', 'Especiales', 'Regionales', 'Institucionales'];
+                        $ordenDeseado = ['Sectoriales', 'Especiales', 'Institucionales'];
                         $programasOrdenados = $programasAgrupados->sortBy(function ($programas, $tipo) use ($ordenDeseado) {
                             $posicion = array_search($tipo, $ordenDeseado);
                             return $posicion !== false ? $posicion : 999;

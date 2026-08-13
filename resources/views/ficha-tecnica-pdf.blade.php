@@ -24,7 +24,7 @@
 
         <section class="ficha-pdf__grid">
             <article class="ficha-pdf__panel">
-                <h2 class="ficha-pdf__heading">Planeación</h2>
+                <h2 class="ficha-pdf__heading">Alineación a la planeación</h2>
                 <div class="ficha-pdf__item">
                     <div class="ficha-pdf__label">Institución responsable</div>
                     <div class="ficha-pdf__value">{{ $indicador->institucion->nombre ?? 'Sin institución responsable' }}
@@ -52,7 +52,7 @@
                 @endif
             </article>
             <article class="ficha-pdf__panel">
-                <h2 class="ficha-pdf__heading">Detalles técnicos</h2>
+                <h2 class="ficha-pdf__heading">Detalle técnico del indicador</h2>
                 <div class="ficha-pdf__item">
                     <div class="ficha-pdf__label">Descripción</div>
                     <div class="ficha-pdf__value">{{ $indicador->descripcion }}</div>
@@ -68,7 +68,7 @@
             </article>
 
             <article class="ficha-pdf__panel ficha-pdf__panel--full">
-                <h2 class="ficha-pdf__heading">Gestión de Gobierno</h2>
+                <h2 class="ficha-pdf__heading">Seguimiento al indicador</h2>
                 <div class="ficha-pdf__metrics">
                     <div class="ficha-pdf__metric">
                         <div class="ficha-pdf__label">Línea base {{ $indicador->linea_base }}</div>
@@ -108,7 +108,7 @@
             </article>
 
             <article class="ficha-pdf__panel ficha-pdf__panel--full">
-                <h2 class="ficha-pdf__heading">Calidad de la información</h2>
+                <h2 class="ficha-pdf__heading">Características del indicador</h2>
                 <div class="ficha-pdf__grid">
                     <div class="ficha-pdf__item">
                         <div class="ficha-pdf__label">Fuente</div>
@@ -122,38 +122,30 @@
             </article>
 
             <article class="ficha-pdf__panel ficha-pdf__panel--full">
-                <h2 class="ficha-pdf__heading">Evolución histórica</h2>
+                <h2 class="ficha-pdf__heading">Comportamiento histórico del indicador</h2>
+                @php
+                    $ultimoDatoConResultadosPdf = $indicador->datos_anuales_validados
+                        ->filter(fn ($dato) => trim((string) $dato->valor_dato) !== '')
+                        ->sortByDesc('anio')
+                        ->first();
+                    $resultadosUltimoAnioPdf = trim((string) ($ultimoDatoConResultadosPdf?->resultados ?? ''));
+                @endphp
                 <div class="ficha-pdf__history">
-                    <table class="ficha-pdf__table">
-                        <thead>
-                            <tr>
-                                <th>Año</th>
-                                <th>Valor</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($indicador->datos_anuales_validados
-                                ->filter(fn($dato) => $dato->valor_dato !== null && trim((string) $dato->valor_dato) !== '')
-                                ->sortBy('anio') as $dato)
-                                @php
-                                    $valorHistorico = filter_var(
-                                        $dato->valor_dato,
-                                        FILTER_SANITIZE_NUMBER_FLOAT,
-                                        FILTER_FLAG_ALLOW_FRACTION | FILTER_FLAG_ALLOW_THOUSAND,
-                                    );
-                                @endphp
-                                <tr>
-                                    <td>{{ $dato->anio }}</td>
-                                    <td>{{ is_numeric($valorHistorico) ? number_format((float) str_replace(',', '', $valorHistorico), 2, '.', ',') : $dato->valor_dato }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="2">No hay datos anuales validados con valor registrado.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
                     <div id="grafica-historica" class="ficha-pdf__chart"></div>
+                    <div class="ficha-pdf__result">
+                        <div class="ficha-pdf__result-icon"><i class="fas fa-file-lines"></i></div>
+                        <div>
+                            <div class="ficha-pdf__label">
+                                Últimos resultados
+                                @if ($ultimoDatoConResultadosPdf)
+                                    <span class="ficha-pdf__result-year">({{ $ultimoDatoConResultadosPdf->anio }})</span>
+                                @endif
+                            </div>
+                            <div class="ficha-pdf__value ficha-pdf__result-text">
+                                {{ $resultadosUltimoAnioPdf !== '' ? $resultadosUltimoAnioPdf : 'Sin resultados registrados para el último año.' }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </article>
         </section>

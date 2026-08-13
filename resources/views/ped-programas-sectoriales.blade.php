@@ -9,7 +9,7 @@
 @section('content')
     @include('partials.programas-derivados-listado', [
         'programas' => $sectoriales,
-        'tipoNombre' => 'Programas derivados sectoriales',
+        'tipoNombre' => 'Programas sectoriales',
         'tipoSlug' => 'sectoriales',
         'modeloActivo' => 'App\\Models\\CatProgramaDerivadoSectorial',
         'colorTema' => '#BF9A24',

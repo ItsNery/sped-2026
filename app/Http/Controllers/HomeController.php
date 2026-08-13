@@ -484,7 +484,9 @@ class HomeController extends Controller
      */
     public function mostrarListadoSectoriales()
     {
-        $sectoriales = CatProgramaDerivadoSectorial::has('indicadores')->get();
+        $sectoriales = CatProgramaDerivadoSectorial::where('plan_estatal', $this->activePlan->id())
+            ->has('indicadores')
+            ->get();
         return view('ped-programas-sectoriales', compact('sectoriales'));
     }
 
@@ -496,7 +498,9 @@ class HomeController extends Controller
      */
     public function mostrarSectorial($slug)
     {
-        $programa = CatProgramaDerivadoSectorial::all()->first(function ($item) use ($slug) {
+        $programa = CatProgramaDerivadoSectorial::where('plan_estatal', $this->activePlan->id())
+            ->get()
+            ->first(function ($item) use ($slug) {
             return Str::slug($item->nombre) === $slug;
         });
 
@@ -524,7 +528,9 @@ class HomeController extends Controller
      */
     public function mostrarEspecial($slug)
     {
-        $programa = CatProgramaDerivadoEspecial::all()->first(function ($item) use ($slug) {
+        $programa = CatProgramaDerivadoEspecial::where('plan_estatal', $this->activePlan->id())
+            ->get()
+            ->first(function ($item) use ($slug) {
             return Str::slug($item->nombre) === $slug;
         });
 
@@ -551,7 +557,9 @@ class HomeController extends Controller
      */
     public function mostrarListadoEspeciales()
     {
-        $especiales = CatProgramaDerivadoEspecial::has('indicadores')->get();
+        $especiales = CatProgramaDerivadoEspecial::where('plan_estatal', $this->activePlan->id())
+            ->has('indicadores')
+            ->get();
         return view('ped-programas-especiales', compact('especiales'));
     }
 
@@ -562,11 +570,21 @@ class HomeController extends Controller
      */
     public function mostrarListadoInstitucionales()
     {
-        $programas = CatProgramaDerivadoInstitucional::all();
+        $planId = $this->activePlan->id();
+
+        $programas = CatProgramaDerivadoInstitucional::where('plan_estatal', $planId)
+            ->where(function ($query) {
+                $query->whereNull('grupo')
+                    ->orWhere('grupo', '!=', 'Historicos');
+            })
+            ->get();
         $grupos = CatProgramaDerivadoInstitucional::select('grupo')
+            ->where('plan_estatal', $planId)
             ->whereNotNull('grupo')
             ->where('grupo', '!=', '')
+            ->where('grupo', '!=', 'Historicos')
             ->distinct()
+            ->orderBy('grupo')
             ->pluck('grupo');
 
         return view('ped-programas-institucionales', compact('programas', 'grupos'));
@@ -580,7 +598,9 @@ class HomeController extends Controller
      */
     public function mostrarInstitucional($slug)
     {
-        $programa = CatProgramaDerivadoInstitucional::all()->first(function ($item) use ($slug) {
+        $programa = CatProgramaDerivadoInstitucional::where('plan_estatal', $this->activePlan->id())
+            ->get()
+            ->first(function ($item) use ($slug) {
             return Str::slug($item->nombre) === $slug;
         });
 
@@ -648,11 +668,12 @@ class HomeController extends Controller
 
         $programasData = $this->getProgramasAvanceInicio($planId, $soloValidados);
 
-        $gruposInstitucionales = CatProgramaDerivadoInstitucional::select('grupo')
-            ->whereNotNull('grupo')
-            ->where('grupo', '!=', '')
-            ->distinct()
-            ->pluck('grupo');
+        $gruposInstitucionales = $programasData
+            ->where('tipo', 'Institucionales')
+            ->pluck('grupo')
+            ->filter()
+            ->unique()
+            ->values();
 
         $heroVideo = config('sped.hero_video');
 
@@ -679,8 +700,7 @@ class HomeController extends Controller
         $tipos = [
             ['class' => CatProgramaDerivadoSectorial::class, 'nombre' => 'Sectoriales', 'slug' => 'sectoriales', 'order' => 1],
             ['class' => CatProgramaDerivadoEspecial::class, 'nombre' => 'Especiales', 'slug' => 'especiales', 'order' => 2],
-            ['class' => CatProgramaDerivadoRegional::class, 'nombre' => 'Regionales', 'slug' => 'regionales', 'order' => 3],
-            ['class' => CatProgramaDerivadoInstitucional::class, 'nombre' => 'Institucionales', 'slug' => 'institucionales', 'order' => 4],
+            ['class' => CatProgramaDerivadoInstitucional::class, 'nombre' => 'Institucionales', 'slug' => 'institucionales', 'order' => 3],
         ];
 
         $resultados = [];
@@ -689,6 +709,11 @@ class HomeController extends Controller
             foreach ($programas as $prog) {
                 $indicadores = $prog->indicadores;
                 $metricas = $this->pedMetrics->summarizeCached($indicadores, $soloValidados);
+
+                if ($metricas['total_registrados'] === 0) {
+                    continue;
+                }
+
                 $resultados[] = [
                     'id' => $prog->id,
                     'nombre' => $prog->nombre,
@@ -697,6 +722,7 @@ class HomeController extends Controller
                     'tipo_order' => $tipo['order'],
                     'avance' => $metricas['avance_promedio'],
                     'color' => $prog->color,
+                    'icono' => $prog->icono,
                     'semaforo_color' => $this->getSemaforoColorInicio($metricas['avance_promedio']),
                     'total_indicadores' => $metricas['total_registrados'],
                     'indicadores_evaluables' => $metricas['total_evaluables'],
@@ -845,7 +871,8 @@ class HomeController extends Controller
     public function mostrarListadoRegionales()
     {
         // $regionales = CatProgramaDerivadoRegional::has('indicadores')->get();
-        $regionales = CatProgramaDerivadoRegional::where('plan_estatal', 3)->get();
+        $regionales = CatProgramaDerivadoRegional::where('plan_estatal', $this->activePlan->id())
+            ->get();
         return view('ped-programas-regionales', compact('regionales'));
     }
 
@@ -857,7 +884,9 @@ class HomeController extends Controller
      */
     public function mostrarRegional($slug)
     {
-        $programa = CatProgramaDerivadoRegional::all()->first(function ($item) use ($slug) {
+        $programa = CatProgramaDerivadoRegional::where('plan_estatal', $this->activePlan->id())
+            ->get()
+            ->first(function ($item) use ($slug) {
             return Str::slug($item->nombre) === $slug;
         });
 

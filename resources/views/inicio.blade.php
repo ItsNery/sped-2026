@@ -9,7 +9,7 @@
     del Estado de Puebla')
 @section('og-description',
     'Dashboard de seguimiento al Plan Estatal de Desarrollo 2024-2030 del Estado de Puebla.
-    Consulta el avance de indicadores estratégicos, sectoriales, especiales, institucionales y regionales.')
+     Consulta el avance de indicadores estratégicos, sectoriales, especiales e institucionales.')
 @section('og:url', url()->current())
 @section('twitter-title',
     'Inicio - Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
@@ -43,7 +43,7 @@
                 <p class="inicio-hero__subtitle">
                     Plataforma oficial e integradora que organiza y difunde el seguimiento puntual al avance de los
                     Indicadores
-                    Estratégicos, Sectoriales, Especiales, Institucionales y Regionales del Estado de Puebla, fortaleciendo
+                     Estratégicos, Sectoriales, Especiales e Institucionales del Estado de Puebla, fortaleciendo
                     la planeación democrática y la toma de decisiones públicas.
                 </p>
                 <a href="#vision-estrategica" target="_self" rel="noopener noreferrer" class="inicio-hero__cta">
@@ -67,17 +67,16 @@
             <div class="row align-items-center g-5">
                 <div class="col-lg-5 col-md-12 text-center text-lg-start border-end-lg">
                     <div class="inicio-dashboard__brand-block">
-                        <img src="{{ asset('img/imagotipo-logo-ped.png') }}" alt="Plan Estatal de Desarrollo 2024-2030"
+                        <img src="{{ asset('img/logo-ped.webp') }}" alt="Plan Estatal de Desarrollo 2024-2030"
                             class="inicio-dashboard__mide-logo">
-                        <h2 class="inicio-dashboard__mide-title">Plan Estatal de Desarrollo 2024–2030</h2>
 
                         <div class="inicio-dashboard__mide-ejes-wrapper">
                             <span class="inicio-dashboard__mide-ejes-label">Ejes:</span>
                             <div class="inicio-dashboard__mide-ejes">
                                 @foreach ($ejesData as $eje)
-                                    <a href="#eje-{{ $eje['numero'] }}" class="inicio-eje-pill"
+                                    <a href="{{ url('/ped/eje-' . $eje['numero']) }}" class="inicio-eje-pill"
                                         style="background-color: var(--color-eje{{ $eje['numero'] }});"
-                                        title="Eje {{ $eje['numero'] }} — {{ $eje['nombre'] }}">
+                                        title="Eje {{ $eje['numero'] }} — {{ $eje['nombre'] }}" target="_self">
                                         <img src="{{ asset('img/iconos/eje-' . $eje['numero'] . '.png') }}"
                                             alt="Icono del Eje {{ $eje['numero'] }}">
                                     </a>
@@ -236,7 +235,7 @@
             <div class="inicio-cumplimiento__card">
 
                 <div class="inicio-cumplimiento__header">
-                    <h3>Cumplimiento por Eje</h3>
+                    <h3>Cumplimiento por Eje del PED 2024-2030</h3>
                     <span class="inicio-cumplimiento__header-sub">Distribución de indicadores por rango de cumplimiento</span>
                 </div>
 
@@ -284,7 +283,7 @@
                                 </div>
 
                                 <a href="{{ url('/ped/eje-' . $eje['numero']) }}" class="inicio-ejes__link">
-                                    + detalle
+                                    + información
                                 </a>
                             </div>
                         @endforeach
@@ -300,7 +299,7 @@
                     <div class="inicio-cumplimiento__body">
                         @php
                             $programasAgrupados = $programasData->groupBy('tipo');
-                            $ordenDeseado = ['Sectoriales', 'Especiales', 'Regionales', 'Institucionales'];
+                             $ordenDeseado = ['Sectoriales', 'Especiales', 'Institucionales'];
                             $programasOrdenados = $programasAgrupados->sortBy(function ($programas, $tipo) use (
                                 $ordenDeseado,
                             ) {
@@ -368,7 +367,9 @@
                                                  style="border-left-color: {{ $programa['color'] ?? '#0c312d' }};">
                                                 <div class="inicio-programa-card__indicator"
                                                      style="background-color: {{ $programa['color'] ?? '#0c312d' }};">
-                                                    {{ $programa['id'] }}
+                                                    <i class="fas {{ $programa['icono'] ?? 'fa-layer-group' }}"
+                                                        aria-hidden="true"></i>
+                                                    <span class="visually-hidden">Icono de {{ $programa['nombre'] }}</span>
                                                 </div>
                                                 <div class="inicio-programa-card__body">
                                                     <div class="inicio-programa-card__name">{{ $programa['nombre'] }}
@@ -451,12 +452,12 @@
     <section class="inicio-esquema" id="esquema">
         <div class="inicio-esquema__container">
             <p class="inicio-section-subtitle">Sistema Estatal de Planeación Democrática</p>
-            <h2 class="inicio-section-title">Esquema Integral</h2>
+            <h2 class="inicio-section-title">Esquema Integral de Planeación</h2>
 
             <div class="inicio-esquema__grid">
                 <div class="inicio-esquema__block">
                     <img src="{{ asset('img/Banners/General/sepd.png') }}"
-                        alt="Sistema Estatal de Planeación Democrática" style="max-width: 800px;">
+                        alt="Sistema Estatal de Planeación Democrática">
                     <p>
                         El esquema integral define el conjunto de procedimientos y actividades mediante las cuales
                         las instituciones de la Administración Pública Estatal y Municipal, entre sí, y en colaboración con
@@ -467,7 +468,7 @@
 
                 <div class="inicio-esquema__block">
                     <img src="{{ asset('img/esquemas/piramide.png') }}"
-                        alt="Esquema de pirámide de los programas derivados" style="max-width: 600px;">
+                        alt="Esquema de pirámide de los programas derivados">
                     <p>
                         Posteriormente, a través de la vinculación con el Sistema de Evaluación del Desempeño, el
                         esquema integral de seguimiento se articula entre toda la APE, la sociedad, las regiones y los
@@ -477,7 +478,7 @@
 
                 <div class="inicio-esquema__block">
                     <img src="{{ asset('img/Banners/General/esquema_sed.png') }}"
-                        alt="Esquema de Seguimiento del Sistema de Evaluación del Desempeño" style="max-width: 800px;">
+                        alt="Esquema de Seguimiento del Sistema de Evaluación del Desempeño">
                     <p>
                         De tal forma el SPED automatiza el proceso de seguimiento de las acciones y metas de los
                         instrumentos
@@ -494,7 +495,7 @@
     <section class="inicio-fuentes" id="fuentes">
         <div class="inicio-fuentes__container">
             <p class="inicio-section-subtitle"></p>
-            <h2 class="inicio-section-title">Fuentes de Consulta</h2>
+            <h2 class="inicio-section-title">Sitios de Interés</h2>
 
             <div class="inicio-fuentes__track-wrapper">
                 <div class="inicio-fuentes__track" id="fuentesTrack">
@@ -617,14 +618,21 @@
                 fuentesTrack.innerHTML += fuentesTrack.innerHTML;
             }
 
-            // 3. Smooth scroll para pills de ejes
-            document.querySelectorAll('.inicio-eje-pill').forEach(function(pill) {
-                pill.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    var target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        target.scrollIntoView({
-                            behavior: 'smooth',
+             // 3. Smooth scroll para pills de ejes
+             document.querySelectorAll('.inicio-eje-pill').forEach(function(pill) {
+                 pill.addEventListener('click', function(e) {
+                     var href = this.getAttribute('href');
+
+                     // Las rutas de detalle deben continuar con la navegación normal.
+                     if (!href || !href.startsWith('#')) {
+                         return;
+                     }
+
+                     e.preventDefault();
+                     var target = document.querySelector(href);
+                     if (target) {
+                         target.scrollIntoView({
+                             behavior: 'smooth',
                             block: 'center'
                         });
                     }

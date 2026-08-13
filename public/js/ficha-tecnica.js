@@ -135,7 +135,19 @@ function initFicha() {
                 symbolSize: 4,
                 itemStyle: { color: config.colorIndicador },
                 smooth: true,
-                connectNulls: true
+                connectNulls: true,
+                label: {
+                    show: true,
+                    position: 'top',
+                    formatter: function(params) {
+                        return params.value === null || params.value === undefined
+                            ? ''
+                            : formatNumber(params.value);
+                    },
+                    color: config.colorIndicador,
+                    fontSize: 11,
+                    fontWeight: 'bold'
+                }
             },
             {
                 name: 'Meta 2030',
@@ -158,14 +170,14 @@ function initFicha() {
 
         if (datosTendencia) {
             seriesHistorico.push({
-                name: 'Tendencia lineal',
+                name: 'Tendencia',
                 type: 'line',
                 data: datosTendencia,
                 symbol: 'none',
                 lineStyle: { type: 'dashed', width: 2, color: '#F59E0B' },
                 itemStyle: { color: '#F59E0B' },
                 connectNulls: false,
-                tooltip: { valueFormatter: function(value) { return formatNumber(value) + ' ' + config.unidadMedida; } }
+                tooltip: { show: false }
             });
         }
 
@@ -175,7 +187,11 @@ function initFicha() {
                 trigger: 'axis',
                 formatter: function(params) {
                     var res = params[0].axisValue;
-                    params.forEach(function(p) {
+                    var seriesVisibles = params.filter(function(p) { return p.seriesName !== 'Tendencia'; });
+
+                    if (!seriesVisibles.length) return '';
+
+                    seriesVisibles.forEach(function(p) {
                         if (p.value !== null && p.value !== undefined && !isNaN(p.value)) {
                             res += '<br/>' + p.marker + ' ' + p.seriesName + ': ' + formatNumber(p.value) + ' ' + config.unidadMedida;
                         }
@@ -184,8 +200,17 @@ function initFicha() {
                 }
             },
             legend: {
-                data: [config.nombreSerieLineaBase, config.unidadMedida, 'Meta 2030'].concat(datosTendencia ? ['Tendencia lineal'] : []),
-                top: 'top'
+                data: [config.nombreSerieLineaBase, config.unidadMedida, 'Meta 2030'].concat(datosTendencia ? ['Tendencia'] : []),
+                bottom: 0,
+                left: 'center',
+                top: 'auto',
+                orient: 'horizontal'
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: 64,
+                containLabel: true
             },
             xAxis: {
                 type: 'category',

@@ -19,7 +19,7 @@ $bannerImg = $bannerImg ?? null; // Ruta de la imagen si lleva banner
 {{-- 2. BARRA DE NAVEGACIÓN MODERNA --}}
 <div class="row mx-0 nav-moderna nav-unificada ocultar_impresion">
     <div class="col-12 px-0">
-        <div class="nav-unificada__tabs d-flex w-100" style="overflow-x: auto;">
+        <div class="nav-unificada__tabs d-flex w-100">
 
             @if($tipoNav === 'ped')
             {{-- MODO 1: EJES DEL PED --}}
@@ -48,8 +48,7 @@ $bannerImg = $bannerImg ?? null; // Ruta de la imagen si lleva banner
             $derivados = [
             'App\Models\CatProgramaDerivadoSectorial' => ['nombre' => 'Sectoriales', 'url' => '/ped-programas/sectoriales'],
             'App\Models\CatProgramaDerivadoEspecial' => ['nombre' => 'Especiales', 'url' => '/ped-programas/especiales'],
-            'App\Models\CatProgramaDerivadoRegional' => ['nombre' => 'Regionales', 'url' => '/ped-programas/regionales'],
-            'App\Models\CatProgramaDerivadoInstitucional' => ['nombre' => 'Institucionales', 'url' => '/ped-programas/institucionales'],
+             'App\Models\CatProgramaDerivadoInstitucional' => ['nombre' => 'Institucionales', 'url' => '/ped-programas/institucionales'],
             ];
             @endphp
             @foreach($derivados as $modelo => $derivado)

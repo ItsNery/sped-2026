@@ -9,7 +9,7 @@
 @section('content')
     @include('partials.programas-derivados-listado', [
         'programas' => $especiales,
-        'tipoNombre' => 'Programas derivados especiales',
+        'tipoNombre' => 'Programas especiales',
         'tipoSlug' => 'especiales',
         'modeloActivo' => 'App\\Models\\CatProgramaDerivadoEspecial',
         'colorTema' => '#8BA59D',

@@ -109,9 +109,15 @@
 
     $avanceVal = $indicador->avance_validado ?: 0;
     $chartVal = $avanceVal > 100 ? 100 : $avanceVal;
+    $resultadoTexto = isset($indicador->dato_reciente_validado)
+        ? number_format((float) str_replace(',', '', $indicador->dato_reciente_validado), $indicador->id == 100 ? 6 : 2, '.', ',')
+        : 'N/D';
+    $resultadoClase = strlen($resultadoTexto) > 16
+        ? 'indicador-cifra--muy-larga'
+        : (strlen($resultadoTexto) > 11 ? 'indicador-cifra--larga' : '');
     @endphp
     <div class="container" data-filter-item data-semaforo="{{ $semKey }}">
-        <div class="card shadow-sm mb-4 border-0 rounded-4 card-indicador" style="--semaforo-color: {{ $colorSemaforo }}; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div class="card shadow-sm mb-4 border-0 rounded-4 card-indicador" style="--semaforo-color: {{ $colorSemaforo }};">
             <div class="card-body p-4">
                 <div class="row align-items-center">
 
@@ -140,13 +146,13 @@
                             </div>
                             <div class="col-6">
                                 <div class="small text-muted mb-1">Línea Base {{ $indicador->linea_base }}</div>
-                                <div class="fw-semibold text-dark">
+                                 <div class="fw-semibold text-dark indicador-cifra {{ strlen((string) $indicador->dato_linea_base) > 11 ? 'indicador-cifra--larga' : '' }}">
                                     {{ isset($indicador->dato_linea_base) ? number_format((float)str_replace(',', '', $indicador->dato_linea_base), $indicador->id == 100 ? 6 : 2, '.', ',') : 'N/D' }}
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="small text-muted mb-1">Meta {{ $indicador->meta_anio }}</div>
-                                <div class="fw-semibold text-dark">
+                                 <div class="fw-semibold text-dark indicador-cifra {{ strlen((string) $indicador->meta) > 11 ? 'indicador-cifra--larga' : '' }}">
                                     {{ isset($indicador->meta) ? number_format((float)str_replace(',', '', $indicador->meta), $indicador->id == 100 ? 6 : 2, '.', ',') : 'N/D' }}
                                 </div>
                             </div>
@@ -154,8 +160,8 @@
                     </div>
                     <div class="col-6 col-md-4 col-lg-2 text-center mb-4 mb-md-0 border-end-md eje-indicador__status" style="border-color: #eee !important;">
                         <div class="text-uppercase small fw-semibold text-muted mb-1">Resultado {{ $indicador->anio_reciente_validado ?? '' }}</div>
-                        <div class="fs-2 fw-bold" style="color: {{ $colorSemaforo }};">
-                            {{ isset($indicador->dato_reciente_validado) ? number_format((float)str_replace(',', '', $indicador->dato_reciente_validado), $indicador->id == 100 ? 6 : 2, '.', ',') : 'N/D' }}
+                         <div class="fs-2 fw-bold indicador-cifra {{ $resultadoClase }}" style="color: {{ $colorSemaforo }};">
+                             {{ $resultadoTexto }}
                         </div>
                         <span class="badge rounded-pill {{ $bgBadge }} px-3 py-1 mt-1 fw-normal shadow-sm" style="cursor: help;" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Estado: {{ $semText }}" data-bs-content="{{ $explicacionDetallada }}">{{ $semText }}</span>
                     </div>
@@ -166,7 +172,7 @@
                         <div class="small text-muted mt-2 fw-semibold text-center">Medición Pendiente</div>
                         @else
                         <div class="grafico-gauge-pendiente" data-gauge="true" data-chart-val="{{ $chartVal }}" data-color="{{ $colorSemaforo }}" style="cursor: help;" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top" title="Estado: {{ $semText }}" data-bs-content="{{ $explicacionDetallada }}"></div>
-                        <div class="fw-bold fs-5 text-dark" style="margin-top: -30px;">{{ number_format($indicador->avance_validado, 2) }}%</div>
+                         <div class="fw-bold fs-5 text-dark indicador-cifra {{ strlen(number_format($indicador->avance_validado, 2)) > 11 ? 'indicador-cifra--larga' : '' }}" style="margin-top: -30px;">{{ number_format($indicador->avance_validado, 2) }}%</div>
                         <div class="small text-muted mt-1 fw-semibold">Avance Meta</div>
                         @endif
                     </div>
