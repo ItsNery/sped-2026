@@ -66,10 +66,23 @@ jobs:
 
           rm -f bootstrap/cache/*.php
           composer install --no-dev --optimize-autoloader
-          export NVM_DIR="/home/user_planeacion/.nvm"
-          test -s "$NVM_DIR/nvm.sh"
-          . "$NVM_DIR/nvm.sh"
-          nvm use 24.14.0
+          if ! command -v node >/dev/null 2>&1 || ! node -e "process.exit(Number(process.versions.node.split('.')[0]) >= 22 ? 0 : 1)"; then
+            NVM_CANDIDATES="${NVM_DIR:-} $HOME/.nvm /home/user_planeacion/.nvm /root/.nvm"
+            for candidate in $NVM_CANDIDATES; do
+              if [ -s "$candidate/nvm.sh" ]; then
+                export NVM_DIR="$candidate"
+                break
+              fi
+            done
+            if [ -z "${NVM_DIR:-}" ] || [ ! -s "$NVM_DIR/nvm.sh" ]; then
+              echo "No se encontró Node >=22 ni nvm.sh. HOME=$HOME USER=$(id -un)"
+              command -v node || true
+              node --version || true
+              exit 1
+            fi
+            . "$NVM_DIR/nvm.sh"
+            nvm use 24.14.0 || nvm use 24
+          fi
           node --version
           npm --version
           npm ci --omit=dev --legacy-peer-deps --no-audit --no-fund
@@ -148,10 +161,23 @@ jobs:
 
           rm -f bootstrap/cache/*.php
           composer install --no-dev --optimize-autoloader
-          export NVM_DIR="/home/user_planeacion/.nvm"
-          test -s "$NVM_DIR/nvm.sh"
-          . "$NVM_DIR/nvm.sh"
-          nvm use 24.14.0
+          if ! command -v node >/dev/null 2>&1 || ! node -e "process.exit(Number(process.versions.node.split('.')[0]) >= 22 ? 0 : 1)"; then
+            NVM_CANDIDATES="${NVM_DIR:-} $HOME/.nvm /home/user_planeacion/.nvm /root/.nvm"
+            for candidate in $NVM_CANDIDATES; do
+              if [ -s "$candidate/nvm.sh" ]; then
+                export NVM_DIR="$candidate"
+                break
+              fi
+            done
+            if [ -z "${NVM_DIR:-}" ] || [ ! -s "$NVM_DIR/nvm.sh" ]; then
+              echo "No se encontró Node >=22 ni nvm.sh. HOME=$HOME USER=$(id -un)"
+              command -v node || true
+              node --version || true
+              exit 1
+            fi
+            . "$NVM_DIR/nvm.sh"
+            nvm use 24.14.0 || nvm use 24
+          fi
           node --version
           npm --version
           npm ci --omit=dev --legacy-peer-deps --no-audit --no-fund
