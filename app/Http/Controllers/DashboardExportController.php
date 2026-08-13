@@ -18,7 +18,11 @@ class DashboardExportController extends Controller
         $html = view('exports.dashboard-executive-pdf', $data)->render();
 
         $pdf = Browsershot::html($html)
+            ->setNodeBinary(config('browsershot.node_binary', 'node'))
             ->setNodeModulePath(base_path('node_modules'))
+            ->setEnvironmentOptions([
+                'PUPPETEER_CACHE_DIR' => storage_path('app/puppeteer'),
+            ])
             ->paperSize(297, 210, 'mm')
             ->margins(8, 8, 10, 8)
             ->showBackground()

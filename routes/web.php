@@ -46,7 +46,7 @@ use App\Http\Controllers\DashboardDrillDownController;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', [HomeController::class, 'mostrarCarrusel']);
+Route::get('/', [HomeController::class, 'inicio']);
 Route::get('/informacion-general/api', [HomeController::class, 'apiDocs'])->name('public.api_docs');
 
 Route::get('/normatividad', function () {

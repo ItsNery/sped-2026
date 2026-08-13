@@ -66,61 +66,7 @@ jobs:
 
           rm -f bootstrap/cache/*.php
           composer install --no-dev --optimize-autoloader
-          [ -f /etc/profile ] && . /etc/profile || true
-          [ -f "$HOME/.profile" ] && . "$HOME/.profile" || true
-          [ -f "$HOME/.bash_profile" ] && . "$HOME/.bash_profile" || true
-          [ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc" || true
-          hash -r
-          NODE_BIN="$(command -v node || true)"
-          if [ -z "$NODE_BIN" ] || ! "$NODE_BIN" -e "process.exit(Number(process.versions.node.split('.')[0]) >= 22 ? 0 : 1)"; then
-            for candidate in \
-              "$HOME/.local/share/fnm/node-versions"/*/installation/bin/node \
-              "$HOME/.fnm/node-versions"/*/installation/bin/node \
-              "$HOME/.asdf/installs/nodejs"/*/bin/node \
-              "$HOME/.volta/bin/node" \
-              /usr/local/bin/node \
-              /usr/local/node*/bin/node; do
-              if [ -x "$candidate" ] && "$candidate" -e "process.exit(Number(process.versions.node.split('.')[0]) >= 22 ? 0 : 1)"; then
-                NODE_BIN="$candidate"
-                break
-              fi
-            done
-          fi
-          if [ -z "$NODE_BIN" ] || ! "$NODE_BIN" -e "process.exit(Number(process.versions.node.split('.')[0]) >= 22 ? 0 : 1)"; then
-            while IFS= read -r candidate; do
-              if "$candidate" -e "process.exit(Number(process.versions.node.split('.')[0]) >= 22 ? 0 : 1)"; then
-                NODE_BIN="$candidate"
-                break
-              fi
-            done < <(find "$HOME" /opt /usr/local -type f -name node -executable 2>/dev/null)
-          fi
-          if [ -z "$NODE_BIN" ] || ! "$NODE_BIN" -e "process.exit(Number(process.versions.node.split('.')[0]) >= 22 ? 0 : 1)"; then
-            NVM_CANDIDATES="${NVM_DIR:-} $HOME/.nvm /home/user_planeacion/.nvm /root/.nvm"
-            for candidate in $NVM_CANDIDATES; do
-              if [ -s "$candidate/nvm.sh" ]; then
-                export NVM_DIR="$candidate"
-                break
-              fi
-            done
-            if [ -n "${NVM_DIR:-}" ] && [ -s "$NVM_DIR/nvm.sh" ]; then
-              . "$NVM_DIR/nvm.sh"
-              nvm use 24.14.0 || nvm use 24
-              NODE_BIN="$(command -v node || true)"
-            fi
-            if [ -z "$NODE_BIN" ] || ! "$NODE_BIN" -e "process.exit(Number(process.versions.node.split('.')[0]) >= 22 ? 0 : 1)"; then
-              echo "No se encontró Node >=22 ni nvm.sh. HOME=$HOME USER=$(id -un)"
-              find "$HOME" /opt /usr/local -type f -name node -perm -u+x 2>/dev/null | head -50 || true
-              command -v node || true
-              node --version || true
-              exit 1
-            fi
-          fi
-          export PATH="$(dirname "$NODE_BIN"):$PATH"
-          hash -r
-          node --version
-          npm --version
-          npm ci --omit=dev --legacy-peer-deps --no-audit --no-fund
-          node -e "require.resolve('puppeteer')"
+          test -f node_modules/puppeteer/package.json
 
           php artisan migrate --force
 
@@ -195,61 +141,7 @@ jobs:
 
           rm -f bootstrap/cache/*.php
           composer install --no-dev --optimize-autoloader
-          [ -f /etc/profile ] && . /etc/profile || true
-          [ -f "$HOME/.profile" ] && . "$HOME/.profile" || true
-          [ -f "$HOME/.bash_profile" ] && . "$HOME/.bash_profile" || true
-          [ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc" || true
-          hash -r
-          NODE_BIN="$(command -v node || true)"
-          if [ -z "$NODE_BIN" ] || ! "$NODE_BIN" -e "process.exit(Number(process.versions.node.split('.')[0]) >= 22 ? 0 : 1)"; then
-            for candidate in \
-              "$HOME/.local/share/fnm/node-versions"/*/installation/bin/node \
-              "$HOME/.fnm/node-versions"/*/installation/bin/node \
-              "$HOME/.asdf/installs/nodejs"/*/bin/node \
-              "$HOME/.volta/bin/node" \
-              /usr/local/bin/node \
-              /usr/local/node*/bin/node; do
-              if [ -x "$candidate" ] && "$candidate" -e "process.exit(Number(process.versions.node.split('.')[0]) >= 22 ? 0 : 1)"; then
-                NODE_BIN="$candidate"
-                break
-              fi
-            done
-          fi
-          if [ -z "$NODE_BIN" ] || ! "$NODE_BIN" -e "process.exit(Number(process.versions.node.split('.')[0]) >= 22 ? 0 : 1)"; then
-            while IFS= read -r candidate; do
-              if "$candidate" -e "process.exit(Number(process.versions.node.split('.')[0]) >= 22 ? 0 : 1)"; then
-                NODE_BIN="$candidate"
-                break
-              fi
-            done < <(find "$HOME" /opt /usr/local -type f -name node -executable 2>/dev/null)
-          fi
-          if [ -z "$NODE_BIN" ] || ! "$NODE_BIN" -e "process.exit(Number(process.versions.node.split('.')[0]) >= 22 ? 0 : 1)"; then
-            NVM_CANDIDATES="${NVM_DIR:-} $HOME/.nvm /home/user_planeacion/.nvm /root/.nvm"
-            for candidate in $NVM_CANDIDATES; do
-              if [ -s "$candidate/nvm.sh" ]; then
-                export NVM_DIR="$candidate"
-                break
-              fi
-            done
-            if [ -n "${NVM_DIR:-}" ] && [ -s "$NVM_DIR/nvm.sh" ]; then
-              . "$NVM_DIR/nvm.sh"
-              nvm use 24.14.0 || nvm use 24
-              NODE_BIN="$(command -v node || true)"
-            fi
-            if [ -z "$NODE_BIN" ] || ! "$NODE_BIN" -e "process.exit(Number(process.versions.node.split('.')[0]) >= 22 ? 0 : 1)"; then
-              echo "No se encontró Node >=22 ni nvm.sh. HOME=$HOME USER=$(id -un)"
-              find "$HOME" /opt /usr/local -type f -name node -perm -u+x 2>/dev/null | head -50 || true
-              command -v node || true
-              node --version || true
-              exit 1
-            fi
-          fi
-          export PATH="$(dirname "$NODE_BIN"):$PATH"
-          hash -r
-          node --version
-          npm --version
-          npm ci --omit=dev --legacy-peer-deps --no-audit --no-fund
-          node -e "require.resolve('puppeteer')"
+          test -f node_modules/puppeteer/package.json
 
           php artisan migrate --force
 

@@ -64,7 +64,11 @@ class HomeController extends Controller
         $footer = '<div style="width: 100vw; margin: 0; padding: 0; color: #706b72; font: 9px Arial, sans-serif; text-align: center;">'
             . 'Hoja <span class="pageNumber"></span> de <span class="totalPages"></span></div>';
         $pdf = Browsershot::html($html)
+            ->setNodeBinary(config('browsershot.node_binary', 'node'))
             ->setNodeModulePath(base_path('node_modules'))
+            ->setEnvironmentOptions([
+                'PUPPETEER_CACHE_DIR' => storage_path('app/puppeteer'),
+            ])
             ->format('a4')
             ->margins(5, 5, 16, 5)
             ->showBrowserHeaderAndFooter()
@@ -667,7 +671,7 @@ class HomeController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function mostrarCarrusel()
+    public function inicio()
     {
         $plan = $this->activePlan->get();
         $planId = $plan->id;
@@ -789,72 +793,6 @@ class HomeController extends Controller
         return '#dc3545';
     }
 
-    /**
-     * Helper específico para obtener el dato reciente del carrusel.
-     *
-     * @param  Indicador $indicador
-     * @return array{anio: int|string|null, valor: float|string|null}
-     */
-    private function obtenerDatoRecienteCarrusel(Indicador $indicador)
-    {
-        $datosAnualesCollection = $indicador->datos_anuales_validados;
-
-        if ($datosAnualesCollection && $datosAnualesCollection->isNotEmpty()) {
-            $datoRecienteEncontrado = $datosAnualesCollection
-                ->filter(function ($datoAnual) {
-                    return isset($datoAnual->valor_dato) &&
-                        !is_null($datoAnual->valor_dato) &&
-                        trim((string) $datoAnual->valor_dato) !== '';
-                })
-                ->sortByDesc('anio')
-                ->first();
-
-            if ($datoRecienteEncontrado) {
-                $anio = $datoRecienteEncontrado->anio;
-                $valorOriginal = $datoRecienteEncontrado->valor_dato;
-                try {
-                    $valorNumerico = filter_var($valorOriginal, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION | FILTER_FLAG_ALLOW_THOUSAND);
-                    if (is_numeric($valorNumerico)) {
-                        $valorFloat = (float) str_replace(',', '', $valorNumerico);
-                        return [
-                            'anio' => $anio,
-                            'valor' => number_format($valorFloat, 2, '.', ''),
-                        ];
-                    } else {
-                        return ['anio' => $anio, 'valor' => $valorOriginal];
-                    }
-                } catch (\Exception $e) {
-                    return ['anio' => $anio, 'valor' => $valorOriginal];
-                }
-            }
-        }
-
-        $valorLineaBase = $indicador->dato_linea_base;
-
-        $anioLineaBase = $indicador->linea_base ?? 'Línea base';
-
-        if ($valorLineaBase !== null && trim((string)$valorLineaBase) !== '') {
-            try {
-                $valorNumericoLB = filter_var($valorLineaBase, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION | FILTER_FLAG_ALLOW_THOUSAND);
-                if (is_numeric($valorNumericoLB)) {
-                    $valorFloatLB = (float) str_replace(',', '', $valorNumericoLB);
-                    return [
-                        'anio' => $anioLineaBase,
-                        'valor' => number_format($valorFloatLB, 2, '.', ''),
-                    ];
-                } else {
-                    return ['anio' => $anioLineaBase, 'valor' => $valorLineaBase];
-                }
-            } catch (\Exception $e) {
-                return ['anio' => $anioLineaBase, 'valor' => $valorLineaBase];
-            }
-        }
-
-        return [
-            'anio' => $anioLineaBase,
-            'valor' => 'Sin datos',
-        ];
-    }
 
     /**
      * Muestra la vista de Agenda ODS (versión 2024 = 0).
