@@ -99,6 +99,7 @@ Route::post('/datos-abiertos-ped-json', [IndicadorController::class, 'datosAbier
 // });
 Route::get('/ped', [DashboardGeneralController::class, 'publicIndex'])->name('public.avance-general');
 Route::get('/ped/eje-{num}', [HomeController::class, 'ped'])->where('num', '[1-6]');
+Route::get('/buscar-indicadores', [HomeController::class, 'buscarIndicadores'])->name('public.buscar-indicadores');
 
 // Programas Generales
 Route::get('/ped-programas', function () {

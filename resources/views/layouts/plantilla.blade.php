@@ -137,13 +137,23 @@
             aria-labelledby="customSearchModalTitle" aria-hidden="true" tabindex="-1">
             <div class="custom-modal-content">
                 <div class="custom-modal-header">
-                    <button type="button" class="custom-close" aria-label="Cerrar búsqueda"
-                        onclick="closeSearchModal()">&times;</button>
-                    <h5 id="customSearchModalTitle" class="custom-modal-title">Buscar con Google</h5>
+                    <h5 id="customSearchModalTitle" class="custom-modal-title">Buscar indicadores</h5>
+                    <button type="button" class="btn-close custom-close" aria-label="Cerrar búsqueda"
+                        onclick="closeSearchModal()"></button>
                 </div>
                 <div class="custom-modal-body">
-                    <script async src="https://cse.google.com/cse.js?cx=031f16cfb8b5845ab"></script>
-                    <div class="gcse-searchbox-only"></div>
+                    <form id="indicatorSearchForm" class="indicator-search-form" role="search">
+                        <label class="visually-hidden" for="indicatorSearchInput">Buscar indicador</label>
+                        <div class="indicator-search-form__input-wrap">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                            <input id="indicatorSearchInput" type="search" name="q"
+                                placeholder="Nombre, temática, eje o institución..." autocomplete="off">
+                        </div>
+                    </form>
+                    <div id="indicatorSearchStatus" class="indicator-search-status" aria-live="polite">
+                        Escribe al menos dos caracteres para buscar.
+                    </div>
+                    <div id="indicatorSearchResults" class="indicator-search-results"></div>
                 </div>
             </div>
         </div>
@@ -165,20 +175,96 @@
             let modal = document.getElementById("customSearchModal");
 
             let lastFocusedElement = null;
+            let searchTimeout = null;
+            let searchRequest = null;
+            const searchInput = document.getElementById('indicatorSearchInput');
+            const searchStatus = document.getElementById('indicatorSearchStatus');
+            const searchResults = document.getElementById('indicatorSearchResults');
+
+            function renderIndicatorResults(items) {
+                searchResults.innerHTML = '';
+
+                if (!items.length) {
+                    searchStatus.textContent = 'No encontramos indicadores con ese criterio.';
+                    return;
+                }
+
+                searchStatus.textContent = items.length === 10
+                    ? 'Mostrando los primeros 10 resultados.'
+                    : items.length + (items.length === 1 ? ' indicador encontrado.' : ' indicadores encontrados.');
+
+                items.forEach(function(item) {
+                    const link = document.createElement('a');
+                    link.className = 'indicator-search-result';
+                    link.href = item.url;
+
+                    const name = document.createElement('strong');
+                    name.textContent = item.nombre;
+                    link.appendChild(name);
+
+                    const context = document.createElement('span');
+                    context.textContent = [item.contexto, item.institucion].filter(Boolean).join(' · ');
+                    link.appendChild(context);
+
+                    searchResults.appendChild(link);
+                });
+            }
+
+            function searchIndicators(value) {
+                const query = value.trim();
+                searchResults.innerHTML = '';
+
+                if (query.length < 2) {
+                    searchStatus.textContent = 'Escribe al menos dos caracteres para buscar.';
+                    return;
+                }
+
+                if (searchRequest) searchRequest.abort();
+                searchStatus.textContent = 'Buscando indicadores...';
+                searchRequest = new AbortController();
+
+                fetch('{{ route('public.buscar-indicadores') }}?q=' + encodeURIComponent(query), {
+                    headers: { 'Accept': 'application/json' },
+                    signal: searchRequest.signal
+                })
+                    .then(function(response) {
+                        if (!response.ok) throw new Error('Search request failed');
+                        return response.json();
+                    })
+                    .then(function(payload) { renderIndicatorResults(payload.data || []); })
+                    .catch(function(error) {
+                        if (error.name !== 'AbortError') searchStatus.textContent = 'No fue posible realizar la búsqueda.';
+                    });
+            }
 
             window.openSearchModal = function(event) {
                 event?.preventDefault();
                 lastFocusedElement = document.activeElement;
                 modal.classList.add("show");
                 modal.setAttribute('aria-hidden', 'false');
-                modal.querySelector('.custom-close').focus();
+                searchInput.value = '';
+                searchResults.innerHTML = '';
+                searchStatus.textContent = 'Escribe al menos dos caracteres para buscar.';
+                searchInput.focus();
             };
 
             window.closeSearchModal = function() {
                 modal.classList.remove("show");
                 modal.setAttribute('aria-hidden', 'true');
+                if (searchRequest) searchRequest.abort();
                 lastFocusedElement?.focus();
             };
+
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() { searchIndicators(searchInput.value); }, 250);
+            });
+
+            document.getElementById('indicatorSearchForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                clearTimeout(searchTimeout);
+                searchIndicators(searchInput.value);
+            });
 
             document.addEventListener('keydown', function(event) {
                 if (event.key === 'Escape' && modal.classList.contains('show')) {

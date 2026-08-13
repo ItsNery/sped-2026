@@ -139,6 +139,7 @@ function initFicha() {
                 label: {
                     show: true,
                     position: 'top',
+                    distance: 8,
                     formatter: function(params) {
                         return params.value === null || params.value === undefined
                             ? ''
@@ -146,7 +147,12 @@ function initFicha() {
                     },
                     color: config.colorIndicador,
                     fontSize: 11,
-                    fontWeight: 'bold'
+                    fontWeight: 'bold',
+                    backgroundColor: 'rgba(255, 255, 255, 0.94)',
+                    borderColor: config.colorIndicador,
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    padding: [3, 5]
                 }
             },
             {
@@ -161,9 +167,16 @@ function initFicha() {
                 connectNulls: true,
                 label: {
                     show: true,
+                    position: 'top',
+                    distance: 8,
                     formatter: function(params) { return params.value ? formatNumber(params.value) : ''; },
                     color: '#FF0000',
-                    fontWeight: 'bold'
+                    fontWeight: 'bold',
+                    backgroundColor: 'rgba(255, 255, 255, 0.94)',
+                    borderColor: '#FF0000',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    padding: [3, 5]
                 }
             }
         ];
@@ -183,6 +196,9 @@ function initFicha() {
 
         chartHistorico.setOption({
             animation: config.pdfMode ? false : true,
+            textStyle: {
+                fontFamily: 'Corra-Montserra-Regular, sans-serif'
+            },
             tooltip: {
                 trigger: 'axis',
                 formatter: function(params) {
@@ -215,7 +231,13 @@ function initFicha() {
             xAxis: {
                 type: 'category',
                 data: config.categoriasEjeX,
-                name: 'Año'
+                name: 'Año',
+                axisLabel: {
+                    interval: 0,
+                    hideOverlap: false,
+                    rotate: window.innerWidth < 768 ? 35 : 0,
+                    margin: 12
+                }
             },
             yAxis: {
                 type: 'value',
@@ -224,7 +246,11 @@ function initFicha() {
                     formatter: function(val) { return formatNumber(val); }
                 }
             },
-            series: seriesHistorico
+            series: seriesHistorico,
+            labelLayout: {
+                hideOverlap: false,
+                moveOverlap: 'shiftY'
+            }
         });
         chartHistorico.resize();
         }

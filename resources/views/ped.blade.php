@@ -20,6 +20,9 @@
                 <p class="ped-dashboard__intro-text">
                     Consulta el avance de los ejes de desarrollo y de los programas derivados del plan.
                 </p>
+                <a class="ped-dashboard__search-link" href="#customSearchModal" onclick="openSearchModal(event);">
+                    <i class="fas fa-search me-2" aria-hidden="true"></i>Buscar un indicador
+                </a>
             </div>
         </section>
 

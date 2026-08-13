@@ -324,6 +324,56 @@ class HomeController extends Controller
     }
 
     /**
+     * Busca indicadores públicos del PED activo para el buscador del navbar.
+     */
+    public function buscarIndicadores(Request $request)
+    {
+        $termino = trim((string) $request->query('q', ''));
+
+        if (mb_strlen($termino) < 2) {
+            return response()->json(['data' => []]);
+        }
+
+        $like = '%' . addcslashes($termino, '%_\\') . '%';
+        $planId = $this->activePlan->id();
+
+        $indicadores = Indicador::query()
+            ->forPlan($planId)
+            ->with(['institucion', 'indicadorable'])
+            ->where(function ($query) use ($like) {
+                $query->where('nombre', 'like', $like)
+                    ->orWhere('tematica', 'like', $like)
+                    ->orWhere('programa', 'like', $like)
+                    ->orWhere('programa_derivado', 'like', $like)
+                    ->orWhereHas('institucion', fn ($institucion) => $institucion->where('nombre', 'like', $like))
+                    ->orWhereHasMorph(
+                        'indicadorable',
+                        [CatEje::class, CatProgramaDerivadoSectorial::class, CatProgramaDerivadoEspecial::class, CatProgramaDerivadoInstitucional::class],
+                        fn ($programa) => $programa->where('nombre', 'like', $like)
+                    );
+            })
+            ->orderBy('nombre')
+            ->limit(10)
+            ->get();
+
+        return response()->json([
+            'data' => $indicadores->map(function ($indicador) {
+                $contexto = $indicador->indicadorable?->nombre
+                    ?? $indicador->programa
+                    ?? $indicador->programa_derivado
+                    ?? $indicador->tematica;
+
+                return [
+                    'nombre' => $indicador->nombre,
+                    'contexto' => $contexto,
+                    'institucion' => $indicador->institucion?->nombre,
+                    'url' => route('ficha-tecnica.show', $indicador),
+                ];
+            }),
+        ]);
+    }
+
+    /**
      * Consulta específica para obtener los indicadores del PED según su eje.
      *
      * @param  int|string $num Número del eje.

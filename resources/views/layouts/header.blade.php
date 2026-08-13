@@ -6,6 +6,11 @@
             </a>
         </div>
         <div class="menu">
+            <a class="mobile-search-button" href="#customSearchModal" onclick="openSearchModal(event);"
+                aria-label="Buscar indicadores" title="Buscar indicadores">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <span>Buscar</span>
+            </a>
             <button class="menu-button" id="menuButton" aria-label="Abrir menú" aria-expanded="false"
                 aria-controls="mobileMenu" title="Mostrar menú">☰</button>
         </div>
