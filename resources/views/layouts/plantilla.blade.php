@@ -60,13 +60,15 @@
     <link href="{{ asset('css/media_queries.css') }}" rel="stylesheet">
     <link href="{{ asset('css/efectos.css') }}" rel="stylesheet">
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/estilos.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/estilos.css') }}?v={{ filemtime(public_path('css/estilos.css')) }}" rel="stylesheet">
+    <script src="{{ asset('js/echarts.min.js') }}"></script>
+    <script src="{{ asset('./js/sienna-accessibility.umd.js') }}" async></script>
 
     @yield('jss-inicial')
     @yield('css')
 </head>
 
-<body>
+<body class="@yield('body-class')">
     @auth
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
             <div class="container">
@@ -130,19 +132,41 @@
     @endauth
     <main>
         @include('layouts.header')
-        <div id="customSearchModal" class="custom-modal-search">
+        <a class="visually-hidden-focusable" href="#contenido-principal">Saltar al contenido principal</a>
+        <div id="customSearchModal" class="custom-modal-search" role="dialog" aria-modal="true"
+            aria-labelledby="customSearchModalTitle" aria-hidden="true" tabindex="-1">
             <div class="custom-modal-content">
                 <div class="custom-modal-header">
-                    <span class="custom-close" onclick="closeSearchModal()">&times;</span>
-                    <h5 class="custom-modal-title">Buscar con Google</h5>
+                    <h5 id="customSearchModalTitle" class="custom-modal-title">Buscar indicadores</h5>
+                    <button type="button" class="btn-close custom-close" aria-label="Cerrar búsqueda"
+                        onclick="closeSearchModal()"></button>
                 </div>
                 <div class="custom-modal-body">
-                    <script async src="https://cse.google.com/cse.js?cx=031f16cfb8b5845ab"></script>
-                    <div class="gcse-searchbox-only"></div>
+                    <form id="indicatorSearchForm" class="indicator-search-form" role="search">
+                        <label class="visually-hidden" for="indicatorSearchInput">Buscar indicador</label>
+                        <div class="indicator-search-form__input-wrap">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                            <input id="indicatorSearchInput" type="search" name="q"
+                                placeholder="Nombre, temática, eje o institución..." autocomplete="off">
+                        </div>
+                    </form>
+                    <div id="indicatorSearchStatus" class="indicator-search-status" aria-live="polite">
+                        Escribe al menos dos caracteres para buscar.
+                    </div>
+                    <div id="indicatorSearchResults" class="indicator-search-results"></div>
                 </div>
             </div>
         </div>
-        @yield('content')
+        <div id="contenido-principal" tabindex="-1">
+            @yield('content')
+        </div>
+        <a class="btn-option scroll-top" href="#contenido-principal" aria-label="Volver al inicio de la página">
+            <svg class="scroll-top__progress" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="scroll-top__track" cx="22" cy="22" r="18"></circle>
+                <circle class="scroll-top__value" cx="22" cy="22" r="18"></circle>
+            </svg>
+            <span class="fas fa-angle-up scroll-top__icon" aria-hidden="true"></span>
+        </a>
         @include('layouts.footer')
     </main>
     @yield('jss-final')
@@ -150,13 +174,103 @@
         window.addEventListener("load", function() {
             let modal = document.getElementById("customSearchModal");
 
-            window.openSearchModal = function() {
+            let lastFocusedElement = null;
+            let searchTimeout = null;
+            let searchRequest = null;
+            const searchInput = document.getElementById('indicatorSearchInput');
+            const searchStatus = document.getElementById('indicatorSearchStatus');
+            const searchResults = document.getElementById('indicatorSearchResults');
+
+            function renderIndicatorResults(items) {
+                searchResults.innerHTML = '';
+
+                if (!items.length) {
+                    searchStatus.textContent = 'No encontramos indicadores con ese criterio.';
+                    return;
+                }
+
+                searchStatus.textContent = items.length === 10
+                    ? 'Mostrando los primeros 10 resultados.'
+                    : items.length + (items.length === 1 ? ' indicador encontrado.' : ' indicadores encontrados.');
+
+                items.forEach(function(item) {
+                    const link = document.createElement('a');
+                    link.className = 'indicator-search-result';
+                    link.href = item.url;
+
+                    const name = document.createElement('strong');
+                    name.textContent = item.nombre;
+                    link.appendChild(name);
+
+                    const context = document.createElement('span');
+                    context.textContent = [item.contexto, item.institucion].filter(Boolean).join(' · ');
+                    link.appendChild(context);
+
+                    searchResults.appendChild(link);
+                });
+            }
+
+            function searchIndicators(value) {
+                const query = value.trim();
+                searchResults.innerHTML = '';
+
+                if (query.length < 2) {
+                    searchStatus.textContent = 'Escribe al menos dos caracteres para buscar.';
+                    return;
+                }
+
+                if (searchRequest) searchRequest.abort();
+                searchStatus.textContent = 'Buscando indicadores...';
+                searchRequest = new AbortController();
+
+                fetch('{{ route('public.buscar-indicadores') }}?q=' + encodeURIComponent(query), {
+                    headers: { 'Accept': 'application/json' },
+                    signal: searchRequest.signal
+                })
+                    .then(function(response) {
+                        if (!response.ok) throw new Error('Search request failed');
+                        return response.json();
+                    })
+                    .then(function(payload) { renderIndicatorResults(payload.data || []); })
+                    .catch(function(error) {
+                        if (error.name !== 'AbortError') searchStatus.textContent = 'No fue posible realizar la búsqueda.';
+                    });
+            }
+
+            window.openSearchModal = function(event) {
+                event?.preventDefault();
+                lastFocusedElement = document.activeElement;
                 modal.classList.add("show");
+                modal.setAttribute('aria-hidden', 'false');
+                searchInput.value = '';
+                searchResults.innerHTML = '';
+                searchStatus.textContent = 'Escribe al menos dos caracteres para buscar.';
+                searchInput.focus();
             };
 
             window.closeSearchModal = function() {
                 modal.classList.remove("show");
+                modal.setAttribute('aria-hidden', 'true');
+                if (searchRequest) searchRequest.abort();
+                lastFocusedElement?.focus();
             };
+
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() { searchIndicators(searchInput.value); }, 250);
+            });
+
+            document.getElementById('indicatorSearchForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                clearTimeout(searchTimeout);
+                searchIndicators(searchInput.value);
+            });
+
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && modal.classList.contains('show')) {
+                    closeSearchModal();
+                }
+            });
 
             window.onclick = function(event) {
                 if (event.target === modal) {

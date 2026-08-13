@@ -44,7 +44,6 @@
     </ul>
 
     <div class="d-flex gap-3 flex-wrap justify-content-center">
-        {{-- Botón de recargar (Muy útil en errores 500) --}}
         <button onclick="location.reload();" class="home-button border-0 cursor-pointer me-3">
             <i class="fa-solid fa-rotate-right"></i> Reintentar
         </button>

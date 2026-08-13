@@ -1,494 +1,257 @@
-# 📊 SPED - Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
+# Sistema SPED - Sistema de Información para el Seguimiento  a la Planeación y Evaluación del Desarrollo
 
-Un sistema integral de gestión, seguimiento, validación y reporte de indicadores de rendimiento para la administración pública. SPED permite a las instituciones gubernamentales capturar, validar y visualizar indicadores alineados con los Objetivos de Desarrollo Sostenible (ODS) y los planes de desarrollo estatales.
+<div align="center">
+  <img src="https://sped.puebla.gob.mx/img/logos_sped.png" alt="SEI Logo" width="200"/>
+</div>
 
-## 🎯 Descripción General
+Sistema web para el seguimiento, control y evaluación de los indicadores del Plan Estatal de Desarrollo y sus Programas Derivados de la Subsecretaría de Planeación, desarrollado con Laravel 12.
 
-SPED es una plataforma web empresarial construida sobre Laravel 12 que centraliza la gestión de indicadores de desempeño institucional. Proporciona herramientas avanzadas para:
+## 📋 Descripción
 
-- **Gestión Integral de Indicadores**: Crear, editar, validar y eliminar indicadores de rendimiento
-- **Seguimiento de Datos Anuales**: Mantener históricos de datos validados con evidencia
-- **Dashboard Inteligente**: Visualización en tiempo real mediante gráficos interactivos (ApexCharts)
-- **API de Datos Abiertos**: Exposición pública de indicadores para integración externa
-- **Sistema de Validación Multiuso**: Flujo de trabajo para validación de datos por roles
-- **Control de Acceso Granular**: Gestión de permisos basada en roles (spatie/laravel-permission)
-- **Gestión de Municipios y Convenios**: Asociación de indicadores con territorios específicos
-- **Informes y Exportación**: Generación de reportes en Excel (PHPOffice)
+El **Sistema SPED** es una plataforma web integral diseñada para la gestión, seguimiento y publicación de indicadores de desempeño y resultados del gobierno. Permite visualizar el avance de metas mediante tableros de control (dashboards), generar fichas técnicas detalladas y proveer datos abiertos a la ciudadanía, facilitando la toma de decisiones basada en evidencia.
+
+## ✨ Características Principales
+
+### Gestión de Indicadores
+
+- **Registro y Seguimiento**: Control del ciclo de vida de los indicadores del Plan Estatal de Desarrollo (PED).
+- **Programas Derivados**: Gestión de programas Sectoriales, Regionales, Institucionales y Especiales.
+- **Indicadores Municipales**: Seguimiento específico para municipios con convenio.
+- **Importación Masiva**: Carga y actualización de indicadores mediante archivos Excel.
+- **Fichas Técnicas**: Generación detallada del estado e historial de cada indicador, sus líneas base y resultados anuales.
+
+### Tableros de Control y Visualización
+
+- **Dashboards Dinámicos**: Vista general del avance y cumplimiento de metas.
+- **Semaforización**: Sistema visual de alertas (Azul, Verde, Amarillo, Rojo, Gris) según el grado de cumplimiento.
+- **Gráficos Interactivos**: Visualización de avances con ApexCharts y medidores interactivos.
+
+### Transparencia y Datos Abiertos
+
+- **Portal Público**: Acceso ciudadano a la información general, normatividad y tableros resumen.
+- **Descarga de Datos**: Exportación de datos abiertos en formatos JSON, CSV y XLSX.
+
+### Gestión de Usuarios y Permisos
+
+- **Roles Dinámicos**: Sistema de autorización basado en roles y permisos (Administrador, Enlace, etc.).
+- **Gestión de Instituciones**: Organización de usuarios por dependencias o instituciones.
+- **Auditoría**: Registro de logs y cambios en el sistema.
 
 ## 🛠️ Stack Tecnológico
 
-### Backend
-- **Framework**: Laravel 12 (PHP 8.2+)
-- **ORM**: Eloquent
-- **Autenticación**: Laravel Jetstream + Sanctum
-- **Autorización**: Spatie Laravel-Permission (RBAC)
-- **Tablas de Datos**: Yajra Laravel-DataTables
-- **Excel**: PHPOffice PHPSpreadsheet
-
-### Frontend
-- **Build Tool**: Laravel Mix / Webpack 5
-- **Estilos**: Tailwind CSS 3.1 + Bootstrap 5.1
-- **JavaScript**: Alpine.js 3.2 + Lodash
-- **Componentes**: Livewire 3 (componentes reactivos del lado del servidor)
-- **Gráficos**: ApexCharts.js
-- **Animaciones**: AOS (Animate On Scroll)
-- **Carrusel**: Swiper
-
-### Base de Datos
-- MySQL/MariaDB
-- Migraciones Laravel con seeders
-
-## 📋 Requisitos
-
+- **Framework**: Laravel 12.x
 - **PHP**: 8.2+
-- **Composer**: Última versión
-- **Node.js**: 14+ y npm/yarn
-- **MySQL/MariaDB**: 5.7+
-- **Git**
+- **Base de Datos**: MySQL
+- **Autenticación y UI**: Laravel Jetstream + Livewire 3.0 + Sanctum
+- **Roles y Permisos**: Spatie Laravel Permission
+- **Frontend**:
+    - Bootstrap 5.1
+    - TailwindCSS 3.1
+    - Alpine.js 3.2
+- **Tablas de Datos**: Yajra DataTables
+- **Excel/Exportación**: PhpSpreadsheet
+- **Build Tools**: Laravel Mix / Webpack
 
-## 🚀 Instalación y Configuración
+## 📦 Instalación
 
-### 1. Clonar el Repositorio
-```bash
-git clone https://github.com/ItsNery/sped-2026.git
-cd sped
-```
+### Requisitos Previos
 
-### 2. Instalar Dependencias PHP
-```bash
-composer install
-```
+- PHP >= 8.2
+- Composer
+- MySQL
+- Node.js y NPM
 
-### 3. Instalar Dependencias JavaScript
-```bash
-npm install
-```
+### Pasos de Instalación
 
-### 4. Configurar Variables de Entorno
-```bash
-cp .env.example .env
-php artisan key:generate
-```
+1. **Clonar el repositorio**
 
-Editar `.env` con tus credenciales:
-```env
-APP_NAME="SPED"
-APP_ENV=local
-APP_DEBUG=true
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=sped
-DB_USERNAME=root
-DB_PASSWORD=
-```
+    ```bash
+    git clone https://github.com/tu-organizacion/sped-final.git
+    cd sped-final
+    ```
 
-### 5. Crear Base de Datos
-```bash
-mysql -u root -p
-CREATE DATABASE sped CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
+2. **Instalar dependencias de PHP**
 
-### 6. Ejecutar Migraciones
-```bash
-php artisan migrate
-php artisan db:seed
-```
+    ```bash
+    composer install
+    ```
 
-### 7. Generar Clave de Aplicación
-```bash
-php artisan key:generate
-```
+3. **Instalar dependencias de Node.js**
 
-### 8. Compilar Assets
-```bash
-npm run development
-# o para producción:
-npm run production
-```
+    ```bash
+    npm install
+    ```
 
-### 9. Iniciar Servidor Local
-```bash
-php artisan serve
-# Disponible en http://localhost:8000
-```
+4. **Configurar el archivo de entorno**
 
-### 10. Compilar Assets en Tiempo Real (Opcional)
-En otra terminal:
-```bash
-npm run watch
-```
+    ```bash
+    cp .env.example .env
+    ```
+
+    Editar `.env` con tus configuraciones de base de datos y aplicación:
+
+    ```env
+    APP_NAME="Sistema SPED"
+    APP_URL=http://localhost:8000
+
+    DB_CONNECTION=mysql
+    DB_HOST=127.0.0.1
+    DB_PORT=3306
+    DB_DATABASE=db_sped
+    DB_USERNAME=root
+    DB_PASSWORD=
+    ```
+
+5. **Generar la clave de aplicación**
+
+    ```bash
+    php artisan key:generate
+    ```
+
+6. **Ejecutar las migraciones**
+
+    ```bash
+    php artisan migrate
+    ```
+
+7. **Ejecutar los seeders (Catálogos iniciales)**
+
+    ```bash
+    php artisan db:seed
+    ```
+
+8. **Compilar assets**
+
+    ```bash
+    npm run dev
+    # o para producción: npm run build
+    ```
+
+9. **Crear el enlace simbólico de storage**
+
+    ```bash
+    php artisan storage:link
+    ```
+
+10. **Iniciar el servidor de desarrollo**
+    ```bash
+    php artisan serve
+    ```
+
+La aplicación estará disponible en `http://localhost:8000`.
+_(Nota: Para cambios en tiempo real en frontend, también puedes usar `npm run watch`)_
 
 ## 📁 Estructura del Proyecto
 
 ```
-sped/
+sped-final/
 ├── app/
 │   ├── Http/
-│   │   ├── Controllers/
-│   │   │   ├── Api/
-│   │   │   │   └── IndicadorApiController.php    # API pública de indicadores
-│   │   │   ├── DashboardController.php           # Lógica del dashboard
-│   │   │   ├── IndicadorController.php           # CRUD de indicadores
-│   │   │   ├── UserController.php                # Gestión de usuarios
-│   │   │   ├── IndicadorMunicipalController.php  # Indicadores por municipio
-│   │   │   ├── InstitucionController.php         # Gestión de instituciones
-│   │   │   └── ... otros controladores
-│   │   ├── Middleware/                           # Middleware personalizado
-│   │   └── Kernel.php                            # Configuración HTTP
-│   ├── Models/
-│   │   ├── Indicador.php                         # Modelo principal
-│   │   ├── DatoAnualIndicador.php               # Histórico anual
-│   │   ├── User.php                              # Usuario
-│   │   ├── Institucion.php                       # Institución
-│   │   ├── CatMunicipio.php                      # Catálogo de municipios
-│   │   ├── Ods.php                               # Objetivos de Desarrollo Sostenible
-│   │   └── ... otros modelos
-│   ├── Observers/                                # Observadores de modelos
-│   ├── Listeners/                                # Event listeners (ej: logs de cambios)
-│   ├── Livewire/                                 # Componentes Livewire
-│   ├── Actions/                                  # Acciones de Jetstream
-│   ├── Providers/                                # Service Providers
-│   ├── Helpers.php                               # Funciones auxiliares
-│   └── Exceptions/                               # Excepciones personalizadas
-├── routes/
-│   ├── web.php                                   # Rutas web
-│   ├── api.php                                   # Rutas API REST
-│   └── channels.php                              # Broadcasting channels
+│   │   └── Controllers/
+│   │       ├── DashboardController.php      # Tableros principales
+│   │       ├── IndicadorController.php      # Lógica central del PED
+│   │       ├── DatosAbiertosController.php  # Exportación JSON/CSV/XLSX
+│   │       └── ...
+│   ├── Models/                              # Modelos Eloquent
+│   ├── Providers/                           # Proveedores de servicios
+│   └── Console/                             # Comandos de consola
 ├── database/
-│   ├── migrations/                               # Migraciones de base de datos
-│   ├── seeders/                                  # Seeders de datos iniciales
-│   └── factories/                                # Factories para testing
+│   ├── migrations/                          # Estructura de BD
+│   └── seeders/                             # Datos semilla (Catálogos)
+├── public/
+│   └── storage/                             # Archivos públicos referenciados
 ├── resources/
 │   ├── views/
-│   │   ├── layouts/                              # Layouts base
-│   │   ├── dashboard.blade.php                   # Vista del dashboard
-│   │   ├── publico/                              # Vistas públicas
-│   │   ├── indicadores/                          # Vistas de indicadores
-│   │   ├── usuarios/                             # Vistas de gestión de usuarios
-│   │   └── ... otras vistas
-│   ├── js/                                       # JavaScript
-│   ├── sass/                                     # Estilos SASS
-│   └── lang/                                     # Traducciones multiidioma
-├── config/
-│   ├── app.php                                   # Configuración app
-│   ├── database.php                              # Configuración BD
-│   ├── auth.php                                  # Configuración autenticación
-│   ├── permission.php                            # Configuración de permisos
-│   └── ... otras configuraciones
-├── public/
-│   ├── index.php                                 # Punto de entrada
-│   ├── css/                                      # CSS compilado
-│   ├── js/                                       # JavaScript compilado
-│   ├── images/                                   # Imágenes
-│   └── assets-administrador/                     # Assets administrativos
-├── storage/                                      # Almacenamiento (logs, archivos)
-├── bootstrap/                                    # Bootstrapping de Laravel
-├── tests/                                        # Tests unitarios e integración
-├── documentation/                                # Documentación del proyecto
-├── .env.example                                  # Ejemplo de variables de entorno
-├── composer.json                                 # Dependencias PHP
-├── package.json                                  # Dependencias Node.js
-├── webpack.mix.js                                # Configuración Laravel Mix
-├── vite.config.js                                # Configuración Vite
-└── artisan                                       # CLI de Laravel
+│   │   ├── auth/                            # Vistas Jetstream/Login
+│   │   ├── panel-indicadores/               # Interfaces de administración
+│   │   ├── livewire/                        # Componentes Livewire
+│   │   └── layouts/                         # Plantillas maestras base
+│   ├── css/                                 # Estilos Tailwind/Bootstrap/Sass
+│   └── js/                                  # Scripts Alpine/Vanilla
+└── routes/
+    ├── web.php                              # Rutas web públicas y autenticadas
+    └── api.php                              # Rutas de API
 ```
 
-## 🔑 Características Principales
+## 🔐 Usuarios y Permisos
 
-### 1. **Gestión de Indicadores**
-- CRUD completo con interfaz avanzada
-- Vinculación con ODS
-- Asociación con programas derivados
-- Gestión de tendencias (Mayor es mejor / Menor es mejor)
-- Cálculo automático de semaforización
-- Histórico de datos anuales validados
-- Sistema de evidencia por año
+El sistema utiliza **Spatie Laravel Permission** acoplado a la administración interna para un control de acceso granular.
 
-### 2. **Dashboard Interactivo**
-- **KPIs**: Indicadores validados, incompletos, actividad reciente
-- **Gráficos Interactivos** (ApexCharts):
-  - Semaforización (distribución por estado)
-  - Avance por enlace/responsable
-  - Indicadores por año
-  - Periodicidad de medición
-  - Tendencias temporales
-- Datos en tiempo real
-- Drill-down interactivo (click en gráficos para filtrar)
+- **Administrador**: Control total sobre catálogos, usuarios, y flujos de captura de indicadores.
+- **Enlace Institucional**: Captura de resultados anuales y manejo de indicadores propios de su dependencia.
+- **Público**: Acceso de solo lectura a los portales de Datos Abiertos, Fichas Técnicas publicadas y Avance General.
 
-### 3. **Sistema de Validación**
-- Flujo de trabajo: Captura → Modificación → Validación
-- Historial de cambios automático
-- Estados de validación
-- Control de acceso por rol
-- Notificaciones de validación
+## 🌐 Módulos y Rutas Principales
 
-### 4. **Gestión de Usuarios Flexible**
-- Usuario de Institución (asociado a una institución)
-- Usuario de Municipio (asociado a un municipio)
-- Usuario Enlace (múltiples instituciones)
-- Creación dinámico de instituciones
-- Asignación granular de permisos
+### Rutas Públicas e Informativas
 
-### 5. **API REST Pública**
-- Endpoints para consulta de indicadores
-- Filtros avanzados (institución, ODS, programa, búsqueda)
-- Paginación configurable
-- Respuestas JSON estructuradas
-- Semaforización en tiempo real
+- `/` - Landing Page / Carrusel Informativo
+- `/ped` - Avance General del Plan Estatal de Desarrollo
+- `/informacion-general` - Contexto y misión
+- `/normatividad` - Marco legal
 
-**Endpoints disponibles:**
-```
-GET  /api/indicadores
-GET  /api/indicadores/{id_or_slug}
+### Transparencia y Datos Abiertos
 
-Parámetros de filtro:
-- institucion_id: Filtrar por institución
-- ods_id: Filtrar por ODS
-- programa_derivado: Filtrar por programa
-- buscar: Búsqueda en nombre/descripción
-- per_page: Indicadores por página (1-100, default 15)
-```
+- `/datos-abiertos-ped` - Portal de descarga de datos del PED
+- `/datos-abiertos-mun` - Datos municipales
 
-### 6. **Gestión de Municipios y Convenios**
-- Catálogo de municipios
-- Convenios municipales
-- Indicadores por municipio
-- Seguimiento territorial
+### Fichas Técnicas
 
-### 7. **Informes y Exportación**
-- Exportación a Excel
-- Generación de reportes
-- Subida masiva de datos desde Excel
-- Validación de integridad de datos
+- `/ficha-tecnica/{indicador}` - Vista pública de las fichas de indicadores.
 
-### 8. **Sistema de Logs de Cambios**
-- Auditoría completa de modificaciones
-- Seguimiento de cierre de sesión
-- Intentos de login fallidos
-- Historial de acciones por usuario
+### Panel de Administración (Protegido)
 
-## 🗄️ Modelos Principales
+- `/dashboard` - Tablero de estado general interno.
+- `/panel-indicadores` - CRUD y gestión integral de los indicadores.
+- `/panel-usuarios` - Gestión de personal y accesos.
+- `/panel-cat-planes` y relacionados - Mantenimiento de catálogos base (Clasificaciones, Ejes, Programas).
 
-### Indicador
-```php
-- id: int
-- nombre: string
-- slug: string
-- descripcion: text
-- programa_derivado: string
-- programa: string
-- tematica: string
-- linea_base: float
-- meta_2024: float
-- unidad_medida: string
-- periodicidad: enum
-- tendencia: enum (mayor/menor)
-- indicador_validado: boolean
-- id_institucion: int (FK)
-- fecha_actualizacion: timestamp
+## 🚀 Despliegue en Producción
 
-Relaciones:
-- hasMany('DatoAnualIndicador')
-- belongsTo('Institucion')
-- belongsToMany('Ods')
-- belongsTo('User') - responsable
+1. **Ajustar variables de entorno**
 
-Métodos:
-- calcularSemaforizacion(validado)
-- obtenerAvance()
-```
+    ```bash
+    APP_ENV=production
+    APP_DEBUG=false
+    ```
 
-### DatoAnualIndicador
-```php
-- id: int
-- indicador_id: int (FK)
-- anio: int
-- dato: float
-- validado: boolean
-- modificado: boolean
-- archivo_evidencia: string
+2. **Caché y Optimización**
 
-Relaciones:
-- belongsTo('Indicador')
-```
+    ```bash
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    composer install --optimize-autoloader --no-dev
+    ```
 
-### User (Extendido)
-```php
-- id: int
-- name: string
-- email: string
-- password: string
-- tipo_usuario: enum (Institución/Municipio)
-- id_institucion: int (FK) - nullable
-- id_municipio: int (FK) - nullable
+3. **Compilación de Producción**
 
-Relaciones:
-- belongsTo('Institucion') - nullable
-- belongsTo('CatMunicipio') - nullable
-- belongsToMany('Institucion') - para Enlace
-- hasMany('Indicador') - como responsable
-- hasMany('DatoAnualIndicador')
-```
+    ```bash
+    npm run prod
+    ```
 
-### Institucion
-```php
-- id: int
-- nombre: string
-- titular: string
-- contacto: string - nullable
-
-Relaciones:
-- hasMany('Indicador')
-- hasMany('User')
-- belongsToMany('User') - Enlace
-```
-
-## 🔐 Sistema de Permisos y Roles
-
-El proyecto utiliza **spatie/laravel-permission** para RBAC granular.
-
-### Roles Disponibles
-- **Administrador**: Acceso completo al sistema
-- **Enlace**: Responsable de validación de indicadores de múltiples instituciones
-- **Institución**: Usuario de una institución específica
-- **Municipio**: Usuario de un municipio específico
-
-### Permisos Principales
-- `ver-indicador` / `crear-indicador` / `editar-indicador` / `borrar-indicador`
-- `validar-indicador` / `editar-indicador-anual`
-- `subida-masiva-indicador`
-- `ver-usuario` / `crear-usuario` / `editar-usuario` / `borrar-usuario` / `des-activar-usuario`
-- `ver-dashboard`
-- Y más...
-
-## 🌐 Rutas Principales
-
-### Web
-```
-GET    /                                    # Página de inicio
-GET    /informacion-general                 # Información general
-GET    /normatividad                        # Marco normativo
-GET    /datos-abiertos-ped                  # Portal de datos abiertos
-GET    /dashboard                           # Dashboard principal (autenticado)
-
-Panel Administrativo:
-GET    /admin/indicadores                   # Listado de indicadores
-GET    /admin/indicadores/crear             # Crear indicador
-GET    /admin/indicadores/{id}/editar       # Editar indicador
-GET    /admin/usuarios                      # Gestión de usuarios
-GET    /admin/instituciones                 # Gestión de instituciones
-GET    /admin/municipios                    # Gestión de municipios
-GET    /admin/convenios                     # Gestión de convenios
-```
-
-### API REST
-```
-GET    /api/indicadores                     # Listar (con filtros)
-GET    /api/indicadores/{id_or_slug}        # Detalle
-```
-
-## 💾 Comandos Artisan Útiles
-
-```bash
-# Migrar la base de datos
-php artisan migrate
-
-# Ejecutar seeders
-php artisan db:seed
-
-# Crear caché de configuración
-php artisan config:cache
-
-# Limpiar caché
-php artisan cache:clear
-
-# Generar documentación
-php artisan ide-helper:generate
-
-# Ejecutar tests
-php artisan test
-
-# Tinker (REPL interactivo)
-php artisan tinker
-```
-
-## 📦 Scripts npm
-
-```bash
-# Desarrollo (watch mode)
-npm run watch
-
-# Build para producción
-npm run production
-
-# Build con optimización
-npm run build
-
-# Desarrollo con hot reload
-npm run hot
-```
-
-## 🧪 Testing
-
-El proyecto incluye soporte para testing con PHPUnit:
-
-```bash
-# Ejecutar todos los tests
-php artisan test
-
-# Ejecutar tests específicos
-php artisan test tests/Feature/IndicadorTest.php
-```
-
-## 📚 Documentación Adicional
-
-En la carpeta `documentation/` se encuentra documentación detallada de cada módulo:
-
-- `dashboard.md` - Guía del Dashboard y sus gráficos
-- `indicadores.md` - Gestión completa de indicadores
-- `usuarios.md` - Gestión de usuarios y roles
-- `roles.md` - Sistema de permisos
-- `indicadormunicipal.md` - Indicadores por municipio
-- `municipioconvenio.md` - Gestión de convenios
-- `logscambios.md` - Sistema de auditoría
-- `carruselindicadores.md` - Carrusel de indicadores
-- `sliderinicio.md` - Configuración del slider
+4. **Permisos de Archivo**
+   Asegúrate de conceder permisos de escritura (`775` o `www-data`) al servidor web en las carpetas `storage/` y `bootstrap/cache/`.
 
 ## 🤝 Contribución
 
-Para contribuir al proyecto:
-
-1. Crear una rama con tu feature: `git checkout -b feature/mi-feature`
-2. Commitear los cambios: `git commit -am 'Añadir mi feature'`
-3. Hacer push a la rama: `git push origin feature/mi-feature`
-4. Abrir un Pull Request
+Este es un proyecto institucional del Gobierno del Estado de Puebla. Para contribuir o reportar incidencias, contacta al equipo de desarrollo del SEI.
 
 ## 📄 Licencia
 
-MIT License - Ver LICENSE para más detalles.
+Este proyecto es de uso interno y confidencial del Gobierno del Estado de Puebla.
 
-## 👥 Autores
+## 📧 Contacto
 
-- **Nery Pozos** - Desarrollo Principal
-- Equipo de Desarrollo
+**Sistema Estatal de Información (SEI)**  
+Subsecretaría de Planeación  
+Secretaría de Planeación, Finanzas y Administración  
+Gobierno del Estado de Puebla
 
-## 📞 Soporte
-
-Para reportar bugs o solicitar features, crear un issue en el repositorio de GitHub: https://github.com/ItsNery/sped-2026/issues
-
-## 🔗 Enlaces Útiles
-
-- [Documentación de Laravel](https://laravel.com/docs)
-- [Spatie Laravel-Permission](https://spatie.be/docs/laravel-permission/v6/introduction)
-- [Livewire](https://livewire.laravel.com/)
-- [ApexCharts](https://apexcharts.com/)
-- [Tailwind CSS](https://tailwindcss.com/)
+Para soporte o consultas sobre el sistema, contacta al equipo de desarrollo.
 
 ---
 
-**Última actualización**: 19 de Mayo de 2026
-
-**Rama**: main (feature/api-indicadores integrada)
-
-**Status**: ✅ Producción - API pública disponible
+<div align="center">
+  Desarrollado con ❤️ por el equipo de SEI
+</div>

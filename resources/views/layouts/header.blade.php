@@ -2,10 +2,15 @@
     <div class="encabezado-movil" id="movil-navbar">
         <div class="logo">
             <a href="{{ url('/') }}">
-                <img src="{{ asset('img/Cadena_SPED_.png') }}" alt="Logo SPED" class="w-100">
+                <img src="{{ asset('img/Cadena_SPED.png') }}" alt="Logo SPED" class="w-100">
             </a>
         </div>
         <div class="menu">
+            <a class="mobile-search-button" href="#customSearchModal" onclick="openSearchModal(event);"
+                aria-label="Buscar indicadores" title="Buscar indicadores">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <span>Buscar</span>
+            </a>
             <button class="menu-button" id="menuButton" aria-label="Abrir menú" aria-expanded="false"
                 aria-controls="mobileMenu" title="Mostrar menú">☰</button>
         </div>
@@ -24,12 +29,12 @@
             </li>
 
             <li
-                class="nav-item dropdown {{ request()->is('informacion-general', 'normatividad', 'datos-abiertos*') ? 'active' : '' }}">
+                class="nav-item dropdown {{ request()->is('normatividad', 'datos-abiertos*', 'informacion-general/*') ? 'active' : '' }}">
                 <a class="nav-link dropdown-toggle" href="#" id="mobileInicioDropdownTrigger" role="button"
                     data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside"> Datos generales
                 </a>
                 <div class="dropdown-menu" aria-labelledby="mobileInicioDropdownTrigger">
-                    <a class="dropdown-item" href="{{ url('/informacion-general') }}">Información general</a>
+                    <a class="dropdown-item" href="{{ url('/informacion-general/api') }}">API</a>
                     <a class="dropdown-item" href="{{ url('/normatividad') }}">Normatividad</a>
 
                     <div class="dropdown segundo-dropdown">
@@ -51,7 +56,7 @@
             </li>
 
             <li
-                class="nav-item dropdown {{ request()->is('ped', 'ped/eje-1', 'ped/eje-2', 'ped/eje-3', 'ped/eje-4', 'ped/eje-5') ? 'active' : '' }}">
+                class="nav-item dropdown {{ request()->is('ped', 'ped/eje-1', 'ped/eje-2', 'ped/eje-3', 'ped/eje-4', 'ped/eje-5', 'ped/eje-6') ? 'active' : '' }}">
                 <a class="nav-link dropdown-toggle" href="#" id="mobilePedDropdownTrigger" role="button"
                     data-bs-toggle="dropdown" aria-expanded="false">
                     Plan Estatal de Desarrollo
@@ -81,20 +86,19 @@
                     <a class="dropdown-item" href="{{ url('/ped-programas/especiales') }}">Programas Especiales</a>
                     <a class="dropdown-item" href="{{ url('/ped-programas/institucionales') }}">Programas
                         Institucionales</a>
-                    <a class="dropdown-item" href="{{ url('/ped-programas/regionales') }}">Programa Regional</a>
                 </div>
             </li>
 
-            <li class="nav-item {{ request()->is('pm*') ? 'active' : '' }}">
+            <li class="nav-item {{ request()->is('pm*', 'ficha-tecnica-municipal/*') ? 'active' : '' }}">
                 <a class="nav-link" href="{{ url('/pm') }}">Planes Municipales de Desarrollo</a>
             </li>
 
             {{-- <li class="nav-item {{ request()->is('agenda') ? 'active' : '' }}">
             <a class="nav-link" href="{{ url('/agenda') }}">Agenda 2030</a>
             </li> --}}
-
+            {{-- Fin de comentario --}}
             <li class="nav-item" id="buscador">
-                <a class="nav-link" href="#" onclick="openSearchModal();">
+                <a class="nav-link" href="#customSearchModal" onclick="openSearchModal(event);">
                     <i class="fas fa-search" aria-hidden="true"></i> Buscar
                 </a>
             </li>

@@ -32,7 +32,7 @@ class UserController extends Controller
 
     /**
      * Muestra una lista de todos los usuarios del sistema.
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function index(Request $request)
     {
@@ -43,7 +43,7 @@ class UserController extends Controller
 
     /**
      * Muestra el formulario para crear un nuevo usuario.
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function create()
     {
@@ -57,8 +57,8 @@ class UserController extends Controller
      * Almacena un nuevo usuario en la base de datos.
      * La lógica de validación y asignación de relaciones cambia dinámicamente
      * según el tipo de usuario (Institución, Municipio, Enlace) y el rol seleccionado.
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request
+     * @return RedirectResponse
      */
     public function store(Request $request)
     {
@@ -97,7 +97,7 @@ class UserController extends Controller
 
         // Validación condicional para id_institucion / nueva_institucion / instituciones (múltiple) / id_municipio
         $rolSeleccionado = $request->input('roles');
-        $tipoUsuario = $request->input('tipo_usuario'); // 'municipio' o 'institucion' (o null si es 'institucion')
+        $tipoUsuario = $request->input('tipo_usuario');
 
         if ($rolSeleccionado === 'Enlace') {
             $rules['instituciones'] = 'required|array|min:1';
@@ -109,7 +109,7 @@ class UserController extends Controller
             $rules['id_municipio'] = 'required|exists:cat_municipios,id';
             $messages['id_municipio.required'] = 'Debe seleccionar un municipio.';
             $messages['id_municipio.exists'] = 'El municipio seleccionado no es válido.';
-        } else { // Es tipo 'institucion' y no es 'Enlace'
+        } else {
             if ($request->input('id_institucion') === 'nueva_institucion') {
                 $rules['nueva_institucion_nombre'] = 'required|string|max:255|unique:instituciones,nombre';
                 $rules['nueva_institucion_titular'] = 'required|string|max:255';
@@ -205,7 +205,7 @@ class UserController extends Controller
     /**
      * Muestra el formulario para editar un usuario existente.
      * @param  int  $id
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function edit($id)
     {
@@ -214,84 +214,22 @@ class UserController extends Controller
         $roles = Role::all();
         $instituciones = Institucion::orderBy('nombre')->get();
 
-        $userRole = $user->roles->first()->name ?? ''; // Nombre del primer rol, o vacío si no tiene roles
+        $userRole = $user->roles->first()->name ?? '';
 
         // Si el usuario es Enlace, obtenemos sus instituciones asociadas
-        $userInstituciones = $user->instituciones->pluck('id')->toArray(); // Obtener las instituciones asociadas en un array
+        $userInstituciones = $user->instituciones->pluck('id')->toArray();
         return view('users.form', compact('user', 'roles', 'userRole', 'instituciones', 'userInstituciones', 'municipios'));
     }
 
     /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    // public function update(Request $request, $id)
-    // {
-    //     $this->validate(
-    //         $request,
-    //         [
-    //             'name' => 'required|string',
-    //             'email' => 'required|email|unique:users,email,' . $id,
-    //             'password' => 'confirmed',
-    //             'roles' => 'nullable|string',
-    //             'instituciones' => 'required_if:roles,Enlace|array|min:1',
-    //             'id_institucion' => 'required_unless:roles,Enlace|exists:instituciones,id',
-    //             'finalizado' => 'nullable|integer'
-
-    //         ],
-    //         [
-    //             'name.required' => 'El campo No puede estar vacío',
-    //             'name.string' => 'Ingresa un nombre válido',
-    //             'email.required' => 'El campo No puede estar vacío',
-    //             'email.email' => 'Debes ingresar un correo válido',
-    //             'email.unique' => 'Este correo ya está registrado',
-    //             'password.confirmed' => 'La contraseña y la confirmación de contraseña deben de coincidir',
-    //             'id_institucion.required_if' => 'Debes elegir una institución si no es Enlace',
-    //             'instituciones.required_if' => 'Debes seleccionar al menos una institución si es Enlace',
-    //             'finalizado.integer' => 'El campo finalizado debe ser un número entero',
-    //         ]
-    //     );
-
-    //     $input = $request->all();
-
-    //     if (!empty($input['password'])) {
-    //         $input['password'] = Hash::make($input['password']);
-    //     } else {
-    //         $input = Arr::except($input, array('password'));
-    //     }
-
-    //     $user = User::find($id);
-    //     $user->update($input);
-
-    //     DB::table('model_has_roles')->where('model_id', $id)->delete();
-    //     $user->assignRole($request->input('roles'));
-
-    //     if ($request->input('roles') === 'Enlace') {
-    //         $user->id_institucion = null;
-    //         $user->save();
-    //         $user->instituciones()->sync($request->input('instituciones')); // Guardar las instituciones en la tabla pivote
-    //     } else {
-    //         $user->id_institucion = $request->input('id_institucion');
-    //         $user->instituciones()->detach();
-    //         $user->save();
-    //     }
-
-    //     return redirect()->route('panel-usuarios.index')->with('success', 'Usuario modificado correctamente');
-    // }
-
-    /**
      * Actualiza un usuario existente en la base de datos.
      * Incluye lógica para actualizar opcionalmente la contraseña y sincronizar roles y relaciones.
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function update(Request $request, $id)
     {
-        // Validación condicional
         $rules = [
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email,' . $id,
@@ -300,14 +238,12 @@ class UserController extends Controller
             'instituciones' => 'required_if:roles,Enlace|array|min:1',
         ];
 
-        // Validación de 'id_institucion' o 'id_municipio' dependiendo del tipo de usuario
         if ($request->input('tipo_usuario') === 'municipio') {
             $rules['id_municipio'] = 'required|exists:cat_municipios,id';
         } else {
             $rules['id_institucion'] = 'required_unless:roles,Enlace|exists:instituciones,id';
         }
 
-        // Mensajes personalizados de error
         $messages = [
             'name.required' => 'El campo No puede estar vacío',
             'name.string' => 'Ingresa un nombre válido',
@@ -321,39 +257,36 @@ class UserController extends Controller
             'instituciones.array' => 'Selecciona instituciones válidas',
         ];
 
-        // Ejecutamos la validación
         $this->validate($request, $rules, $messages);
 
-        // Preparamos los datos de entrada
         $input = $request->all();
 
-        // Si la contraseña no está vacía, la encriptamos
         if (!empty($input['password'])) {
             $input['password'] = Hash::make($input['password']);
         } else {
-            // Si no se actualiza la contraseña, la eliminamos de los datos a actualizar
             $input = Arr::except($input, ['password']);
         }
         if (isset($input['finalizado']) && $input['finalizado'] == '0') {
-            // Restablecemos los campos del reporte para permitir generarlo de nuevo
-            $input['reporte_generado'] = false; // o 0
+            $input['reporte_generado'] = false;
             $input['reporte_generado_at'] = null;
         }
-        // Encontramos al usuario por su ID
         $user = User::findOrFail($id);
+
+        if ($user->isSystemAccount()) {
+            abort_unless(auth()->user()->isSuperAdministrator(), 403, 'La cuenta del sistema solo puede ser gestionada por SuperAdministrador.');
+            abort_unless($request->input('roles') === 'SuperAdministrador', 403, 'La cuenta del sistema debe conservar el rol SuperAdministrador.');
+        }
+
         $user->update($input);
 
-        // Sincronizar roles (usa el sistema de Spatie para limpiar caché)
         $user->syncRoles($request->input('roles'));
 
-        // Lógica de limpieza de campos según el tipo de usuario y rol
         if ($request->input('roles') === 'Enlace') {
             $user->id_institucion = null;
             $user->id_municipio = null;
             $user->save();
             $user->instituciones()->sync($request->input('instituciones'));
         } else {
-            // No es Enlace, limpiamos tabla pivote
             $user->instituciones()->detach();
 
             if ($request->input('tipo_usuario') === 'municipio') {
@@ -366,7 +299,6 @@ class UserController extends Controller
             $user->save();
         }
 
-        // Redirigimos con un mensaje de éxito
         return redirect()->route('panel-usuarios.index')->with('success', 'Usuario modificado correctamente');
     }
 
@@ -374,21 +306,24 @@ class UserController extends Controller
     /**
      * Elimina un usuario de la base de datos.
      * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function destroy($id)
     {
-        User::find($id)->delete();
+        $user = User::findOrFail($id);
+        abort_if($user->isSystemAccount(), 403, 'La cuenta del sistema no puede eliminarse.');
+        $user->delete();
         return redirect()->route('panel-usuarios.index')->with('success', 'Usuario borrado correctamente');
     }
 
     /**
      * Desactiva la cuenta de un usuario.
-     * @param  \App\Models\User $user
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  User $user
+     * @return RedirectResponse
      */
     public function deactivate(User $user)
     {
+        abort_if($user->isSystemAccount(), 403, 'La cuenta del sistema no puede desactivarse.');
         $user->is_active = false;
         $user->save();
 
@@ -397,11 +332,12 @@ class UserController extends Controller
 
     /**
      * Activa la cuenta de un usuario.
-     * @param  \App\Models\User $user
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  User $user
+     * @return RedirectResponse
      */
     public function activate(User $user)
     {
+        abort_if($user->isSystemAccount(), 403, 'La cuenta del sistema no puede modificarse desde esta acción.');
         $user->is_active = true;
         $user->save();
 

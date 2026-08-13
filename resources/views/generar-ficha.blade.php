@@ -20,7 +20,6 @@
             max-width: 100% !important;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 </head>
 
 <body>
@@ -277,10 +276,10 @@
                                 <div class="row">
                                     <div class="col-xs-12 col-sm-12 col-md-12 ficha_titulo"
                                         style="color:{{ $indicador->color }};">
-                                        Meta 2030
+                                        Meta {{ $indicador->meta_anio }}
                                     </div>
                                     <div class="col-xs-12 col-sm-12 col-md-12 ficha_datos">
-                                        {{ $indicador->meta_2024 }}
+                                        {{ $indicador->meta_anio }}: {{ $indicador->meta }}
                                     </div>
                                 </div>
                             </div>
@@ -552,22 +551,22 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             //======================================================================
-            // Función de Formateo Numérico para JavaScript (la misma que antes)
+            // Función de Formateo Numérico
             //======================================================================
-            function formatNumberForApex(value, decimalPlaces = 2) {
+            function formatNumber(value, decimalPlaces = 2) {
                 if (value === null || value === undefined) {
                     return "";
-                } // Devuelve cadena vacía para dataLabels
+                }
                 const num = parseFloat(value);
                 if (isNaN(num)) {
                     return "";
-                } // Devuelve cadena vacía
+                }
                 try {
-                    return num.toLocaleString('en-US', { // Formato: 1,234.56
+                    return num.toLocaleString('en-US', {
                         minimumFractionDigits: decimalPlaces,
                         maximumFractionDigits: decimalPlaces
                     });
-                } catch (e) { // Fallback
+                } catch (e) {
                     const parts = num.toFixed(decimalPlaces).split('.');
                     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                     return parts.join('.');
@@ -584,131 +583,71 @@
             const datosPrincipalesJS = @json($datosParaGraficaPrincipal_php); // Array de [{x,y}]
             const categoriasEjeXJS = @json($categoriasEjeX_php); // Array de años string 'YYYY'
 
-            // console.log("Categorías X:", categoriasEjeXJS);
-            // console.log("Datos Principales:", datosPrincipalesJS);
-
             //======================================================================
-            // Opciones de ApexCharts
+            // Gráfica con ECharts
             //======================================================================
-            var options = {
-                series: [{
-                    name: unidadMedidaJS, // Nombre de la serie principal
-                    data: datosPrincipalesJS, // Datos para la línea principal
-                    type: 'line'
-                }],
-                chart: {
-                    height: 380,
-                    type: 'line',
-                    zoom: {
-                        enabled: false
-                    },
-                    toolbar: {
-                        show: true,
-                        tools: {
-                            download: true,
-                            selection: false,
-                            zoom: false,
-                            zoomin: false,
-                            zoomout: false,
-                            pan: false,
-                            reset: false
-                        }
-                    },
-                    animations: {
-                        enabled: true,
-                        easing: 'easeinout',
-                        speed: 800
-                    }
-                },
-                colors: [colorIndicadorJS], // Solo el color para la serie principal
-                dataLabels: {
-                    enabled: true, // HABILITAR ETIQUETAS DE DATOS
-                    formatter: function(val, opts) {
-                        return val !== null ? formatNumberForApex(val) :
-                            ''; // Formatear y no mostrar "N/D" o null
-                    },
-                    offsetY: -10, // Ajustar la posición vertical de la etiqueta
-                    style: {
-                        fontSize: '10px',
-                        colors: ["#fafafa"] // Color del texto de la etiqueta
-                    },
-                    background: { // Fondo para las etiquetas para mejor legibilidad
-                        enabled: true,
-                        foreColor: '#304758', // Color del texto sobre el fondo
-                        padding: 4,
-                        borderRadius: 2,
-                        borderWidth: 1,
-                        borderColor: 'rgba(180,180,180,0.6)',
-                        opacity: 0.9,
-                    }
-                },
-                stroke: {
-                    curve: 'smooth',
-                    width: 3
-                },
-                markers: {
-                    size: 5,
-                    strokeColors: '#fff',
-                    strokeWidth: 2,
-                    hover: {
-                        size: 7
-                    }
-                },
-                title: {
-                    text: nombreIndicadorJS,
-                    align: 'left',
-                    style: {
-                        fontSize: '16px',
-                        fontWeight: 'bold'
-                    }
-                },
+            var chart = echarts.init(document.getElementById('grafica'));
+            chart.setOption({
                 tooltip: {
-                    enabled: true, // Puedes dejar el tooltip habilitado o deshabilitarlo
-                    shared: true, // Si está habilitado, 'shared' puede ser útil
-                    intersect: false,
-                    x: {
-                        format: 'yyyy'
-                    },
-                    y: {
-                        formatter: function(value) {
-                            return formatNumberForApex(value);
-                        }
-                    }
-                },
-                xaxis: {
-                    categories: categoriasEjeXJS, // Años 2020-2030
-                    type: 'category',
-                    title: {
-                        text: 'Año'
-                    },
-                    tooltip: {
-                        enabled: false
-                    }
-                },
-                yaxis: {
-                    title: {
-                        text: unidadMedidaJS
-                    },
-                    labels: {
-                        formatter: function(val) {
-                            return formatNumberForApex(val);
-                        }
+                    trigger: 'axis',
+                    formatter: function(params) {
+                        var res = params[0].axisValue;
+                        params.forEach(function(p) {
+                            if (p.value !== null && p.value !== undefined && !isNaN(p.value)) {
+                                res += '<br/>' + p.marker + ' ' + p.seriesName + ': ' + formatNumber(p.value);
+                            }
+                        });
+                        return res;
                     }
                 },
                 legend: {
-                    position: 'top',
-                    horizontalAlign: 'right',
-                    floating: true,
-                    offsetY: -25,
-                    offsetX: -5
+                    data: [unidadMedidaJS],
+                    top: 'top'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: categoriasEjeXJS,
+                    name: 'Año'
+                },
+                yAxis: {
+                    type: 'value',
+                    name: unidadMedidaJS,
+                    axisLabel: {
+                        formatter: function(val) { return formatNumber(val); }
+                    }
+                },
+                series: [{
+                    name: unidadMedidaJS,
+                    type: 'line',
+                    data: datosPrincipalesJS.map(function(d) { return d.y; }),
+                    smooth: true,
+                    lineStyle: { width: 3, color: colorIndicadorJS },
+                    itemStyle: { color: colorIndicadorJS },
+                    symbolSize: 5,
+                    connectNulls: true,
+                    label: {
+                        show: true,
+                        formatter: function(params) {
+                            return params.value !== null && params.value !== undefined ? formatNumber(params.value) : '';
+                        },
+                        offsetY: -10,
+                        fontSize: 10,
+                        color: '#fafafa',
+                        backgroundColor: 'rgba(48,71,88,0.9)',
+                        padding: [4, 4, 4, 4],
+                        borderRadius: 2
+                    }
+                }],
+                title: {
+                    text: nombreIndicadorJS,
+                    left: 'left',
+                    textStyle: {
+                        fontSize: 16,
+                        fontWeight: 'bold'
+                    }
                 }
-            };
-
-            // Destruir gráfica anterior si existe
-            var existingChart = ApexCharts.exec("grafica", 'destroy');
-
-            var chart = new ApexCharts(document.querySelector("#grafica"), options);
-            chart.render();
+            });
+            chart.resize();
         });
     </script>
     <script>

@@ -69,9 +69,9 @@
                             Inicio
                         </a>
                         <br>
-                        <a class="text-white mb-2" href="{{ url('/informacion-general') }}">
+                        <a class="text-white mb-2" href="{{ url('/informacion-general/api') }}">
                             <i class="fa fa-angle-right mr-2"></i>
-                            Información General
+                            API Pública
                         </a>
                         <br>
                         <a class="text-white mb-2" href="{{ url('/normatividad') }}">

@@ -20,32 +20,40 @@ del Estado de Puebla')
 'Sección de los Planes Municipales de Desarrollo dentro del Sistema de Información para el
 Seguimiento a la Planeación y Evaluación del Desarrollo del Estado de Puebla')
 @section('css')
+    <link href="{{ asset('css/municipales.css') }}" rel="stylesheet">
 @endsection
 @section('jss-inicial')
 @endsection
 @section('content')
-<img class="w-100" src="{{ asset('img/Banners/Banner_Municipales/bannerPMD.jpg') }}"
-    title="Indicadores Planes Municipales" alt="Imagen con texto que dice Indicadores de los Planes Municipales">
-<div class="container" style="margin-left: auto; margin-right: auto;">
-    <div class="row">
-        @foreach ($municipiosConvenio as $municipio)
-        <div class="col-6 col-md-3 col-lg-3 hvr-grow" style="margin-bottom:30px; margin-top:30px;">
-            <div class="avatar">
-                <div class="avatar__content">
-                    <a href="{{ route('pm.show', ['municipioConvenio' => $municipio]) }}" style="text-decoration:none;">
-                        <img class="profile-pic" src="{{ $municipio->icono }}" alt="Profile Pic">
-                    </a>
-                </div>
+<div class="municipales">
+    <section class="municipales__hero">
+        <div class="municipales__hero-container">
+            <div class="municipales__hero-content">
+                <span class="municipales__hero-tag">Planeación municipal</span>
+                <h1 class="municipales__hero-title">Planes Municipales de Desarrollo</h1>
+                <p class="municipales__hero-desc">Consulta el seguimiento de los indicadores de los municipios que participan en el Sistema de Información.</p>
             </div>
         </div>
-        @endforeach
-    </div>
-    <div class="row">
-        <p class="p-planes-mun">
-            Nota: La información contenida en esta sección es responsabilidad de los municipios de acuerdo a lo
-            establecido en sus Planes Municipales de Desarrollo.
-        </p>
-    </div>
+    </section>
+    <main class="municipales__main">
+        <div class="container municipales__container">
+            <p class="municipales__intro">Selecciona un municipio para consultar sus indicadores y documentos relacionados.</p>
+            <div class="municipales__grid">
+                @foreach ($municipiosConvenio as $municipio)
+                    <a class="municipales__card" href="{{ route('pm.show', ['municipioConvenio' => $municipio]) }}">
+                        <div class="municipales__card-icon">
+                            <img src="{{ asset($municipio->icono) }}" alt="{{ $municipio->municipio->nombre ?? 'Municipio' }}">
+                        </div>
+                        <div class="municipales__card-body">
+                            <h2>{{ $municipio->municipio->nombre ?? 'Municipio' }}</h2>
+                            <span>Consultar indicadores <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+            <p class="municipales__note"><i class="fas fa-circle-info me-2"></i>La información contenida en esta sección es responsabilidad de los municipios de acuerdo con lo establecido en sus Planes Municipales de Desarrollo.</p>
+        </div>
+    </main>
 </div>
 @section('jss-final')
 

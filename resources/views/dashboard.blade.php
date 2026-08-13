@@ -1,432 +1,389 @@
 <x-app-layout>
-    @section('title', 'Administración: Inicio')
+    @section('title', 'Centro de mando del PED')
     <x-slot name="header">
-        <h2 class="h4 font-weight-bold">
-            {{ __('Inicio') }}
-        </h2>
+        <div class="exec-header">
+            <div>
+                <span class="exec-eyebrow">Centro de mando</span>
+                <h2 class="exec-header__title">Seguimiento del Plan Estatal de Desarrollo</h2>
+            </div>
+            <span class="exec-header__plan">{{ $plan->nombre }}</span>
+        </div>
     </x-slot>
-    {{-- <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script> --}}
-    <script src="{{ asset('js/apexcharts.js') }}"></script>
-    @auth
-    @if (auth()->user()->hasRole('Administrador'))
-    <div class="contenedor-principal container my-1">
-        <div class="encabezado-lista">
-            <h2>📊 Resumen de Indicadores</h2>
-        </div>
-        <div class="row g-4">
-            <!-- Total de Indicadores Validados e Incompletos -->
-            <div class="col-md-6">
-                <div class="card text-center shadow-sm mb-3">
-                    <div class="card-body">
-                        <h3 class="card-title text-success fw-bold">{{ $totalIndicadoresValidados }}</h3>
-                        <p class="card-text">Indicadores validados</p>
-                        <div class="progress" style="height: 10px;">
-                            <div class="progress-bar bg-success" role="progressbar"
-                                style="width: {{ $porcentajeValidado }}%;" aria-valuenow="{{ $porcentajeValidado }}"
-                                aria-valuemin="0" aria-valuemax="100">
-                            </div>
-                        </div>
-                        <small class="text-muted">{{ number_format($porcentajeValidado, 2) }}% del total</small>
-                    </div>
-                </div>
+
+    @php
+        $semaforoColores = [
+            'Excedido' => '#3E8CEE',
+            'Aceptable' => '#43B383',
+            'Moderado' => '#F5E35B',
+            'Insuficiente' => '#B94149',
+            'No clasificado' => '#A7AFB2',
+        ];
+        $totalSemaforo = max(array_sum($semaforizacionCounts), 1);
+        $programasPrioritarios = $programasData
+            ->flatMap(fn ($grupo) => $grupo['programas'])
+            ->sortBy(fn ($programa) => $programa['avance'] ?? -1)
+            ->take(8);
+    @endphp
+
+    <div class="exec-dashboard">
+        <section class="exec-intro" aria-labelledby="exec-title">
+            <div class="exec-intro__copy">
+                <span class="exec-eyebrow">Lectura ejecutiva</span>
+                <h1 id="exec-title">¿Qué requiere atención hoy?</h1>
+                <p>
+                    Resumen operativo del {{ $plan->nombre }} con datos
+                    {{ $soloValidados ? 'validados' : 'registrados' }}.
+                </p>
             </div>
-            <div class="col-md-6">
-                <div class="card text-center shadow-sm">
-                    <div class="card-body">
-                        <h3 class="card-title text-danger fw-bold">{{ $totalIndicadoresIncompletos }}</h3>
-                        <p class="card-text">Indicadores incompletos</p>
-                        <div class="progress" style="height: 10px;">
-                            <div class="progress-bar bg-danger" role="progressbar"
-                                style="width: {{ $porcentajeIncompletos }}%;"
-                                aria-valuenow="{{ $porcentajeIncompletos }}" aria-valuemin="0" aria-valuemax="100">
-                            </div>
-                        </div>
-                        <small class="text-muted">{{ number_format($porcentajeIncompletos, 2) }}% del total</small>
+            <div class="exec-options" aria-label="Opciones de consulta">
+                <div class="exec-options__header">
+                    <div>
+                        <span class="exec-eyebrow">Controles del tablero</span>
+                        <strong>Opciones de consulta</strong>
                     </div>
+                    <span class="exec-options__hint">Actualiza el universo visible</span>
                 </div>
-            </div>
-        </div>
-        <div class="row g-4">
-            @if (count($indicadoresRecientes) > 0)
-            <!-- Indicadores Recientes -->
-            <div class="col-md-6">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">🆕 Indicadores Recientes</h5>
-                        <div class="scroll-container" id="indicadoresRecientes">
-                            @foreach ($indicadoresRecientes as $indicador)
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <a href="{{ route('panel-indicadores.show', $indicador['id']) }}"><span
-                                        class="fw-bold">{{ $indicador['nombre'] }}</span></a>
-                                <small
-                                    class="badge 
-                                                                {{ $indicador['tipo'] == 'Nuevo' ? 'bg-success' : 'bg-warning' }} text-black">
-                                    {{ $indicador['tipo'] }}
-                                </small>
-                            </div>
+                <div class="exec-options__body">
+                    <form class="exec-filters" method="GET" action="{{ route('dashboard') }}">
+                        <label class="exec-filter-field exec-filter-field--plan">
+                            <span>Plan estatal</span>
+                            <select name="plan_id" aria-label="Seleccionar plan">
+                                @foreach ($planes as $optionPlan)
+                                    <option value="{{ $optionPlan->id }}" @selected($optionPlan->id === $plan->id)>
+                                        {{ $optionPlan->nombre }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </label>
+                        <label class="exec-filter-field">
+                            <span>Datos</span>
+                            <select name="solo_validados" aria-label="Seleccionar estado de datos">
+                                <option value="1" @selected($soloValidados)>Solo validados</option>
+                                <option value="0" @selected(!$soloValidados)>Todos los registrados</option>
+                            </select>
+                        </label>
+                        <label class="exec-filter-field exec-filter-field--year">
+                            <span>Desde</span>
+                            <input type="number" name="anio_desde" min="2000" max="2100" value="{{ request('anio_desde') }}" placeholder="Año">
+                        </label>
+                        <label class="exec-filter-field exec-filter-field--year">
+                            <span>Hasta</span>
+                            <input type="number" name="anio_hasta" min="2000" max="2100" value="{{ request('anio_hasta') }}" placeholder="Año">
+                        </label>
+                        @foreach (['eje_id', 'programa_id', 'institucion_id', 'semaforo', 'calidad'] as $hiddenFilter)
+                            @foreach ($filters[$hiddenFilter] as $hiddenValue)
+                                <input type="hidden" name="{{ $hiddenFilter }}[]" value="{{ $hiddenValue }}">
                             @endforeach
+                        @endforeach
+                        @if ($filters['programa_tipo'])<input type="hidden" name="programa_tipo" value="{{ $filters['programa_tipo'] }}">@endif
+                        @if ($filters['buscar'])<input type="hidden" name="buscar" value="{{ $filters['buscar'] }}">@endif
+                        <button type="submit" class="exec-filter-button">Actualizar</button>
+                    </form>
+                    <div class="exec-options__tools">
+                        <div class="exec-options__tool-group">
+                            <a class="exec-clear-filters" href="{{ route('dashboard') }}">
+                                <span aria-hidden="true">×</span> Limpiar
+                            </a>
+                            <button type="button" class="exec-more-filters" data-bs-toggle="offcanvas" data-bs-target="#dashboardFilters" aria-controls="dashboardFilters">
+                                <span class="exec-more-filters__icon" aria-hidden="true">+</span>
+                                <span class="exec-more-filters__label">Más filtros</span>
+                                <b>{{ count($filters['eje_id']) + count($filters['programa_id']) + count($filters['institucion_id']) + count($filters['semaforo']) + count($filters['calidad']) + ($filters['programa_tipo'] ? 1 : 0) + ($filters['buscar'] ? 1 : 0) }}</b>
+                            </button>
+                        </div>
+                        <div class="exec-export-actions" aria-label="Exportar dashboard">
+                            <span class="exec-tools-label">Exportar</span>
+                            <a href="{{ route('dashboard.export.pdf', request()->query()) }}" title="Descargar PDF"><strong>PDF</strong><small>Descargar</small></a>
+                            <a href="{{ route('dashboard.export.xlsx', request()->query()) }}" title="Descargar Excel"><strong>XLSX</strong><small>Descargar</small></a>
                         </div>
                     </div>
                 </div>
             </div>
+        </section>
+
+        <div class="exec-filter-chips" aria-label="Filtros activos">
+            @if ($filters['eje_id']) <a href="{{ route('dashboard', request()->except('eje_id')) }}">Eje: {{ count($filters['eje_id']) }} seleccionado(s) ×</a> @endif
+            @if ($filters['institucion_id']) <a href="{{ route('dashboard', request()->except('institucion_id')) }}">Institución: {{ count($filters['institucion_id']) }} seleccionada(s) ×</a> @endif
+            @if ($filters['programa_id']) <a href="{{ route('dashboard', request()->except(['programa_id', 'programa_tipo'])) }}">Programa: {{ count($filters['programa_id']) }} seleccionado(s) ×</a> @endif
+            @if ($filters['semaforo']) <a href="{{ route('dashboard', request()->except('semaforo')) }}">Estado: {{ implode(', ', $filters['semaforo']) }} ×</a> @endif
+            @if ($filters['calidad']) <a href="{{ route('dashboard', request()->except('calidad')) }}">Calidad: {{ count($filters['calidad']) }} criterio(s) ×</a> @endif
+            @if ($filters['buscar']) <a href="{{ route('dashboard', request()->except('buscar')) }}">Búsqueda: {{ $filters['buscar'] }} ×</a> @endif
+        </div>
+
+        <div class="offcanvas offcanvas-end exec-filter-drawer" tabindex="-1" id="dashboardFilters" aria-labelledby="dashboardFiltersTitle">
+            <div class="offcanvas-header">
+                <div><span class="exec-eyebrow">Consulta avanzada</span><h2 id="dashboardFiltersTitle">Más filtros</h2></div>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar filtros"></button>
+            </div>
+            <div class="offcanvas-body">
+                <form method="GET" action="{{ route('dashboard') }}" class="exec-drawer-form">
+                    <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                    <input type="hidden" name="solo_validados" value="{{ $soloValidados ? 1 : 0 }}">
+                    @if ($filters['anio_desde'] !== null)<input type="hidden" name="anio_desde" value="{{ $filters['anio_desde'] }}">@endif
+                    @if ($filters['anio_hasta'] !== null)<input type="hidden" name="anio_hasta" value="{{ $filters['anio_hasta'] }}">@endif
+
+                    <fieldset><legend>Alcance</legend>
+                        <label class="exec-drawer-field">Buscar indicador<input type="search" name="buscar" value="{{ $filters['buscar'] }}" placeholder="Nombre, tema o descripción"></label>
+                        <label class="exec-drawer-field">Ejes<select name="eje_id[]" multiple size="5">@foreach ($filterOptions['ejes'] as $eje)<option value="{{ $eje->id }}" @selected(in_array($eje->id, $filters['eje_id']))>{{ $eje->numero }}. {{ $eje->nombre }}</option>@endforeach</select></label>
+                        <label class="exec-drawer-field">Tipo de programa<select name="programa_tipo"><option value="">Todos los tipos</option>@foreach ($filterOptions['programas'] as $tipo => $programas)<option value="{{ $tipo }}" @selected($filters['programa_tipo'] === $tipo)>{{ ucfirst($tipo) }}</option>@endforeach</select></label>
+                        <label class="exec-drawer-field">Programas<select name="programa_id[]" multiple size="6">@foreach ($filterOptions['programas'] as $tipo => $programas)<optgroup label="{{ ucfirst($tipo) }}">@foreach ($programas as $programa)<option value="{{ $programa->id }}" @selected(in_array($programa->id, $filters['programa_id']))>{{ $programa->nombre }}</option>@endforeach</optgroup>@endforeach</select></label>
+                        <label class="exec-drawer-field">Instituciones<select name="institucion_id[]" multiple size="6">@foreach ($filterOptions['instituciones'] as $institucion)<option value="{{ $institucion->id }}" @selected(in_array($institucion->id, $filters['institucion_id']))>{{ $institucion->nombre }}</option>@endforeach</select></label>
+                    </fieldset>
+
+                    <fieldset><legend>Diagnóstico</legend>
+                        <div class="exec-check-grid">@foreach (['Excedido', 'Aceptable', 'Moderado', 'Insuficiente', 'No clasificado'] as $estado)<label><input type="checkbox" name="semaforo[]" value="{{ $estado }}" @checked(in_array($estado, $filters['semaforo']))>{{ $estado }}</label>@endforeach</div>
+                        <div class="exec-check-grid">@foreach (['sin_datos' => 'Sin datos', 'sin_meta' => 'Sin meta', 'sin_tendencia' => 'Sin tendencia', 'pendiente_validacion' => 'Pendiente de validación'] as $valor => $label)<label><input type="checkbox" name="calidad[]" value="{{ $valor }}" @checked(in_array($valor, $filters['calidad']))>{{ $label }}</label>@endforeach</div>
+                    </fieldset>
+
+                    <div class="exec-drawer-actions"><a href="{{ route('dashboard', ['plan_id' => $plan->id]) }}">Limpiar</a><button type="submit" class="exec-filter-button">Aplicar filtros</button></div>
+                </form>
+            </div>
+        </div>
+
+        <section class="exec-kpis" aria-label="Indicadores principales">
+            <a class="exec-kpi exec-kpi--primary" href="#prioridades">
+                <span class="exec-kpi__label">Avance promedio</span>
+                <strong>{{ number_format($avanceGlobalPromedio, 1) }}<small>%</small></strong>
+                <span class="exec-kpi__detail">{{ $metricasGlobal['total_evaluables'] }} de {{ $totalIndicadores }} evaluables</span>
+                <span class="exec-kpi__bar"><i style="width: {{ min(100, max(0, $avanceGlobalPromedio)) }}%; background: {{ $colorAvanceGlobal }}"></i></span>
+            </a>
+            <div class="exec-kpi">
+                <span class="exec-kpi__label">Cobertura de evaluación</span>
+                <strong>{{ number_format($metricasGlobal['cobertura_evaluacion'], 1) }}<small>%</small></strong>
+                <span class="exec-kpi__detail">{{ $metricasGlobal['total_evaluables'] }} indicadores con dato útil</span>
+                <span class="exec-kpi__signal exec-kpi__signal--green">Calidad de seguimiento</span>
+            </div>
+            <div class="exec-kpi">
+                <span class="exec-kpi__label">Validación del universo</span>
+                <strong>{{ number_format($porcentajeValidado, 1) }}<small>%</small></strong>
+                <span class="exec-kpi__detail">{{ $totalIndicadoresValidados }} de {{ $totalIndicadores }} indicadores</span>
+                <span class="exec-kpi__signal exec-kpi__signal--sand">{{ $quality['pendientes_validacion'] }} pendientes</span>
+            </div>
+            <a class="exec-kpi exec-kpi--alert" href="{{ route('dashboard.drill-down', array_merge(request()->query(), ['criticas' => 1])) }}">
+                <span class="exec-kpi__label">Alertas críticas</span>
+                <strong>{{ $indicadoresCriticos }}</strong>
+                <span class="exec-kpi__detail">Avance insuficiente, actualización vencida o validación pendiente</span>
+                <span class="exec-kpi__signal exec-kpi__signal--red">{{ $totalCriticos }} sin dato o insuficientes</span>
+            </a>
+        </section>
+
+        <section class="exec-section" id="prioridades" aria-labelledby="prioridades-title">
+            <div class="exec-section__heading">
+                <div>
+                    <span class="exec-eyebrow">Bandeja de atención</span>
+                    <h2 id="prioridades-title">Prioridades para decisión</h2>
+                </div>
+                <a class="exec-table__action" href="{{ route('dashboard.drill-down', array_merge(request()->query(), ['alertas' => 1])) }}">{{ $actionQueue->count() }} alertas · Ver todas <span aria-hidden="true">→</span></a>
+            </div>
+            @if ($actionQueue->isEmpty())
+                <div class="exec-empty exec-empty--success">
+                    <i class="fas fa-circle-check" aria-hidden="true"></i>
+                    <div><strong>Sin pendientes críticos</strong><span>El universo seleccionado no tiene alertas que requieran intervención inmediata.</span></div>
+                </div>
             @else
-            <span class="text-muted">No hay datos</span>
+                <div class="exec-priority-table-wrap">
+                    <table class="exec-table">
+                        <caption class="visually-hidden">Indicadores que requieren atención prioritaria</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Indicador</th>
+                                <th scope="col">Institución</th>
+                                <th scope="col">Motivo</th>
+                                <th scope="col">Avance</th>
+                                <th scope="col">Último dato</th>
+                                <th scope="col"><span class="visually-hidden">Acción</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($actionQueue->take(12) as $item)
+                                <tr>
+                                    <td data-label="Indicador">
+                                        <a href="{{ route('panel-indicadores.show', ['indicador' => $item['id'], 'plan_id' => $plan->id]) }}" class="exec-table__indicator">
+                                            {{ Str::limit($item['nombre'], 72) }}
+                                        </a>
+                                    </td>
+                                    <td data-label="Institución">{{ Str::limit($item['institucion'], 34) }}</td>
+                                    <td data-label="Motivo"><span class="exec-status exec-status--{{ $item['prioridad'] <= 2 ? 'red' : 'sand' }}">{{ $item['motivo'] }}</span></td>
+                                    <td data-label="Avance" class="exec-table__number">
+                                        {{ $item['avance'] !== null ? number_format($item['avance'], 1) . '%' : 'N/D' }}
+                                    </td>
+                                    <td data-label="Último dato">{{ $item['fecha_dato'] }}{{ $item['anio'] ? ' · ' . $item['anio'] : '' }}</td>
+                                    <td data-label="Acción" class="text-end"><a href="{{ route('panel-indicadores.show', ['indicador' => $item['id'], 'plan_id' => $plan->id]) }}" class="exec-table__action">Revisar <span aria-hidden="true">→</span></a></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             @endif
+        </section>
 
+        <div class="exec-grid exec-grid--main">
+            <section class="exec-section" aria-labelledby="semaforo-title">
+                <div class="exec-section__heading">
+                    <div>
+                        <span class="exec-eyebrow">Desempeño</span>
+                        <h2 id="semaforo-title">Estado del universo</h2>
+                    </div>
+                    <span class="exec-section__meta">{{ $totalIndicadores }} indicadores</span>
+                </div>
+                <div class="exec-semaphore" role="img" aria-label="Distribución de indicadores por estado de avance">
+                    @foreach ($semaforizacionCounts as $estado => $cantidad)
+                        <span style="width: {{ ($cantidad / $totalSemaforo) * 100 }}%; background: {{ $semaforoColores[$estado] }}"></span>
+                    @endforeach
+                </div>
+                <div class="exec-legend">
+                    @foreach ($semaforizacionCounts as $estado => $cantidad)
+                        <div><i style="background: {{ $semaforoColores[$estado] }}"></i><a class="exec-legend__link" href="{{ route('dashboard.drill-down', ['plan_id' => $plan->id, 'solo_validados' => $soloValidados ? 1 : 0, 'semaforo' => [$estado]]) }}">{{ $estado }}</a><strong>{{ $cantidad }}</strong></div>
+                    @endforeach
+                </div>
+                <div class="exec-method-note">
+                    <i class="fas fa-circle-info" aria-hidden="true"></i>
+                    <span>El avance se calcula contra la meta y la tendencia registrada de cada indicador.</span>
+                </div>
+            </section>
 
-            <!-- Instituciones sin Indicadores Validados -->
-            <div class="col-md-6">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">⚠️ Instituciones sin Indicadores Validados</h5>
-                        <div class="scroll-container" id="institucionesSinIndicadores">
-                            @if ($institucionesSinIndicadores->isEmpty())
-                            <p class="text-muted">✅ Todas las instituciones tienen al menos un indicador válido.
-                            </p>
-                            @else
-                            @foreach ($institucionesSinIndicadores as $institucion)
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="fw-bold">{{ $institucion->nombre }}</span>
-                                <small class="badge bg-danger">Sin indicadores completos</small>
-                            </div>
-                            @endforeach
-                            @endif
-                        </div>
+            <section class="exec-section" aria-labelledby="quality-title">
+                <div class="exec-section__heading">
+                    <div>
+                        <span class="exec-eyebrow">Calidad de información</span>
+                        <h2 id="quality-title">Qué limita la lectura</h2>
                     </div>
                 </div>
-            </div>
+                <div class="exec-quality-list">
+                    <div><span class="exec-quality__marker exec-quality__marker--red"></span><span>Sin dato anual</span><strong>{{ $quality['sin_datos'] }}</strong></div>
+                    <div><span class="exec-quality__marker exec-quality__marker--sand"></span><span>Pendientes de validación</span><strong>{{ $quality['pendientes_validacion'] }}</strong></div>
+                    <div><span class="exec-quality__marker exec-quality__marker--gray"></span><span>Sin meta válida</span><strong>{{ $quality['sin_meta'] }}</strong></div>
+                    <div><span class="exec-quality__marker exec-quality__marker--green"></span><span>Sin tendencia definida</span><strong>{{ $quality['sin_tendencia'] }}</strong></div>
+                </div>
+                <div class="exec-quality-footer">Último corte de datos: <strong>{{ $fechaCorte ? $fechaCorte->format('d/m/Y') : 'Sin fecha registrada' }}</strong></div>
+            </section>
         </div>
-        <div class="row g-4">
-            <!-- Top Instituciones -->
-            <div class="col-md-12">
-                <div class="card text-center shadow-sm">
-                    <div class="card-body">
-                        <h3 class="card-title">🏆 Top Instituciones</h3>
-                        <p class="card-text">Las instituciones con más indicadores validados.</p>
-                        <div class="list-group">
-                            @foreach ($instituciones as $index => $institucion)
-                            <div class="list-group-item d-flex align-items-center">
-                                <div class="me-3 d-flex align-items-center justify-content-center bg-primary text-white fw-bold rounded-circle"
-                                    style="width: 40px; height: 40px;">
-                                    {{ $index + 1 }}
-                                </div>
-                                <div class="flex-grow-1">
-                                    <h5 class="mb-1"> {{ $institucion->nombre }} </h5>
-                                    <p class="text-muted mb-1">
-                                        {{ $institucion->indicadores_validados_count }}
-                                        indicadores validados
-                                    </p>
-                                    <div class="progress" style="height: 10px;">
-                                        @php
-                                        $totalIndicadores = $institucion->total_indicadores ?? 1;
-                                        $progreso =
-                                        ($institucion->indicadores_validados_count / $totalIndicadores) * 100;
-                                        @endphp
-                                        <div class="progress-bar bg-success" role="progressbar"
-                                            style="width: {{ $progreso }}%;"
-                                            aria-valuenow="{{ $progreso }}" aria-valuemin="0"
-                                            aria-valuemax="100">
-                                        </div>
-                                    </div>
-                                </div>
-                                @if ($index === 0)
-                                <span class="ms-3 text-warning" style="font-size: 1.5rem;">🏆</span>
-                                @endif
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
+
+        <section class="exec-section" aria-labelledby="trend-title">
+            <div class="exec-section__heading">
+                <div>
+                    <span class="exec-eyebrow">Comportamiento observado</span>
+                    <h2 id="trend-title">Evolución del desempeño</h2>
+                </div>
+                <span class="exec-section__meta">{{ $trend['anio_desde'] ?? 'Sin año' }} - {{ $trend['anio_hasta'] ?? 'Sin año' }}</span>
+            </div>
+            <div class="exec-trend-summary">
+                <div><span class="exec-quality__marker exec-quality__marker--green"></span><span>Mejoran</span><strong>{{ $trend['comparaciones']['mejoran'] }}</strong></div>
+                <div><span class="exec-quality__marker exec-quality__marker--red"></span><span>Retroceden</span><strong>{{ $trend['comparaciones']['retroceden'] }}</strong></div>
+                <div><span class="exec-quality__marker exec-quality__marker--sand"></span><span>Estables</span><strong>{{ $trend['comparaciones']['estables'] }}</strong></div>
+                <div><span class="exec-quality__marker exec-quality__marker--gray"></span><span>Sin comparación</span><strong>{{ $trend['comparaciones']['sin_comparacion'] }}</strong></div>
+            </div>
+            <div id="exec-trend-chart" class="exec-trend-chart" role="img" aria-label="Evolución histórica del avance promedio"></div>
+            <div class="exec-trend-tables">
+                <div>
+                    <h3>Mayores mejoras</h3>
+                    @forelse ($trend['mejoras'] as $item)
+                        <div class="exec-trend-item"><span>{{ Str::limit($item['nombre'], 48) }}</span><strong class="exec-trend-item--up">+{{ number_format($item['variacion'], 1) }} pp</strong></div>
+                    @empty
+                        <p class="exec-trend-empty">No hay mejoras comparables.</p>
+                    @endforelse
+                </div>
+                <div>
+                    <h3>Mayores retrocesos</h3>
+                    @forelse ($trend['retrocesos'] as $item)
+                        <div class="exec-trend-item"><span>{{ Str::limit($item['nombre'], 48) }}</span><strong class="exec-trend-item--down">{{ number_format($item['variacion'], 1) }} pp</strong></div>
+                    @empty
+                        <p class="exec-trend-empty">No hay retrocesos comparables.</p>
+                    @endforelse
                 </div>
             </div>
-        </div>
-        <div class="row g-4">
-            <!-- Indicadores Caducados -->
-            <div class="col-md-4">
-                <div class="card border-danger mb-3">
-                    <div class="card-header bg-danger text-white">📅 Indicadores Caducados
-                        <span class="badge text-bg-light mx-3">
-                            {{ count($indicadoresCaducados) }}
-                        </span>
-                    </div>
-                    <div class="card-body">
-                        @if ($indicadoresCaducados->isEmpty())
-                        <p class="text-muted">✅ No hay indicadores caducados.</p>
-                        @else
-                        <input type="text" class="form-control mb-2 search-input"
-                            placeholder="Buscar indicador..." data-target="indicadoresCaducados">
-                        <ul class="list-group indicadoresCaducados"
-                            style="max-height: 350px; overflow-y: scroll;">
-                            @foreach ($indicadoresCaducados as $indicador)
-                            <li class="list-group-item">
-                                <a href="{{ route('panel-indicadores.show', $indicador->id) }}">
-                                    <strong>{{ $indicador->nombre }}</strong>
-                                </a>
-                                <span class="badge bg-danger">Expiró:
-                                    {{ $indicador->fecha_actualizacion }}</span>
-                            </li>
-                            @endforeach
-                        </ul>
-                        @endif
-                    </div>
+            <p class="exec-method-note"><i class="fas fa-circle-info" aria-hidden="true"></i><span>La variación compara el avance calculado entre los dos últimos años disponibles por indicador. No representa una proyección.</span></p>
+        </section>
+
+        <section class="exec-section" aria-labelledby="ejes-title">
+            <div class="exec-section__heading">
+                <div>
+                    <span class="exec-eyebrow">Seguimiento estratégico</span>
+                    <h2 id="ejes-title">Avance por eje</h2>
                 </div>
+                <span class="exec-section__meta">Comparación con la misma regla de cálculo</span>
             </div>
-
-            <!-- Indicadores Próximos a Actualizar -->
-            <div class="col-md-4">
-                <div class="card border-warning mb-3">
-                    <div class="card-header bg-warning text-black">📆 Próximos a Actualizar
-                        <span class="badge text-bg-light mx-3">
-                            {{ count($indicadoresProximos) }}
-                        </span>
-                    </div>
-                    <div class="card-body">
-                        @if ($indicadoresProximos->isEmpty())
-                        <p class="text-muted">🎯 No hay indicadores próximos a actualizar.</p>
-                        @else
-                        <input type="text" class="form-control mb-2 search-input"
-                            placeholder="Buscar indicador..." data-target="indicadoresProximos">
-                        <ul class="list-group indicadoresProximos"
-                            style="max-height: 350px; overflow-y: scroll;">
-                            @foreach ($indicadoresProximos as $indicador)
-                            <li class="list-group-item">
-                                <a href="{{ route('panel-indicadores.show', $indicador->id) }}">
-                                    <strong>{{ $indicador->nombre }}</strong>
-                                </a>
-                                <span class="badge bg-warning text-black">Actualiza:
-                                    {{ $indicador->fecha_actualizacion }}</span>
-                            </li>
-                            @endforeach
-                        </ul>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            <!-- Indicadores a Tiempo -->
-            <div class="col-md-4">
-                <div class="card border-success mb-3">
-                    <div class="card-header bg-success text-white">⏳ Indicadores a Tiempo
-                        <span class="badge text-bg-light mx-3">
-                            {{ count($indicadoresATiempo) }}
-                        </span>
-                    </div>
-                    <div class="card-body">
-                        @if ($indicadoresATiempo->isEmpty())
-                        <p class="text-muted">🎉 Hoy no se tiene que actualizar ningún indicador.</p>
-                        @else
-                        <input type="text" class="form-control mb-2 search-input"
-                            placeholder="Buscar indicador..." data-target="indicadoresATiempo">
-                        <ul class="list-group indicadoresATiempo"
-                            style="max-height: 350px; overflow-y: scroll;">
-                            @foreach ($indicadoresATiempo as $indicador)
-                            <li class="list-group-item">
-                                <a href="{{ route('panel-indicadores.show', $indicador->id) }}">
-                                    <strong>{{ $indicador->nombre }}</strong>
-                                </a>
-                                <span class="badge bg-success">Hoy:
-                                    {{ $indicador->fecha_actualizacion }}</span>
-                            </li>
-                            @endforeach
-                        </ul>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-        </div>
-        <div class="row g-4">
-            <!-- Gráfico de Indicadores por Año -->
-            <div class="col-md-6">
-                <div id="chart-indicadores-anio"></div>
-            </div>
-
-            <!-- Gráfico de Periodicidad -->
-            <div class="col-md-6">
-                <div id="chart-periodicidad"></div>
-            </div>
-            <div class="col-md-12">
-                <div id="semaforizacionChart"></div>
-            </div>
-        </div>
-        <div class="row g-4">
-            <div class="encabezado-lista">
-                <h2>Enlaces</h2>
-            </div>
-            @if ($datosGraficas)
-            <div class="row g-4">
-                @foreach ($datosGraficas as $data)
-                <div class="col-md-4">
-                    <h5 class="text-center">{{ $data['nombre'] }}</h5>
-                    <div id="chart-{{ Str::slug($data['nombre']) }}" class="chart-container"
-                        data-url="{{ route('usuarios.indicadores', ['id' => $data['id_usuario']]) }}">
-                    </div>
-                    <script>
-                        document.addEventListener("DOMContentLoaded", function() {
-                            var chartOptions = {
-                                series: [{{ $data['validados'] }}, {{ $data['no_validados'] }}],
-                                chart: {
-                                    type: 'pie',
-                                    height: 300,
-                                    events: {
-                                        dataPointSelection: function(event, chartContext, config) {
-                                            let chartDiv = document.querySelector(
-                                                "#chart-{{ Str::slug($data['nombre']) }}");
-                                            let baseUrl = chartDiv.getAttribute('data-url');
-                                            let filtro = config.dataPointIndex === 0 ? 'validados' : 'no-validados';
-                                            window.open(baseUrl + '?filtro=' + filtro, '_blank'); }},
-                                    toolbar: {
-                                        show: true, // Asegura que la barra de herramientas esté visible
-                                        tools: {
-                                            download: true, // Habilita el botón de descarga
-                                            selection: false,
-                                            zoom: false,
-                                            zoomin: false,
-                                            zoomout: false,
-                                            pan: false,
-                                            reset: false }},
-                                },
-                                labels: ['Validados', 'No Validados'],
-                                colors: ['#28a745', '#dc3545'],
-                                responsive: [{
-                                    breakpoint: 480,
-                                    options: {
-                                        chart: {
-                                            width: 200 }}
-                                }]
-                            };
-
-                            new ApexCharts(document.querySelector("#chart-{{ Str::slug($data['nombre']) }}"), chartOptions)
-                                .render();
-                        });
-                    </script>
-                </div>
+            <div class="exec-axis-list">
+                @foreach ($ejesData as $eje)
+                    <a class="exec-axis exec-axis__link" href="{{ route('dashboard.drill-down', ['plan_id' => $plan->id, 'solo_validados' => $soloValidados ? 1 : 0, 'eje_id' => [$eje['id']]]) }}">
+                        <div class="exec-axis__identity"><span style="background: {{ $eje['color'] }}">{{ $eje['numero'] }}</span><strong>{{ $eje['nombre'] }}</strong></div>
+                        <div class="exec-axis__bar"><i style="width: {{ min(100, max(0, $eje['avance'] ?? 0)) }}%; background: {{ $eje['semaforo_color'] }}"></i></div>
+                        <strong class="exec-axis__value" style="color: {{ $eje['semaforo_color'] }}">{{ number_format($eje['avance'] ?? 0, 1) }}%</strong>
+                        <span class="exec-axis__coverage">{{ number_format($eje['cobertura'], 0) }}% cobertura</span>
+                    </a>
                 @endforeach
             </div>
-            @else
-            <span class="text-muted my-3">No hay datos de enlaces</span>
-            @endif
+        </section>
+
+        <div class="exec-grid exec-grid--lower">
+            <section class="exec-section" aria-labelledby="institutions-title">
+                <div class="exec-section__heading">
+                    <div>
+                        <span class="exec-eyebrow">Responsabilidad</span>
+                        <h2 id="institutions-title">Instituciones bajo presión</h2>
+                    </div>
+                </div>
+                <div class="exec-institution-list">
+                    @forelse ($institucionesData as $institucion)
+                        <a class="exec-institution exec-institution__link" href="{{ route('dashboard.drill-down', ['plan_id' => $plan->id, 'solo_validados' => $soloValidados ? 1 : 0, 'institucion_id' => [$institucion['id']]]) }}">
+                            <div class="exec-institution__name"><strong>{{ Str::limit($institucion['nombre'], 38) }}</strong><span>{{ $institucion['criticos'] }} señales</span></div>
+                            <div class="exec-institution__bar"><i style="width: {{ min(100, max(0, $institucion['cobertura'])) }}%"></i></div>
+                            <div class="exec-institution__meta"><span>{{ number_format($institucion['avance'] ?? 0, 1) }}% avance</span><span>{{ number_format($institucion['cobertura'], 0) }}% cobertura</span></div>
+                        </a>
+                    @empty
+                        <div class="exec-empty"><span>No hay instituciones con indicadores en el universo seleccionado.</span></div>
+                    @endforelse
+                </div>
+            </section>
+
+            <section class="exec-section" aria-labelledby="programs-title">
+                <div class="exec-section__heading">
+                    <div>
+                        <span class="exec-eyebrow">Implementación</span>
+                        <h2 id="programs-title">Programas con mayor rezago</h2>
+                    </div>
+                </div>
+                <div class="exec-program-list">
+                    @forelse ($programasPrioritarios as $programa)
+                        <a class="exec-program exec-program__link" href="{{ route('dashboard.drill-down', ['plan_id' => $plan->id, 'solo_validados' => $soloValidados ? 1 : 0, 'programa_tipo' => $programa['tipo_slug'], 'programa_id' => [$programa['id']]]) }}">
+                            <div><strong>{{ Str::limit($programa['nombre'], 42) }}</strong><span>{{ $programa['tipo'] }}</span></div>
+                            <strong class="exec-program__value" style="color: {{ $programa['semaforo_color'] }}">{{ number_format($programa['avance'] ?? 0, 1) }}%</strong>
+                        </a>
+                    @empty
+                        <div class="exec-empty"><span>No hay programas asociados al plan seleccionado.</span></div>
+                    @endforelse
+                </div>
+            </section>
         </div>
     </div>
-    @else
-    <div class="container contenedor-tarjetas">
-        <div class="tarjeta-sped">
-            <div class="tarjeta-sped-details">
-                <img src="{{ asset('assets-administrador/img/modulo_indicadores.png') }}" alt="">
-            </div>
-            <a href="{{ route('panel-indicadores.index') }}" target="_self" title="Indicadores"
-                class="tarjeta-sped-button">Ver</a>
-        </div>
-    </div>
-    @endif
-    @endauth
 
-    <script>
-        var options = {
-            series: [
-                {{ $semaforizacionCounts['Excedido'] }},
-                {{ $semaforizacionCounts['Aceptable'] }},
-                {{ $semaforizacionCounts['Moderado'] }},
-                {{ $semaforizacionCounts['Insuficiente'] }},
-                {{ $semaforizacionCounts['No clasificado'] }}
-            ],
-            chart: {
-                type: 'pie',
-                height: 350,
-                events: {
-                    dataPointSelection: function(event, chartContext, config) {
-                        var categorias = ["Excedido", "Aceptable", "Moderado", "Insuficiente", "No clasificado"];
-                        var categoriaSeleccionada = categorias[config.dataPointIndex];
+    @push('scripts')
+        <script src="{{ asset('js/echarts.min.js') }}"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var element = document.getElementById('exec-trend-chart');
+                if (!element || typeof echarts === 'undefined') return;
 
-                        var url = "/panel-indicadores/semaforizacion/" + categoriaSeleccionada;
-                        window.open(url, "_blank"); // Abre en una nueva pestaña }},
-                toolbar: {
-                    show: true, // Asegura que la barra de herramientas esté visible
-                    tools: {
-                        download: true, // Habilita el botón de descarga
-                        selection: false,
-                        zoom: false,
-                        zoomin: false,
-                        zoomout: false,
-                        pan: false,
-                        reset: false }},
-            },
-            title: {
-                text: "Distribución de Indicadores por Semaforización",
-                align: 'center',
-                style: {
-                    fontSize: '18px',
-                    fontWeight: 'bold',
-                    color: '#333' }},
-            colors: ['#3E8CEE', '#43B383', '#F5E35B', '#B94149', '#D3D3D3'],
-            labels: ["Excedido", "Aceptable", "Moderado", "Insuficiente", "No clasificado"],
-        };
-
-        var chart = new ApexCharts(document.querySelector("#semaforizacionChart"), options);
-        chart.render();
-    </script>
-    <script>
-        var options = {
-            series: [{
-                name: 'Indicadores con Datos',
-                data: @json($datosPorAnio)
-            }],
-            chart: {
-                type: 'bar',
-                height: 350,
-
-            },
-            title: {
-                text: "Distribución de Indicadores por Datos Anuales",
-                align: 'center',
-                style: {
-                    fontSize: '18px',
-                    fontWeight: 'bold',
-                    color: '#333' }},
-            xaxis: {
-                categories: @json($years)
-            },
-            colors: ['#007bff'],
-            plotOptions: {
-                bar: {
-                    horizontal: false,
-                    columnWidth: '50%' }},
-            dataLabels: {
-                enabled: false }};
-
-        new ApexCharts(document.querySelector("#chart-indicadores-anio"), options).render();
-    </script>
-    <script>
-        var options = {
-            series: @json($values_periodicidades),
-            chart: {
-                type: 'donut',
-                toolbar: {
-                    show: true, // Asegura que la barra de herramientas esté visible
-                    tools: {
-                        download: true, // Habilita el botón de descarga
-                        selection: false,
-                        zoom: false,
-                        zoomin: false,
-                        zoomout: false,
-                        pan: false,
-                        reset: false }},
-                height: 350
-            },
-            title: {
-                text: "Distribución de Indicadores por Periodicidad", // 🔥 Aquí agregas el título
-                align: 'center',
-                style: {
-                    fontSize: '18px',
-                    fontWeight: 'bold',
-                    color: '#333' }},
-            labels: @json($etiquetas_periodicidades),
-            colors: ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0'],
-            dataLabels: {
-                enabled: true
-            },
-            legend: {
-                position: 'bottom' }};
-
-        new ApexCharts(document.querySelector("#chart-periodicidad"), options).render();
-    </script>
+                var chart = echarts.init(element);
+                var series = @json($trend['series']);
+                chart.setOption({
+                    animation: false,
+                    tooltip: { trigger: 'axis', valueFormatter: function (value) { return value + '%'; } },
+                    grid: { left: 12, right: 20, top: 20, bottom: 28, containLabel: true },
+                    xAxis: { type: 'category', data: series.map(function (item) { return item.anio; }) },
+                    yAxis: { type: 'value', name: '%', min: 0 },
+                    series: [{
+                        name: 'Avance promedio',
+                        type: 'line',
+                        smooth: true,
+                        symbolSize: 7,
+                        data: series.map(function (item) { return item.avance; }),
+                        lineStyle: { width: 3, color: '#0c312d' },
+                        itemStyle: { color: '#9d2449' },
+                        areaStyle: { color: 'rgba(12, 49, 45, 0.08)' }
+                    }]
+                });
+                window.addEventListener('resize', function () { chart.resize(); });
+            });
+        </script>
+    @endpush
 </x-app-layout>

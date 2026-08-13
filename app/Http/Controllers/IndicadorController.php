@@ -8,6 +8,7 @@ use App\Models\Odses;
 use App\Models\Institucion;
 use Illuminate\Http\Request;
 // use App\Models\DatoAnualIndicador;
+use App\Models\CatEje;
 use App\Models\CatPlanEstatalDesarrollo;
 use App\Models\CatProgramaDerivadoEspecial;
 use App\Models\CatProgramaDerivadoInstitucional;
@@ -26,24 +27,30 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use Illuminate\Support\Facades\Log; // Para registrar errores (opcional pero recomendado)
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use App\Services\AuditLogger;
+use App\Services\ActivePlanResolver;
 
 class IndicadorController extends Controller
 {
+    public function __construct(
+        private AuditLogger $auditLogger,
+        private ActivePlanResolver $activePlan
+    )
+    {
     /**
      * Aplica el middleware de permisos a las acciones del controlador.
      */
-    public function __construct()
-    {
         $this->middleware('permission:ver-indicador|crear-indicador|editar-indicador|borrar-indicador', ['only' => ['index']]);
         $this->middleware('permission:crear-indicador', ['only' => ['create', 'store']]);
         $this->middleware('permission:editar-indicador', ['only' => ['edit', 'update']]);
         $this->middleware('permission:borrar-indicador', ['only' => ['destroy']]);
         $this->middleware('permission:editar-indicador-anual', ['only' => ['updateAnualData']]);
-        $this->middleware('permission:validar-indicador', ['only' => ['toggleValidacion']]);
+        $this->middleware('permission:validar-indicador', ['only' => ['toggleValidacion', 'toggleValidacionAnual']]);
         $this->middleware('permission:subida-masiva-indicador', ['only' => ['confirmImport']]);
     }
 
@@ -54,6 +61,7 @@ class IndicadorController extends Controller
     public function index()
     {
         $user = auth()->user();
+        $activePlanId = $this->activePlan->id();
         $tiposPrograma = Indicador::select('programa_derivado')
             ->whereNotNull('programa_derivado')
             ->where('programa_derivado', '!=', '')
@@ -62,21 +70,18 @@ class IndicadorController extends Controller
             ->pluck('programa_derivado')
             ->toArray();
 
-        if ($user->hasRole('Administrador')) {
-            // Indicadores para el administrador
-            $indicadores = Indicador::with('datosAnuales')->get();
-            // dd($indicadores);
-            // $instituciones = Institucion::where('id', '!=', 1)->get();
-            $instituciones = Institucion::whereHas('indicadores')->where('id', '!=', 1)->get();
-
-
+        if ($user->isAdministrator()) {
+            $indicadores = Indicador::forPlan($activePlanId)->with('datosAnuales')->get();
+            $instituciones = Institucion::whereHas('indicadores', fn ($query) => $query->forPlan($activePlanId))
+                ->where('id', '!=', 1)
+                ->get();
             return view('panel-indicadores.index', compact('indicadores', 'instituciones', 'tiposPrograma'));
         }
 
         if ($user->hasRole('Enlace')) {
-            // Indicadores para el enlace (varias instituciones asignadas)
             $institucionesAsignadas = $user->instituciones()->pluck('institucion_id');
-            $indicadores = Indicador::whereIn('id_institucion', $institucionesAsignadas)
+            $indicadores = Indicador::forPlan($activePlanId)
+                ->whereIn('id_institucion', $institucionesAsignadas)
                 ->orderBy('id')
                 ->paginate(1000);
             $instituciones = $user->instituciones;
@@ -85,8 +90,8 @@ class IndicadorController extends Controller
         }
 
         if ($user->hasRole(['Enlace dependencia', 'Visualizador'])) {
-            // Indicadores para enlace de dependencia o visualizador (por id_institucion en tabla users)
-            $indicadores = Indicador::where('id_institucion', $user->id_institucion)
+            $indicadores = Indicador::forPlan($activePlanId)
+                ->where('id_institucion', $user->id_institucion)
                 ->where('id', '!=', 608)
                 ->orderBy('id')
                 ->get();
@@ -99,8 +104,8 @@ class IndicadorController extends Controller
             return view('panel-indicadores.index', compact('indicadores', 'mostrarBotonFinalizar', 'user', 'mostrarBotonGenerarReporte'));
         }
 
-        // Caso por defecto (otros usuarios, ej. capturistas que solo ven lo suyo)
-        $indicadores = Indicador::where('id_usuario', $user->id)
+        $indicadores = Indicador::forPlan($activePlanId)
+            ->where('id_usuario', $user->id)
             ->where('id', '!=', 608)
             ->orderBy('id')
             ->get();
@@ -112,6 +117,7 @@ class IndicadorController extends Controller
 
         return view('panel-indicadores.index', compact('indicadores', 'mostrarBotonFinalizar', 'user', 'mostrarBotonGenerarReporte'));
     }
+
     /**
      * Muestra el formulario para crear un nuevo indicador.
      * @return \Illuminate\View\View
@@ -121,7 +127,6 @@ class IndicadorController extends Controller
         $pds = [
             'Plan Estatal de Desarrollo',
             'Programa Especial',
-            'Programa Institucional',
             'Programa Regional',
             'Programa Sectorial',
         ];
@@ -151,30 +156,25 @@ class IndicadorController extends Controller
             'Constante'
         ];
 
-        // $usuarios = User::where('id', '!=', 1)->get();
-        $usuarios = User::where('id', '>=', 8) // IDs del 8 en adelante
-            ->role('Enlace dependencia')       // Solo con este rol
-            ->get();
+        $usuarios = User::role('Enlace dependencia')->orderBy('id')->get();
         $instituciones = Institucion::where('id', '!=', 1)->get();
 
-        // Fetch Plans for the new parent selection
-        $planes = CatPlanEstatalDesarrollo::all();
+        $planes = collect([$this->activePlan->get()]);
+        $metaAnioSugerido = $this->activePlan->id() === 3 ? 2030 : 2024;
+        $programasInstitucionales = CatProgramaDerivadoInstitucional::all();
 
-        // dd($odses);
-        return view('panel-indicadores.crear', compact('pds', 'instituciones', 'usuarios', 'odses', 'periodicidades', 'coberturas', 'tendencias', 'planes'));
+        return view('panel-indicadores.crear', compact('pds', 'instituciones', 'usuarios', 'odses', 'periodicidades', 'coberturas', 'tendencias', 'planes', 'programasInstitucionales', 'metaAnioSugerido'));
     }
 
     /**
      * Almacena un nuevo indicador y sus datos anuales asociados.
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request
+     * @return RedirectResponse
      */
     public function store(Request $request)
     {
-        Log::debug('IndicadorController@store: Método iniciado.'); // LOG 1
+        Log::debug('IndicadorController@store: Método iniciado.');
 
-        // Log::debug('IndicadorController@store: Datos completos del Request:', $request->all()); // LOG 2 (Todos los datos)
-        // Opcional: Loguear solo los datos esperados para no llenar demasiado el log si hay muchos campos
         Log::debug('IndicadorController@store: Request data (indicador):', $request->only([
             'nombre',
             'programa_derivado',
@@ -183,7 +183,8 @@ class IndicadorController extends Controller
             'linea_base',
             'dato_linea_base',
             'periodo',
-            'meta_2024',
+            'meta_anio',
+            'meta',
             'unidad_medida',
             'id_institucion',
             'id_usuario',
@@ -196,23 +197,20 @@ class IndicadorController extends Controller
             'fecha_actualizacion',
             'formula'
         ]));
-        // Log::debug('IndicadorController@store: Request data (odses):', ['odses' => $request->input('odses')]);
+
         Log::debug('IndicadorController@store: Request data (datos_anuales):', ['datos_anuales' => $request->input('datos_anuales')]);
 
-
-        // Pre-procesamiento de URL para codificar espacios
         if ($request->filled('liga')) {
             $request->merge([
                 'liga' => str_replace(' ', '%20', trim($request->input('liga')))
             ]);
         }
-
-        // --- VALIDACIÓN ---
         $rules = [
             'nombre' => 'required|string|max:255',
             // 'programa_derivado' => 'required|string|max:255',
             // 'programa' => 'required|string|max:255',
             'plan_id' => 'required|exists:cat_planes_estatales_desarrollo,id',
+            'eje_id' => 'nullable|required_unless:es_programa_derivado,1|exists:cat_ejes,id',
             'es_programa_derivado' => 'boolean',
             'tipo_programa' => 'nullable|required_if:es_programa_derivado,1|string',
             'programa_id' => 'nullable|required_if:es_programa_derivado,1|integer',
@@ -222,7 +220,8 @@ class IndicadorController extends Controller
             'linea_base' => 'required|integer|digits:4',
             'dato_linea_base' => 'required|string|max:255',
             // 'periodo' => 'nullable|string|max:255',
-            'meta_2024' => 'required|string|max:255',
+            'meta_anio' => 'required|integer|min:1900|max:2100',
+            'meta' => 'required|string|max:255',
             'unidad_medida' => 'required|string|max:255',
             'id_institucion' => 'nullable|integer|exists:instituciones,id',
             'id_usuario' => 'nullable|integer|exists:users,id',
@@ -237,6 +236,8 @@ class IndicadorController extends Controller
             'formula' => 'required|string',
             // 'odses' => 'required|array',
             // 'odses.*' => 'exists:ods,id',
+            'programas_institucionales' => 'nullable|array',
+            'programas_institucionales.*' => 'exists:cat_programas_derivados_institucionales,id',
             'datos_anuales' => 'nullable|array',
             'datos_anuales.*.anio' => 'required_with:datos_anuales|integer|distinct|min:1900|max:' . (date('Y') + 10),
             'datos_anuales.*.valor_dato' => 'nullable|numeric',
@@ -252,11 +253,11 @@ class IndicadorController extends Controller
             'tematica.required' => 'La temática es obligatoria.',
             'linea_base.required' => 'El año de la linea base es obligatorio.',
             'dato_linea_base.required' => 'El dato de la linea base es obligatorio.',
-            'meta_2024.required' => 'La Meta 2030 es obligatoria.',
+            'meta_anio.required' => 'El año de la meta es obligatorio.',
+            'meta_anio.integer' => 'El año de la meta debe ser un número entero.',
+            'meta.required' => 'La meta es obligatoria.',
             'unidad_medida.required' => 'La unidad de medida es obligatoria.',
             'periodicidad.required' => 'El programa derivado es obligatorio.',
-
-
             'odses.required' => 'Debe seleccionar al menos un ODS.',
             'odses.*.exists' => 'El ODS seleccionado no es válido.',
             'datos_anuales.*.anio.required_with' => 'El año es obligatorio para cada entrada del histórico.',
@@ -266,7 +267,7 @@ class IndicadorController extends Controller
             'datos_anuales.*.fecha_actualizacion.date' => 'La fecha de actualización del dato anual no es válida.',
         ];
 
-        Log::debug('IndicadorController@store: Antes de la validación.'); // LOG 3
+        Log::debug('IndicadorController@store: Antes de la validación.');
         $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
@@ -274,44 +275,35 @@ class IndicadorController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        $validatedData = $validator->validated(); // Obtener los datos validados
-        Log::info('IndicadorController@store: Validación exitosa.'); // LOG 4 (Si pasa)
-        // Log::debug('IndicadorController@store: Datos validados:', $validatedData); // Opcional, puede ser redundante si ya logueaste el request
-
-        Log::debug('IndicadorController@store: Antes de DB::beginTransaction().'); // LOG 5
+        $validatedData = $validator->validated();
+        Log::info('IndicadorController@store: Validación exitosa.');
+        Log::debug('IndicadorController@store: Antes de DB::beginTransaction().');
         DB::beginTransaction();
 
         try {
-            Log::debug('IndicadorController@store: Dentro del bloque try, antes de crear Indicador.'); // LOG 6
+            Log::debug('IndicadorController@store: Dentro del bloque try, antes de crear Indicador.');
 
-            // Determine Parent and Strings
             $indicadorableId = null;
             $indicadorableType = null;
             $programaDerivadoString = '';
 
             if ($request->boolean('es_programa_derivado')) {
-                // It's a Derived Program
                 $indicadorableId = $validatedData['programa_id'];
                 $modelClass = $this->getProgramaModelClass($validatedData['tipo_programa']);
                 $indicadorableType = $modelClass;
-
-                // Fetch the object to get its name
                 $parentObj = $modelClass::find($indicadorableId);
                 $programaDerivadoString = $parentObj ? $parentObj->nombre : $validatedData['tipo_programa'];
             } else {
-                // It's a Plan
-                $indicadorableId = $validatedData['plan_id'];
-                $indicadorableType = CatPlanEstatalDesarrollo::class;
-
-                // Fetch Plan Name
-                $parentObj = CatPlanEstatalDesarrollo::find($indicadorableId);
-                $programaDerivadoString = $parentObj ? $parentObj->nombre : 'Plan Estatal de Desarrollo';
+                $indicadorableId = $request->input('eje_id');
+                $indicadorableType = CatEje::class;
+                $parentObj = CatEje::find($indicadorableId);
+                $programaDerivadoString = ($parentObj && $parentObj->catPlanEstatalDesarrollo) ? $parentObj->catPlanEstatalDesarrollo->nombre : 'Plan Estatal de Desarrollo';
             }
 
             $indicador = Indicador::create([
                 'nombre' => $validatedData['nombre'],
-                'programa_derivado' => $programaDerivadoString, // Auto-filled from Parent Name
-                'programa' => $validatedData['eje_app'], // Manual input for "Eje"
+                'programa_derivado' => $programaDerivadoString,
+                'programa' => $validatedData['eje_app'],
                 'indicadorable_id' => $indicadorableId,
                 'indicadorable_type' => $indicadorableType,
                 // 'cod_tematica' => $validatedData['cod_tematica'],
@@ -319,7 +311,8 @@ class IndicadorController extends Controller
                 'linea_base' => $validatedData['linea_base'],
                 'dato_linea_base' => $validatedData['dato_linea_base'],
                 // 'periodo' => $validatedData['periodo'],
-                'meta_2024' => $validatedData['meta_2024'],
+                'meta_anio' => $validatedData['meta_anio'],
+                'meta' => $validatedData['meta'],
                 'unidad_medida' => $validatedData['unidad_medida'],
                 'id_institucion' => $validatedData['id_institucion'],
                 'id_usuario' => $validatedData['id_usuario'],
@@ -334,12 +327,26 @@ class IndicadorController extends Controller
                 'formula' => $validatedData['formula'],
                 'indicador_validado' => false,
             ]);
-            Log::info('IndicadorController@store: Indicador creado con ID: ' . $indicador->id); // LOG 7
+            Log::info('IndicadorController@store: Indicador creado con ID: ' . $indicador->id);
+
+            if ($request->has('programas_institucionales')) {
+                $indicador->programasInstitucionales()->sync($request->input('programas_institucionales', []));
+            }
+
+            if (isset($validatedData['linea_base']) && isset($validatedData['dato_linea_base']) && $validatedData['dato_linea_base'] !== '') {
+                $indicador->datosAnuales()->create([
+                    'anio' => $validatedData['linea_base'],
+                    'valor_dato' => $validatedData['dato_linea_base'],
+                    'modificado' => false,
+                    'validado' => true
+                ]);
+                Log::info("IndicadorController@store: Línea base (Año {$validatedData['linea_base']}) guardada como DatoAnual.");
+            }
 
             if (!empty($validatedData['datos_anuales'])) {
-                Log::debug('IndicadorController@store: Procesando datos_anuales. Cantidad: ' . count($validatedData['datos_anuales'])); // LOG 8
+                Log::debug('IndicadorController@store: Procesando datos_anuales. Cantidad: ' . count($validatedData['datos_anuales']));
                 foreach ($validatedData['datos_anuales'] as $index => $datoAnualData) {
-                    Log::debug("IndicadorController@store: Procesando datoAnualData[{$index}]:", $datoAnualData); // LOG 9
+                    Log::debug("IndicadorController@store: Procesando datoAnualData[{$index}]:", $datoAnualData);
                     if (isset($datoAnualData['anio'])) {
                         $hasSignificantData = !is_null($datoAnualData['valor_dato']) ||
                             !empty($datoAnualData['resultados']) ||
@@ -357,39 +364,38 @@ class IndicadorController extends Controller
                                 'observaciones' => $datoAnualData['observaciones'] ?? null,
                                 'modificado' => false,
                             ]);
-                            Log::info("IndicadorController@store: DatoAnual creado con ID: {$datoAnualCreado->id} para el año {$datoAnualData['anio']}."); // LOG 9.2
+                            Log::info("IndicadorController@store: DatoAnual creado con ID: {$datoAnualCreado->id} para el año {$datoAnualData['anio']}.");
                         } else {
-                            Log::debug("IndicadorController@store: Omitiendo creación de DatoAnual para el año {$datoAnualData['anio']} (sin datos significativos)."); // LOG 9.3
+                            Log::debug("IndicadorController@store: Omitiendo creación de DatoAnual para el año {$datoAnualData['anio']} (sin datos significativos).");
                         }
                     } else {
-                        Log::warning("IndicadorController@store: Se omitió un dato anual porque no tenía 'anio'. Datos:", $datoAnualData); // LOG 9.4
+                        Log::warning("IndicadorController@store: Se omitió un dato anual porque no tenía 'anio'. Datos:", $datoAnualData);
                     }
                 }
             } else {
-                Log::debug('IndicadorController@store: No se proporcionaron datos_anuales.'); // LOG 8.1 (Si no hay datos anuales)
+                Log::debug('IndicadorController@store: No se proporcionaron datos_anuales.');
             }
 
             if (!empty($validatedData['odses'])) {
-                Log::debug('IndicadorController@store: Antes de sincronizar ODSes.', ['odses_ids' => $validatedData['odses']]); // LOG 10
+                Log::debug('IndicadorController@store: Antes de sincronizar ODSes.', ['odses_ids' => $validatedData['odses']]);
                 $indicador->ods()->sync($validatedData['odses']);
-                Log::info('IndicadorController@store: ODSes sincronizados.'); // LOG 11
+                Log::info('IndicadorController@store: ODSes sincronizados.');
             } else {
-                Log::debug('IndicadorController@store: No se proporcionaron ODSes para sincronizar.'); // LOG 10.1
+                Log::debug('IndicadorController@store: No se proporcionaron ODSes para sincronizar.');
             }
 
-            Log::debug('IndicadorController@store: Antes de DB::commit().'); // LOG 12
+            Log::debug('IndicadorController@store: Antes de DB::commit().');
             DB::commit();
-            Log::info('IndicadorController@store: Transacción completada (commit).'); // LOG 13
+            Log::info('IndicadorController@store: Transacción completada (commit).');
 
             return redirect()->route('panel-indicadores.index')
                 ->with('success', 'Indicador creado exitosamente.');
         } catch (\Illuminate\Validation\ValidationException $e) {
-            // Este bloque es por si algo escapa a la validación inicial, aunque es raro con $validator->validated()
             DB::rollBack();
             Log::error('IndicadorController@store: Error de Validación en el bloque try-catch.', [
                 'message' => $e->getMessage(),
                 'errors' => $e->errors(),
-                'trace' => $e->getTraceAsString() // Loguear el stack trace puede ser muy largo, pero útil
+                'trace' => $e->getTraceAsString()
             ]);
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
@@ -398,7 +404,6 @@ class IndicadorController extends Controller
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
-                // 'trace' => $e->getTraceAsString() // Descomentar si necesitas el stack trace completo
             ]);
             return back()->withInput()
                 ->with('error', 'Ocurrió un error al guardar el indicador. Por favor, inténtelo de nuevo. Revise los logs para más detalles.');
@@ -410,21 +415,30 @@ class IndicadorController extends Controller
      * @param  int $id
      * @return \Illuminate\View\View
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        /** @var \App\Models\User */
+        /** @var User */
         $user = auth()->user();
+        $planId = $this->activePlan->id();
 
-        // Obtener el indicador junto con sus relaciones
-        $indicador = Indicador::with(['datosAnuales', 'ods'])->findOrFail($id);
+        if (($user->isAdministrator() || $user->can('ver-panel-avance-general')) && $request->filled('plan_id')) {
+            $planId = CatPlanEstatalDesarrollo::find($request->integer('plan_id'))?->id ?? $planId;
+        }
 
-        // Verificar si el usuario tiene acceso al indicador
+        $query = Indicador::query()
+            ->with(['datosAnuales', 'ods', 'programasInstitucionales']);
+
+        // Los administradores pueden abrir indicadores históricos por ID cuando
+        // el enlace no incluye un plan explícito; los demás usuarios permanecen
+        // limitados al PED activo.
+        if (!$user->isAdministrator() || $request->filled('plan_id')) {
+            $query->forPlan($planId);
+        }
+
+        $indicador = $query->findOrFail($id);
 
         if ($user->hasRole('Enlace')) {
-            // Obtener las instituciones asignadas al usuario
             $institucionesAsignadas = $user->instituciones->pluck('id');
-
-            // Validar que el indicador pertenece a una de las instituciones permitidas
             if (!$institucionesAsignadas->contains($indicador->id_institucion)) {
                 abort(403, 'No tienes permiso para acceder a este indicador.');
             }
@@ -436,8 +450,7 @@ class IndicadorController extends Controller
             }
         }
 
-        if ($user->hasRole('Administrador')) {
-            // Los administradores tienen acceso a todos los indicadores, no se hace restricción
+        if ($user->isAdministrator()) {
             return view('panel-indicadores.mostrar', compact('indicador'));
         }
 
@@ -451,14 +464,13 @@ class IndicadorController extends Controller
      */
     public function edit($id)
     {
-        /** @var \App\Models\User */
+        /** @var User */
         $user = auth()->user();
 
-        // $id = $indicador->id;
-        // $indicador = Indicador::findOrFail($id);
-        $indicador = Indicador::with(['datosAnuales'])->findOrFail($id);
+        $indicador = Indicador::forPlan($this->activePlan->id())
+            ->with(['datosAnuales', 'programasInstitucionales'])
+            ->findOrFail($id);
 
-        // Verificar si el usuario tiene acceso al indicador
         if ($user->hasRole('Enlace')) {
             $institucionesAsignadas = $user->instituciones->pluck('id');
             if (!$institucionesAsignadas->contains($indicador->id_institucion)) {
@@ -474,11 +486,9 @@ class IndicadorController extends Controller
 
         $instituciones = Institucion::where('id', '!=', 1)->get();
         $odeses = Odses::all();
-        $planes = CatPlanEstatalDesarrollo::all(); // Fetch Planes for Edit View
-        // $usuarios = User::where('id', '!=', 1)->get();
-        $usuarios = User::where('id', '>=', 8) // IDs del 8 en adelante
-            ->role('Enlace dependencia')       // Solo con este rol
-            ->get();
+        $planes = collect([$this->activePlan->get()]);
+        $programasInstitucionales = CatProgramaDerivadoInstitucional::where('plan_estatal', $this->activePlan->id())->get();
+        $usuarios = User::role('Enlace dependencia')->orderBy('id')->get();
         $periodicidades = [
             'Sexenal',
             'Quinquenal',
@@ -504,21 +514,19 @@ class IndicadorController extends Controller
             'Constante'
         ];
 
-        return view('panel-indicadores.editar', compact('indicador', 'instituciones', 'odeses', 'usuarios', 'periodicidades', 'coberturas', 'tendencias', 'planes'));
+        return view('panel-indicadores.editar', compact('indicador', 'instituciones', 'odeses', 'usuarios', 'periodicidades', 'coberturas', 'tendencias', 'planes', 'programasInstitucionales'));
     }
 
     /**
      * Actualiza un indicador y gestiona la creación, actualización y eliminación de sus datos anuales.
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Indicador  $indicador
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request
+     * @param  Indicador  $indicador
+     * @return RedirectResponse
      */
     public function update(Request $request, Indicador $indicador)
     {
-        /** @var \App\Models\User */
         $user = auth()->user();
 
-        // Verificar si el usuario tiene acceso al indicador
         if ($user->hasRole('Enlace')) {
             $institucionesAsignadas = $user->instituciones->pluck('id');
             if (!$institucionesAsignadas->contains($indicador->id_institucion)) {
@@ -532,21 +540,10 @@ class IndicadorController extends Controller
             }
         }
 
-        $indicadorIdForLog = 'NO DISPONIBLE';
-        if ($indicador && $indicador->exists) { // Verificamos si el modelo fue cargado y existe en BD
-            $indicadorIdForLog = $indicador->id;
-        }
-        Log::debug("IndicadorController@update: Método iniciado. Indicador recibido (ID: {$indicadorIdForLog}). Tipo: " . get_class($indicador));
         if (!$indicador || !$indicador->exists) {
-            Log::error("IndicadorController@update: La instancia del Indicador no es válida o no existe. ID recibido en ruta: " . $request->route('indicador')); // Asume que el parámetro de ruta se llama 'indicador'
-            // Esto no debería pasar con Route Model Binding si la ruta está bien definida, Laravel daría 404.
-            // Pero si llega aquí, es un problema grave.
             return redirect()->route('panel-indicadores.index')->with('error', 'Indicador no encontrado.');
         }
-        Log::debug("IndicadorController@update: ID del Indicador (desde el objeto): {$indicador->id}.");
 
-
-        // Pre-procesamiento de URL para codificar espacios
         if ($request->filled('liga')) {
             $request->merge([
                 'liga' => str_replace(' ', '%20', trim($request->input('liga')))
@@ -556,19 +553,17 @@ class IndicadorController extends Controller
         // --- VALIDACIÓN ---
         $rules = [
             'nombre' => 'required|string|max:255',
-            // 'programa_derivado' => 'required|string|max:255', // Asegúrate que este sea el nombre correcto del campo
-            // 'programa' => 'required|string|max:255',
             'plan_id' => 'required|exists:cat_planes_estatales_desarrollo,id',
+            'eje_id' => 'nullable|required_unless:es_programa_derivado,1|exists:cat_ejes,id',
             'es_programa_derivado' => 'boolean',
             'tipo_programa' => 'nullable|required_if:es_programa_derivado,1|string',
             'programa_id' => 'nullable|required_if:es_programa_derivado,1|integer',
             'eje_app' => 'required|string|max:255',
-            // 'cod_tematica' => 'required|string|max:255',
-            // 'cod_tematica' => 'required|string|max:255',
             'tematica' => 'required|string|max:255',
             'linea_base' => 'required|integer|digits:4',
             'dato_linea_base' => 'required|string|max:255',
-            'meta_2024' => 'required|string|max:255',
+            'meta_anio' => 'required|integer|min:1900|max:2100',
+            'meta' => 'required|string|max:255',
             'unidad_medida' => 'required|string|max:255',
             'id_usuario' => 'nullable|integer|exists:users,id',
             'id_institucion' => 'nullable|integer|exists:instituciones,id',
@@ -579,23 +574,15 @@ class IndicadorController extends Controller
             'cobertura' => 'required|string|max:255',
             'tendencia' => 'required|string|max:255',
             'fecha_actualizacion' => 'nullable|date',
-            // 'resultados' => 'required|string',
             'formula' => 'required|string',
             'odses' => 'sometimes|array',
             'odses.*' => 'exists:ods,id',
+            'programas_institucionales' => 'nullable|array',
+            'programas_institucionales.*' => 'exists:cat_programas_derivados_institucionales,id',
             'indicador_validado' => 'sometimes|boolean',
             'datos_anuales' => 'nullable|array',
             'datos_anuales.*.id' => 'nullable|integer|exists:datos_anuales,id',
-            'datos_anuales.*.anio' => [
-                'required_with:datos_anuales', // o 'required' si cada bloque debe tener año
-                'integer',
-                'min:1900',
-                'max:' . (date('Y') + 10),
-                'distinct', // Único dentro del array enviado
-                // Para unicidad contra la BD (id_indicador, anio) excluyendo el ID actual:
-                // Esta validación se manejará mejor con updateOrCreate y la lógica de búsqueda.
-                // Si necesitas un error de validación explícito aquí, sería una Regla Personalizada.
-            ],
+            'datos_anuales.*.anio' => 'required_with:datos_anuales|integer|min:1900|max:' . (date('Y') + 10) . '|distinct',
             'datos_anuales.*.valor_dato' => 'nullable|numeric',
             'datos_anuales.*.fecha_actualizacion' => 'nullable|date',
             'datos_anuales.*.resultados' => 'nullable|string',
@@ -606,7 +593,6 @@ class IndicadorController extends Controller
         ];
 
         $messages = [
-            // Mensajes para los campos principales del Indicador
             'nombre.required' => 'El nombre del indicador es obligatorio.',
             'nombre.string' => 'El nombre del indicador debe ser texto.',
             'nombre.max' => 'El nombre del indicador no debe exceder los 255 caracteres.',
@@ -632,12 +618,14 @@ class IndicadorController extends Controller
             'linea_base.digits' => 'El año de la línea base debe ser un número de 4 dígitos (ej: 2020).',
 
             'dato_linea_base.required' => 'El valor de la línea base es obligatorio.',
-            'dato_linea_base.string' => 'El valor de la línea base debe ser texto o número.', // O 'numeric' si siempre es número
+            'dato_linea_base.string' => 'El valor de la línea base debe ser texto o número.',
             'dato_linea_base.max' => 'El valor de la línea base no debe exceder los 255 caracteres.',
 
-            'meta_2024.required' => 'La meta 2024 es obligatoria.',
-            'meta_2024.string' => 'La meta 2024 debe ser texto o número.', // O 'numeric'
-            'meta_2024.max' => 'La meta 2024 no debe exceder los 255 caracteres.',
+            'meta_anio.required' => 'El año de la meta es obligatorio.',
+            'meta_anio.integer' => 'El año de la meta debe ser un número entero.',
+            'meta.required' => 'La meta es obligatoria.',
+            'meta.string' => 'La meta debe ser texto o número.',
+            'meta.max' => 'La meta no debe exceder los 255 caracteres.',
 
             'unidad_medida.required' => 'La unidad de medida es obligatoria.',
             'unidad_medida.string' => 'La unidad de medida debe ser texto.',
@@ -702,48 +690,38 @@ class IndicadorController extends Controller
             'datos_anuales.*.eliminar_evidencia.boolean' => 'La opción para eliminar evidencia no es válida.',
         ];
 
-        Log::debug("IndicadorController@update: Antes de la validación para Indicador ID: {$indicador->id}.");
         $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
-            Log::warning("IndicadorController@update: Falló la validación para Indicador ID: {$indicador->id}.", $validator->errors()->toArray());
             return back()->withErrors($validator)->withInput();
         }
 
         $validatedData = $validator->validated();
-        Log::info("IndicadorController@update: Validación exitosa para Indicador ID: {$indicador->id}.");
 
         DB::beginTransaction();
-        Log::debug("IndicadorController@update: Transacción iniciada para Indicador ID: {$indicador->id}.");
 
         try {
-            // Determine Parent and Strings (Same logic as store)
             $indicadorableId = null;
             $indicadorableType = null;
             $programaDerivadoString = '';
 
             if ($request->boolean('es_programa_derivado')) {
-                // It's a Derived Program
                 $indicadorableId = $validatedData['programa_id'];
                 $modelClass = $this->getProgramaModelClass($validatedData['tipo_programa']);
                 $indicadorableType = $modelClass;
 
-                // Fetch the object to get its name
                 $parentObj = $modelClass::find($indicadorableId);
                 $programaDerivadoString = $parentObj ? $parentObj->nombre : $validatedData['tipo_programa'];
             } else {
-                // It's a Plan
-                $indicadorableId = $validatedData['plan_id'];
-                $indicadorableType = CatPlanEstatalDesarrollo::class;
+                $indicadorableId = $request->input('eje_id');
+                $indicadorableType = CatEje::class;
 
-                // Fetch Plan Name
-                $parentObj = CatPlanEstatalDesarrollo::find($indicadorableId);
-                $programaDerivadoString = $parentObj ? $parentObj->nombre : 'Plan Estatal de Desarrollo';
+                $parentObj = CatEje::find($indicadorableId);
+                $programaDerivadoString = $parentObj && $parentObj->planEstatal ? $parentObj->planEstatal->nombre : 'Plan Estatal de Desarrollo';
             }
 
-            $indicadorDataToUpdate = collect($validatedData)->except(['odses', 'datos_anuales', '_token', '_method', 'plan_id', 'es_programa_derivado', 'tipo_programa', 'programa_id', 'eje_app'])->toArray();
+            $indicadorDataToUpdate = collect($validatedData)->except(['odses', 'programas_institucionales', 'datos_anuales', '_token', '_method', 'plan_id', 'es_programa_derivado', 'tipo_programa', 'programa_id', 'eje_app'])->toArray();
 
-            // Overwrite/Add the calculated fields
             $indicadorDataToUpdate['programa_derivado'] = $programaDerivadoString;
             $indicadorDataToUpdate['programa'] = $validatedData['eje_app'];
             $indicadorDataToUpdate['indicadorable_id'] = $indicadorableId;
@@ -758,22 +736,44 @@ class IndicadorController extends Controller
             }
             if ($mainIndicadorFieldsChanged && !isset($indicadorDataToUpdate['indicador_validado'])) {
                 $indicadorDataToUpdate['indicador_validado'] = false;
-                Log::debug("IndicadorController@update: Indicador ID {$indicador->id} desvalidado por cambios.");
             }
+
+            $anioLineaBaseAnterior = $indicador->linea_base;
+
             $indicador->update($indicadorDataToUpdate);
-            Log::info("IndicadorController@update: Indicador principal ID {$indicador->id} actualizado.");
+
+            if ($request->has('programas_institucionales')) {
+                $indicador->programasInstitucionales()->sync($request->input('programas_institucionales', []));
+            } else {
+                $indicador->programasInstitucionales()->sync([]);
+            }
 
             $idsDatosAnualesEnviadosYProcesados = [];
+
+            if (isset($validatedData['linea_base']) && isset($validatedData['dato_linea_base']) && $validatedData['dato_linea_base'] !== '') {
+
+                if ($anioLineaBaseAnterior && $anioLineaBaseAnterior != $validatedData['linea_base']) {
+                    $indicador->datosAnuales()->where('anio', $anioLineaBaseAnterior)->delete();
+                }
+
+                $datoAnualLineaBase = $indicador->datosAnuales()->updateOrCreate(
+                    ['anio' => $validatedData['linea_base']],
+                    ['valor_dato' => $validatedData['dato_linea_base']]
+                );
+
+                $idsDatosAnualesEnviadosYProcesados[] = $datoAnualLineaBase->id;
+            }
+
             if (isset($validatedData['datos_anuales'])) {
-                Log::debug("IndicadorController@update: Procesando datos_anuales para Indicador ID: {$indicador->id}. Cantidad: " . count($validatedData['datos_anuales']));
                 $archivosEvidenciaEnRequest = $request->file('datos_anuales') ?? [];
 
                 foreach ($validatedData['datos_anuales'] as $index => $datoAnualData) {
                     $idDatoAnual = $datoAnualData['id'] ?? null;
                     $anio = $datoAnualData['anio'] ?? null;
 
-                    if (empty($anio)) {
-                        Log::warning("IndicadorController@update: [Ind.{$indicador->id}] Se omitió un dato anual (índice validado {$index}) porque el año estaba vacío.", $datoAnualData);
+                    if (empty($anio)) continue;
+
+                    if ($anioLineaBaseAnterior && $anio == $anioLineaBaseAnterior && $anio != $validatedData['linea_base']) {
                         continue;
                     }
 
@@ -781,121 +781,98 @@ class IndicadorController extends Controller
                     if ($idDatoAnual) {
                         $datoAnualRecord = DatoAnual::where('id', $idDatoAnual)->where('id_indicador', $indicador->id)->first();
                         if (!$datoAnualRecord) {
-                            Log::warning("IndicadorController@update: [Ind.{$indicador->id}] ID de DatoAnual {$idDatoAnual} no encontrado o no pertenece. Buscando/creando por año {$anio}.");
                             $datoAnualRecord = $indicador->datosAnuales()->firstOrNew(['anio' => $anio]);
                         }
                     } else {
                         $datoAnualRecord = $indicador->datosAnuales()->firstOrNew(['anio' => $anio]);
                     }
 
-                    // Asegurar que id_indicador esté establecido si es un nuevo registro
                     if (!$datoAnualRecord->exists) {
-                        $datoAnualRecord->id_indicador = $indicador->id; // Crucial si firstOrNew en relación no lo hizo (debería)
-                        Log::debug("IndicadorController@update: [Ind.{$indicador->id}] Nuevo DatoAnual para año {$anio}, asignando id_indicador: {$indicador->id}.");
+                        $datoAnualRecord->id_indicador = $indicador->id;
                     }
 
                     $datosParaLlenar = [
-                        'anio' => $anio, // Redundante si ya está en $datoAnualRecord, pero fill() lo manejará
+                        'anio' => $anio,
                         'valor_dato' => $datoAnualData['valor_dato'] ?? null,
                         'fecha_actualizacion' => $datoAnualData['fecha_actualizacion'] ?? null,
                         'resultados' => $datoAnualData['resultados'] ?? null,
                         'observaciones' => $datoAnualData['observaciones'] ?? null,
                     ];
 
-                    // Manejo de Evidencia
                     $nombreArchivoEvidenciaActual = $datoAnualData['evidencia_actual'] ?? ($datoAnualRecord->evidencia ?? null);
                     $nombreArchivoEvidenciaParaGuardar = $nombreArchivoEvidenciaActual;
 
                     if (!empty($datoAnualData['eliminar_evidencia'])) {
-                        if ($nombreArchivoEvidenciaActual) {
-                            Log::debug("IndicadorController@update: [Ind.{$indicador->id}, Año {$anio}] Eliminando evidencia '{$nombreArchivoEvidenciaActual}'.");
-                            if (file_exists(public_path('assets-administrador/docs/' . $nombreArchivoEvidenciaActual))) {
-                                unlink(public_path('assets-administrador/docs/' . $nombreArchivoEvidenciaActual));
-                            }
+                        if ($nombreArchivoEvidenciaActual && file_exists(public_path('assets-administrador/docs/' . $nombreArchivoEvidenciaActual))) {
+                            unlink(public_path('assets-administrador/docs/' . $nombreArchivoEvidenciaActual));
                         }
                         $nombreArchivoEvidenciaParaGuardar = null;
                     }
 
                     $archivoEvidenciaSubido = $archivosEvidenciaEnRequest[$index]['evidencia_file'] ?? null;
                     if ($archivoEvidenciaSubido && $archivoEvidenciaSubido->isValid()) {
-                        Log::debug("IndicadorController@update: [Ind.{$indicador->id}, Año {$anio}] Nuevo archivo de evidencia subido.");
                         if ($nombreArchivoEvidenciaActual && ($nombreArchivoEvidenciaParaGuardar === null || $nombreArchivoEvidenciaActual !== $nombreArchivoEvidenciaParaGuardar)) {
                             if (file_exists(public_path('assets-administrador/docs/' . $nombreArchivoEvidenciaActual))) {
                                 unlink(public_path('assets-administrador/docs/' . $nombreArchivoEvidenciaActual));
-                                Log::debug("IndicadorController@update: [Ind.{$indicador->id}, Año {$anio}] Evidencia antigua '{$nombreArchivoEvidenciaActual}' eliminada para reemplazo.");
                             }
                         }
                         $extension = $archivoEvidenciaSubido->getClientOriginalExtension();
                         $nombreArchivoEvidenciaParaGuardar = "Evidencia_{$anio}_{$indicador->id}_" . time() . "_" . $index . "." . $extension;
                         $archivoEvidenciaSubido->move(public_path('assets-administrador/docs/'), $nombreArchivoEvidenciaParaGuardar);
-                        Log::info("IndicadorController@update: [Ind.{$indicador->id}, Año {$anio}] Nueva evidencia '{$nombreArchivoEvidenciaParaGuardar}' guardada.");
                     }
-                    $datosParaLlenar['evidencia'] = $nombreArchivoEvidenciaParaGuardar;
 
+                    $datosParaLlenar['evidencia'] = $nombreArchivoEvidenciaParaGuardar;
                     $datoAnualRecord->fill($datosParaLlenar);
 
                     if ($datoAnualRecord->id_indicador === null) {
-                        Log::critical("IndicadorController@update: [Ind.{$indicador->id}, Año {$anio}] ¡id_indicador es NULL ANTES de guardar DatoAnual! Record: ", $datoAnualRecord->toArray());
                         throw new \Exception("Integridad de datos: id_indicador no puede ser nulo para DatoAnual del año {$anio}.");
                     }
 
                     if ($datoAnualRecord->isDirty() || !$datoAnualRecord->exists) {
                         $datoAnualRecord->save();
-                        Log::info("IndicadorController@update: [Ind.{$indicador->id}] DatoAnual ID {$datoAnualRecord->id} (Año: {$anio}) guardado.");
-                    } else {
-                        Log::debug("IndicadorController@update: [Ind.{$indicador->id}] Sin cambios para DatoAnual ID {$datoAnualRecord->id} (Año: {$anio}).");
                     }
-                    $idsDatosAnualesEnviadosYProcesados[] = $datoAnualRecord->id;
+
+                    if (!in_array($datoAnualRecord->id, $idsDatosAnualesEnviadosYProcesados)) {
+                        $idsDatosAnualesEnviadosYProcesados[] = $datoAnualRecord->id;
+                    }
                 }
-            } else {
-                Log::debug("IndicadorController@update: [Ind.{$indicador->id}] No se proporcionaron datos_anuales en el request.");
             }
 
             if ($request->exists('datos_anuales')) {
                 $datosAnualesAEliminar = $indicador->datosAnuales()->whereNotIn('id', $idsDatosAnualesEnviadosYProcesados)->get();
                 foreach ($datosAnualesAEliminar as $dae) {
-                    Log::debug("IndicadorController@update: [Ind.{$indicador->id}] Eliminando DatoAnual ID {$dae->id} (Año: {$dae->anio}).");
-                    if ($dae->evidencia) {
-                        if (file_exists(public_path('assets-administrador/docs/' . $dae->evidencia))) {
-                            unlink(public_path('assets-administrador/docs/' . $dae->evidencia));
-                        }
+                    if ($dae->evidencia && file_exists(public_path('assets-administrador/docs/' . $dae->evidencia))) {
+                        unlink(public_path('assets-administrador/docs/' . $dae->evidencia));
                     }
                     $dae->delete();
                 }
             }
 
             if ($request->has('odses')) {
-                Log::debug("IndicadorController@update: [Ind.{$indicador->id}] Sincronizando ODSes.", ['odses_ids' => $validatedData['odses'] ?? []]);
                 $indicador->ods()->sync($validatedData['odses'] ?? []);
             }
 
-            Log::debug("IndicadorController@update: [Ind.{$indicador->id}] Antes de DB::commit().");
             DB::commit();
-            Log::info("IndicadorController@update: [Ind.{$indicador->id}] Transacción completada (commit).");
-
             return redirect()->route('panel-indicadores.index')->with('success', 'Indicador actualizado exitosamente.');
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
-            Log::error("IndicadorController@update: [Ind.{$indicador->id}] Error de Validación en try-catch.", ['message' => $e->getMessage(), 'errors' => $e->errors()]);
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("IndicadorController@update: [Ind.{$indicador->id}] Excepción general.", ['message' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]);
             return back()->withInput()->with('error', 'Ocurrió un error al actualizar el indicador: ' . $e->getMessage());
         }
     }
 
     /**
      * Elimina un indicador y todos sus datos y archivos relacionados.
-     * @param  \App\Models\Indicador  $indicador
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Indicador  $indicador
+     * @return RedirectResponse
      */
-    public function destroy(Indicador $indicador) // Asumiendo Route Model Binding
+    public function destroy(Indicador $indicador)
     {
-        /** @var \App\Models\User */
+        /** @var User */
         $user = auth()->user();
 
-        // Verificar si el usuario tiene acceso al indicador
         if ($user->hasRole('Enlace')) {
             $institucionesAsignadas = $user->instituciones->pluck('id');
             if (!$institucionesAsignadas->contains($indicador->id_institucion)) {
@@ -913,8 +890,6 @@ class IndicadorController extends Controller
 
         DB::beginTransaction();
         try {
-            // 1. (Opcional) Eliminar archivos de evidencia de los DatoAnual asociados
-            //    Esto es necesario si el modelo DatoAnual no lo hace en su evento 'deleting'.
             foreach ($indicador->datosAnuales as $datoAnual) {
                 if ($datoAnual->evidencia) {
                     $rutaArchivo = public_path('assets-administrador/docs/' . $datoAnual->evidencia);
@@ -925,15 +900,12 @@ class IndicadorController extends Controller
                 }
             }
 
-            // 2. Elimina los registros DatoAnual relacionados
             $indicador->datosAnuales()->delete();
             Log::info("IndicadorController@destroy: Registros DatoAnual eliminados para Indicador ID {$indicador->id}.");
 
-            // 3. Elimina las relaciones en la tabla pivot (Indicador_ods)
             $indicador->ods()->detach();
             Log::info("IndicadorController@destroy: Relaciones ODS eliminadas para Indicador ID {$indicador->id}.");
 
-            // 4. Finalmente, elimina el indicador
             $indicador->delete();
             Log::info("IndicadorController@destroy: Indicador ID {$indicador->id} eliminado de la base de datos.");
 
@@ -954,20 +926,16 @@ class IndicadorController extends Controller
 
     public function filtrarIndicadores($institucion, $programa = null)
     {
-        /** @var \App\Models\User */
+        /** @var User */
         $user = auth()->user();
 
-        // Verificar si el usuario tiene el rol "Enlace"
         if ($user->hasRole('Enlace')) {
-            // Obtener las instituciones asignadas al usuario
             $institucionesAsignadas = $user->instituciones->pluck('id');
 
-            // Validar si la institución seleccionada está permitida
             if ($institucion !== 'todos' && !$institucionesAsignadas->contains($institucion)) {
                 return response()->json(['error' => 'No tienes acceso a esta institución.'], 403);
             }
 
-            // Aplicar filtros según el valor de institución y programa
             $indicadores = Indicador::query()
                 ->when($institucion !== 'todos', function ($query) use ($institucion) {
                     $query->where('id_institucion', $institucion);
@@ -975,10 +943,9 @@ class IndicadorController extends Controller
                 ->when($programa, function ($query) use ($programa) {
                     $query->where('programa_derivado', $programa);
                 })
-                ->whereIn('id_institucion', $institucionesAsignadas) // Restringir a las instituciones asignadas
+                ->whereIn('id_institucion', $institucionesAsignadas)
                 ->get();
         } else {
-            // Otros roles pueden ver todos los indicadores (o ajustar según necesidades)
             $indicadores = Indicador::query()
                 ->when($institucion !== 'todos', function ($query) use ($institucion) {
                     $query->where('id_institucion', $institucion);
@@ -994,29 +961,93 @@ class IndicadorController extends Controller
     /**
      * Cambia el estado de validación de un indicador.
      * @param  int $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function toggleValidacion($id)
+    public function toggleValidacion(Request $request, $id)
     {
-        // Buscar el indicador
-        $indicador = Indicador::findOrFail($id);
+        $indicador = Indicador::forPlan($this->activePlan->id())->findOrFail($id);
 
-        // Alternar el estado de validación
-        $estadoValidacion = !$indicador->indicador_validado;
-        $indicador->indicador_validado = $estadoValidacion;
+        $valorAnterior = (bool) $indicador->getRawOriginal('indicador_validado');
+        $estadoValidacion = $request->has('estado')
+            ? $request->boolean('estado')
+            : !$valorAnterior;
 
-        // Guardar los cambios y propagar al histórico anual
-        $indicador->save();
-        $indicador->datosAnuales()->update(['validado' => $estadoValidacion]);
+        if ($valorAnterior === $estadoValidacion) {
+            return redirect()->back()->with('status', 'La ficha ya tenía ese estado de validación.');
+        }
+        DB::transaction(function () use ($indicador, $estadoValidacion, $valorAnterior) {
+            $actualizados = DB::table($indicador->getTable())
+                ->where('id', $indicador->id)
+                ->update([
+                    'indicador_validado' => $estadoValidacion,
+                    'updated_at' => now(),
+                ]);
 
-        return redirect()->back()->with('status', 'Estado de validación actualizado.');
+            abort_unless($actualizados === 1, 500, 'No se pudo guardar el estado de validación de la ficha.');
+            $this->auditLogger->recordUpdate(
+                $indicador,
+                'indicador_validado',
+                $valorAnterior,
+                $estadoValidacion,
+                $estadoValidacion ? 'validado' : 'invalidado',
+                'Cambio de validación de ficha'
+            );
+        });
+
+        return redirect()->back()->with('status', 'Estado de validación de la ficha actualizado. Los datos anuales conservan su validación independiente.');
+    }
+
+    /**
+     * Cambia el estado de validación de un dato anual sin modificar los demás años.
+     *
+     * La carga histórica conserva su estado actual; esta acción aplica a las
+     * validaciones independientes de nuevas cargas y actualizaciones futuras.
+     */
+    public function toggleValidacionAnual(Request $request, $id, $year)
+    {
+        $indicador = Indicador::forPlan($this->activePlan->id())->findOrFail($id);
+        $datoAnual = $indicador->datosAnuales()->where('anio', $year)->firstOrFail();
+        $valorAnterior = (bool) $datoAnual->getRawOriginal('validado');
+        $estadoValidacion = $request->has('estado')
+            ? $request->boolean('estado')
+            : !$valorAnterior;
+
+        if ($valorAnterior === $estadoValidacion) {
+            return redirect()->back()->with('status', "El dato anual {$year} ya tenía ese estado de validación.");
+        }
+        DB::transaction(function () use ($datoAnual, $estadoValidacion, $valorAnterior, $year) {
+            $actualizados = DB::table($datoAnual->getTable())
+                ->where('id', $datoAnual->id)
+                ->update([
+                    'validado' => $estadoValidacion,
+                    'modificado' => !$estadoValidacion,
+                    'updated_at' => now(),
+                ]);
+
+            abort_unless($actualizados === 1, 500, "No se pudo guardar la validación del dato anual {$year}.");
+            $this->auditLogger->recordUpdate(
+                $datoAnual,
+                'validado',
+                $valorAnterior,
+                $estadoValidacion,
+                $estadoValidacion ? 'validado' : 'invalidado',
+                "Cambio de validación del dato anual {$year}"
+            );
+        });
+
+        return redirect()->back()->with(
+            'status',
+            $estadoValidacion
+                ? "El dato anual {$year} fue validado."
+                : "El dato anual {$year} quedó pendiente de validación."
+        );
     }
 
     /**
      * Almacena un nuevo año para un indicador.
-     * @param  \Illuminate\Http\Request $request
+     * @param  Request $request
      * @param  int $id ID del Indicador
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function storeAnualData(Request $request, $id)
     {
@@ -1027,7 +1058,6 @@ class IndicadorController extends Controller
             return redirect()->back()->with('error', 'El año es obligatorio.');
         }
 
-        // Simplemente reutilizamos la lógica de updateAnualData pasando el año del request
         return $this->updateAnualData($request, $id, $year);
     }
 
@@ -1045,10 +1075,8 @@ class IndicadorController extends Controller
         Log::debug("IndicadorController@updateAnualData: Request Files:", $request->files->all());
 
 
-        $indicador = Indicador::findOrFail($id);
+        $indicador = Indicador::forPlan($this->activePlan->id())->findOrFail($id);
 
-        // 1. Validar los datos de entrada (ahora con nombres genéricos)
-        // Los nombres de los campos vienen del formulario del modal que ajustamos
         $rules = [
             'valor_dato' => 'nullable|numeric',
             'resultados_anual' => 'nullable|string',
@@ -1074,9 +1102,9 @@ class IndicadorController extends Controller
         if ($validator->fails()) {
             Log::warning("IndicadorController@updateAnualData: Validación fallida para Indicador ID: {$id}, Año: {$year}.", $validator->errors()->toArray());
             return redirect()->back()
-                ->withErrors($validator, "updateAnualValidation_{$year}") // Enviar errores a una bolsa específica
+                ->withErrors($validator, "updateAnualValidation_{$year}")
                 ->withInput()
-                ->with("updateAnualValidationErrors_{$year}", true); // Flag para reabrir el modal
+                ->with("updateAnualValidationErrors_{$year}", true);
         }
 
         $validatedData = $validator->validated();
@@ -1084,27 +1112,19 @@ class IndicadorController extends Controller
 
         DB::beginTransaction();
         try {
-            // 2. Buscar o crear el registro DatoAnual para este indicador y año
-            // firstOrNew preparará una nueva instancia con id_indicador y anio si no existe
             $datoAnual = $indicador->datosAnuales()->firstOrNew(['anio' => $year]);
             Log::debug("IndicadorController@updateAnualData: DatoAnual " . ($datoAnual->exists ? "encontrado (ID: {$datoAnual->id})" : "nuevo") . " para Año: {$year}.");
 
-
-            // 3. Preparar los datos para actualizar/crear
-            // Los nombres de las claves en $dataToSave deben coincidir con las columnas de la tabla `datos_anuales`
             $dataToSave = [
                 'valor_dato' => $validatedData['valor_dato'] ?? null,
                 'resultados' => $validatedData['resultados_anual'] ?? null,
                 'observaciones' => $validatedData['observaciones_anual'] ?? null,
                 'fecha_actualizacion' => $validatedData['fecha_actualizacion_anual'] ?? null,
-                // 'modificado' será manejado por el observer del modelo DatoAnual si hay cambios
             ];
 
-            // 4. Manejar la evidencia
             $nombreArchivoEvidenciaActual = $datoAnual->evidencia ?? null;
             $nombreArchivoEvidenciaParaGuardar = $nombreArchivoEvidenciaActual;
 
-            // a. Si se marcó "eliminar_evidencia_anual"
             if (!empty($validatedData['eliminar_evidencia_anual'])) {
                 if ($nombreArchivoEvidenciaActual) {
                     Log::debug("IndicadorController@updateAnualData: [Ind.{$id}, Año {$year}] Eliminando evidencia actual '{$nombreArchivoEvidenciaActual}' por checkbox.");
@@ -1115,12 +1135,10 @@ class IndicadorController extends Controller
                 $nombreArchivoEvidenciaParaGuardar = null;
             }
 
-            // b. Si se subió un nuevo archivo "evidencia_anual"
             if ($request->hasFile('evidencia_anual') && $request->file('evidencia_anual')->isValid()) {
                 $archivoEvidenciaSubido = $request->file('evidencia_anual');
                 Log::debug("IndicadorController@updateAnualData: [Ind.{$id}, Año {$year}] Nuevo archivo de evidencia subido: " . $archivoEvidenciaSubido->getClientOriginalName());
 
-                // Eliminar el archivo viejo si existe y se está reemplazando
                 if ($nombreArchivoEvidenciaActual && ($nombreArchivoEvidenciaParaGuardar === null || $nombreArchivoEvidenciaActual !== $nombreArchivoEvidenciaParaGuardar)) {
                     if (file_exists(public_path('assets-administrador/docs/' . $nombreArchivoEvidenciaActual))) {
                         unlink(public_path('assets-administrador/docs/' . $nombreArchivoEvidenciaActual));
@@ -1134,21 +1152,15 @@ class IndicadorController extends Controller
             }
             $dataToSave['evidencia'] = $nombreArchivoEvidenciaParaGuardar;
 
-
-            // 5. Llenar el modelo DatoAnual y guardar
-            // El id_indicador y anio ya están establecidos por firstOrNew
             $datoAnual->fill($dataToSave);
 
-            // El observer en DatoAnual se encargará de 'modificado = true' y de
-            // 'indicador_validado = false' en el Indicador padre si hay cambios.
             if ($datoAnual->isDirty() || !$datoAnual->exists) {
-                // Si es un nuevo registro y id_indicador no está (aunque firstOrNew en relación debería ponerlo)
                 if (!$datoAnual->exists && !$datoAnual->id_indicador) {
                     $datoAnual->id_indicador = $indicador->id;
                     Log::warning("IndicadorController@updateAnualData: [Ind.{$id}, Año {$year}] id_indicador fue explícitamente asignado para nuevo DatoAnual.");
                 }
 
-                if ($datoAnual->id_indicador === null) { // Comprobación crítica
+                if ($datoAnual->id_indicador === null) {
                     Log::critical("IndicadorController@updateAnualData: [Ind.{$id}, Año {$year}] ¡CRÍTICO! id_indicador es NULL ANTES de guardar DatoAnual. Abortando.");
                     throw new \Exception("No se pudo asociar el dato anual con el indicador.");
                 }
@@ -1168,18 +1180,17 @@ class IndicadorController extends Controller
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
-                // 'trace' => $e->getTraceAsString() // Descomentar para trace completo
             ]);
             return redirect()->back()
                 ->with('error', "Ocurrió un error al actualizar los datos para el año {$year}: " . $e->getMessage())
-                ->with("updateAnualValidationErrors_{$year}", true); // Para reabrir el modal
+                ->with("updateAnualValidationErrors_{$year}", true);
         }
     }
 
     /**
      * Finaliza el periodo de captura para un usuario.
-     * @param  \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @param  Request $request
+     * @return JsonResponse
      */
     public function finalizarCaptura(Request $request)
     {
@@ -1191,23 +1202,6 @@ class IndicadorController extends Controller
         }
         return response()->json(['success' => false], 500);
     }
-    // old v1
-    // public function generarReporte($id)
-    // {
-
-    //     $user = Auth::user()->load([
-    //         'institucion', // Carga la institución relacionada con el usuario
-    //         'indicadores.datosAnuales', // Carga los indicadores del usuario y los datos anuales de cada indicador
-    //         'indicadores.institucion' // Carga la institución de cada indicador
-    //     ]);
-    //     $user->update([
-    //         'reporte_generado' => true,
-    //         'reporte_generado_at' => now(),
-    //     ]);
-
-    //     // Pasar los datos a la vista
-    //     return view('panel-indicadores.generar-documento', compact('user'));
-    // }
 
     /**
      * Genera la vista de reporte imprimible para un usuario.
@@ -1216,17 +1210,13 @@ class IndicadorController extends Controller
      */
     public function generarReporte($id)
     {
-        /** @var \App\Models\User|null $user */
+        /** @var User|null $user */
         $user = Auth::user();
 
-        // Es buena práctica verificar si el usuario realmente existe (está logueado)
         if (!$user) {
-            // Manejar el caso de usuario no autenticado, por ejemplo:
             abort(403, 'Usuario no autenticado.');
-            // O return redirect()->route('login');
         }
 
-        // Ahora la extensión sabe que $user es (probablemente) de tipo App\Models\User
         $user->load([
             'institucion',
             'indicadores.datosAnuales',
@@ -1243,15 +1233,15 @@ class IndicadorController extends Controller
 
     /**
      * Genera y descarga un archivo Excel con indicadores filtrados.
-     * @param  \Illuminate\Http\Request $request
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\JsonResponse
+     * @param  Request $request
+     * @return JsonResponse
      */
     public function datosAbiertosPed(Request $request)
     {
         Log::debug('IndicadorController@datosAbiertosPed: Iniciado.', $request->all());
-        $nombreArchivoBase = $request->nombre_archivo; // Renombrado para claridad
+        $nombreArchivoBase = $request->nombre_archivo;
         $parametro = $request->parametro;
-        $indicadoresQuery = Indicador::select( // Definimos la base de la consulta aquí
+        $indicadoresQuery = Indicador::forPlan($this->activePlan->id())->select(
             'id',
             'nombre',
             'programa_derivado',
@@ -1260,7 +1250,8 @@ class IndicadorController extends Controller
             'linea_base',
             'dato_linea_base',
             'unidad_medida',
-            'meta_2024',
+            'meta_anio',
+            'meta',
             'fuente',
             'liga',
             'descripcion',
@@ -1272,12 +1263,8 @@ class IndicadorController extends Controller
             'formula',
             'fecha_actualizacion'
         )->with([
-            // MODIFICADO: Cargar la relación 'datosAnuales' completa.
-            // Cada 'DatoAnual' tendrá 'anio' y 'valor_dato'.
             'datosAnuales' => function ($query) {
-                // Seleccionar solo las columnas necesarias del modelo DatoAnual
-                // para optimizar la consulta, si no necesitas todas.
-                $query->select('id_indicador', 'anio', 'valor_dato' /*, 'resultados', 'observaciones', etc. si los necesitas */);
+                $query->select('id_indicador', 'anio', 'valor_dato');
             },
             'ods',
             'institucion:id,nombre'
@@ -1285,9 +1272,6 @@ class IndicadorController extends Controller
 
         switch ($parametro) {
             case 'total-indicadores-ped':
-                // No se necesitan condiciones 'where' adicionales para este caso.
-                // La consulta base ya está definida en $indicadoresQuery.
-                // Simplemente se usará $indicadoresQuery->get() después del switch.
                 Log::debug("IndicadorController@datosAbiertosPed: Caso 'total-indicadores-ped', no se añaden filtros 'where' adicionales.");
                 break;
             case 'indicadores-ped':
@@ -1295,12 +1279,7 @@ class IndicadorController extends Controller
                 Log::debug("IndicadorController@datosAbiertosPed: Aplicado filtro where programa_derivado = 'Plan Estatal de Desarrollo'");
                 break;
             case 'indicadores-pd-ped':
-                $indicadoresQuery->whereIn('programa_derivado', [
-                    'Programa Sectorial',
-                    'Programa Especial',
-                    'Programa Institucional',
-                    'Programa Regional'
-                ]);
+                $this->applyDerivedProgramFilter($indicadoresQuery);
                 Log::debug("IndicadorController@datosAbiertosPed: Aplicado filtro whereIn programa_derivado.");
                 break;
             case 'indicadores-eje1-ped':
@@ -1314,10 +1293,8 @@ class IndicadorController extends Controller
                 Log::debug("IndicadorController@datosAbiertosPed: Aplicados filtros para Eje 2.");
                 break;
             case 'indicadores-eje3-ped':
-                // OJO: Parece haber un espacio extra al final de 'Estado de Derecho, Seguridad y Justicia '
-                // Asegúrate de que coincida exactamente con tu base de datos o quita el espacio.
                 $indicadoresQuery->where('programa_derivado', 'Plan Estatal de Desarrollo')
-                    ->where('programa', 'Estado de Derecho, Seguridad y Justicia'); // Corregido posible espacio extra
+                    ->where('programa', 'Estado de Derecho, Seguridad y Justicia');
                 Log::debug("IndicadorController@datosAbiertosPed: Aplicados filtros para Eje 3.");
                 break;
             case 'indicadores-eje4-ped':
@@ -1344,39 +1321,24 @@ class IndicadorController extends Controller
         Log::debug('IndicadorController@datosAbiertosPed: Indicadores obtenidos de BD: ' . $indicadoresCollection->count());
 
         $indicadoresParaExcel = $indicadoresCollection->map(function ($indicador) {
-            // Definir un array con los campos de datos anuales y valores vacíos por defecto
-            // para el formato "ancho" del Excel.
             $camposAnualesParaExcel = [];
-            $rangoDeAniosParaExcel = range(2015, 2030); // Ajusta este rango según necesites para las columnas del Excel
+            $rangoDeAniosParaExcel = range(2015, 2030);
 
             foreach ($rangoDeAniosParaExcel as $year) {
-                $camposAnualesParaExcel["dato_$year"] = ''; // Inicializar con vacío
-                // Si necesitas otros campos anuales en el Excel, inicialízalos aquí también:
-                // $camposAnualesParaExcel["resultados_$year"] = '';
-                // $camposAnualesParaExcel["observaciones_$year"] = '';
+                $camposAnualesParaExcel["dato_$year"] = '';
             }
 
-            // Si existen datos anuales (ahora es una colección de objetos DatoAnual),
-            // iterar sobre ellos y llenar los campos correspondientes.
             if ($indicador->datosAnuales && $indicador->datosAnuales->isNotEmpty()) {
                 foreach ($indicador->datosAnuales as $datoAnual) {
                     $keyParaValor = "dato_" . $datoAnual->anio;
                     if (array_key_exists($keyParaValor, $camposAnualesParaExcel)) {
                         $camposAnualesParaExcel[$keyParaValor] = $datoAnual->valor_dato;
                     }
-
-                    // Si necesitas otros campos de DatoAnual en el Excel:
-                    // $keyParaResultados = "resultados_" . $datoAnual->anio;
-                    // if (array_key_exists($keyParaResultados, $camposAnualesParaExcel)) {
-                    //    $camposAnualesParaExcel[$keyParaResultados] = $datoAnual->resultados;
-                    // }
                 }
             }
 
-            // Concatenar ODS en un solo campo
             $ods = $indicador->ods->pluck('id')->unique()->implode(', ');
 
-            // Retornar el nuevo formato del indicador para el Excel
             $datosIndicadorBase = $indicador->only([
                 'id',
                 'nombre',
@@ -1386,7 +1348,8 @@ class IndicadorController extends Controller
                 'linea_base',
                 'dato_linea_base',
                 'unidad_medida',
-                'meta_2024',
+                'meta_anio',
+                'meta',
                 'fuente',
                 'liga',
                 'descripcion',
@@ -1394,9 +1357,9 @@ class IndicadorController extends Controller
                 'cobertura',
                 'tendencia',
                 'id_institucion',
-                // 'resultados', // Estos son los resultados generales del indicador
+                // 'resultados',
                 'formula',
-                'fecha_actualizacion' // Esta es la fecha de actualización inicial
+                'fecha_actualizacion'
             ]);
             $datosIndicadorBase['nombre_institucion'] = $indicador->institucion ? $indicador->institucion->nombre : 'N/A';
             return array_merge($datosIndicadorBase, $camposAnualesParaExcel, ['ods' => $ods]);
@@ -1410,8 +1373,8 @@ class IndicadorController extends Controller
             $spreadsheet = IOFactory::load($rutaPlantillaExcel);
             $sheet = $spreadsheet->getActiveSheet();
 
-            $fila = 2; // Comenzar desde la segunda fila
-            foreach ($indicadoresParaExcel as $indicadorDataRow) { // Renombrada la variable para claridad
+            $fila = 2;
+            foreach ($indicadoresParaExcel as $indicadorDataRow) {
                 $sheet->setCellValue("A{$fila}", $fila - 1);
                 $sheet->setCellValue("B{$fila}", $indicadorDataRow['nombre']);
                 $sheet->setCellValue("C{$fila}", $indicadorDataRow['programa_derivado']);
@@ -1420,17 +1383,17 @@ class IndicadorController extends Controller
                 $sheet->setCellValue("F{$fila}", $indicadorDataRow['linea_base']);
                 $sheet->setCellValue("G{$fila}", $indicadorDataRow['dato_linea_base']);
                 $sheet->setCellValue("H{$fila}", $indicadorDataRow['unidad_medida']);
-                $sheet->setCellValue("I{$fila}", $indicadorDataRow['meta_2024']);
+                $sheet->setCellValue("I{$fila}", $indicadorDataRow['meta']);
                 $sheet->setCellValue("J{$fila}", $indicadorDataRow['fuente']);
                 $sheet->setCellValue("K{$fila}", $indicadorDataRow['liga']);
                 $sheet->setCellValue("L{$fila}", $indicadorDataRow['descripcion']);
                 $sheet->setCellValue("M{$fila}", $indicadorDataRow['periodicidad']);
                 $sheet->setCellValue("N{$fila}", $indicadorDataRow['cobertura']);
                 $sheet->setCellValue("O{$fila}", $indicadorDataRow['tendencia']);
-                // $sheet->setCellValue("P{$fila}", $indicadorDataRow['resultados']); // Resultados generales
+                // $sheet->setCellValue("P{$fila}", $indicadorDataRow['resultados']);
                 $sheet->setCellValue("P{$fila}", $indicadorDataRow['formula']);
                 $sheet->setCellValue("Q{$fila}", $indicadorDataRow['ods']);
-                $sheet->setCellValue("R{$fila}", $indicadorDataRow['fecha_actualizacion']); // Fecha actualización general
+                $sheet->setCellValue("R{$fila}", $indicadorDataRow['fecha_actualizacion']);
 
                 // Columnas de datos anuales
                 $sheet->setCellValue("S{$fila}", $indicadorDataRow['dato_2015']);
@@ -1449,16 +1412,14 @@ class IndicadorController extends Controller
                 $sheet->setCellValue("AF{$fila}", $indicadorDataRow['dato_2028']);
                 $sheet->setCellValue("AG{$fila}", $indicadorDataRow['dato_2029']);
                 $sheet->setCellValue("AH{$fila}", $indicadorDataRow['dato_2030']);
-                // Si necesitas más columnas para resultados_YYYY, etc., añádelas aquí
                 $sheet->setCellValue("AI{$fila}", $indicadorDataRow['nombre_institucion']);
                 $fila++;
             }
             Log::debug('IndicadorController@datosAbiertosPed: Datos escritos en la hoja de Excel.');
 
-            $nombreArchivoFinal = "indicadores_ped_{$nombreArchivoBase}.xlsx"; // Nombre final del archivo
-            $rutaSalida = storage_path("app/public/exports/{$nombreArchivoFinal}"); // Guardar en storage/app/public/exports
+            $nombreArchivoFinal = "indicadores_ped_{$nombreArchivoBase}.xlsx";
+            $rutaSalida = storage_path("app/public/exports/{$nombreArchivoFinal}");
 
-            // Asegurarse de que el directorio exista
             if (!Storage::disk('public')->exists('exports')) {
                 Storage::disk('public')->makeDirectory('exports');
             }
@@ -1479,8 +1440,8 @@ class IndicadorController extends Controller
 
     /**
      * Genera y descarga un archivo CSV con indicadores filtrados.
-     * @param  \Illuminate\Http\Request $request
-     * @return \Symfony\Component\HttpFoundation\StreamedResponse|\Illuminate\Http\RedirectResponse
+     * @param  Request $request
+     * @return RedirectResponse
      */
     public function datosAbiertosPedCsv(Request $request)
     {
@@ -1488,12 +1449,7 @@ class IndicadorController extends Controller
         $nombreArchivoBase = $request->input('nombre_archivo', 'exportacion_indicadores'); // Usar input()
         $parametro = $request->input('parametro');
 
-        // --- 1. OBTENER Y PREPARAR DATOS (REUTILIZAR LÓGICA) ---
-        // Esta parte es muy similar a tu datosAbiertosPed para Excel.
-        // Puedes refactorizar la lógica de consulta y mapeo a un método privado
-        // para no duplicar código.
-
-        $indicadoresQuery = Indicador::select(
+        $indicadoresQuery = Indicador::forPlan($this->activePlan->id())->select(
             'id',
             'nombre',
             'programa_derivado',
@@ -1502,7 +1458,8 @@ class IndicadorController extends Controller
             'linea_base',
             'dato_linea_base',
             'unidad_medida',
-            'meta_2024',
+            'meta_anio',
+            'meta',
             'fuente',
             'liga',
             'descripcion',
@@ -1517,11 +1474,10 @@ class IndicadorController extends Controller
             'datosAnuales' => function ($query) {
                 $query->select('id_indicador', 'anio', 'valor_dato');
             },
-            'ods:id,nombre', // Asumiendo que quieres los nombres de los ODS
+            'ods:id,nombre',
             'institucion:id,nombre'
         ]);
 
-        // Aplicar filtros según $parametro (tu switch se mantiene igual)
         switch ($parametro) {
             case 'total-indicadores':
                 Log::debug("Caso 'total-indicadores-ped'");
@@ -1531,12 +1487,7 @@ class IndicadorController extends Controller
                 Log::debug("IndicadorController@datosAbiertosPedCSV: Aplicado filtro where programa_derivado = 'Plan Estatal de Desarrollo'");
                 break;
             case 'indicadores-pd-ped':
-                $indicadoresQuery->whereIn('programa_derivado', [
-                    'Programa Sectorial',
-                    'Programa Especial',
-                    'Programa Institucional',
-                    'Programa Regional'
-                ]);
+                $this->applyDerivedProgramFilter($indicadoresQuery);
                 Log::debug("IndicadorController@datosAbiertosPedCSV: Aplicado filtro whereIn programa_derivado.");
                 break;
             case 'indicadores-eje1-ped':
@@ -1550,10 +1501,8 @@ class IndicadorController extends Controller
                 Log::debug("IndicadorController@datosAbiertosPedCSV: Aplicados filtros para Eje 2.");
                 break;
             case 'indicadores-eje3-ped':
-                // OJO: Parece haber un espacio extra al final de 'Estado de Derecho, Seguridad y Justicia '
-                // Asegúrate de que coincida exactamente con tu base de datos o quita el espacio.
                 $indicadoresQuery->where('programa_derivado', 'Plan Estatal de Desarrollo')
-                    ->where('programa', 'Estado de Derecho, Seguridad y Justicia'); // Corregido posible espacio extra
+                    ->where('programa', 'Estado de Derecho, Seguridad y Justicia');
                 Log::debug("IndicadorController@datosAbiertosPedCSV: Aplicados filtros para Eje 3.");
                 break;
             case 'indicadores-eje4-ped':
@@ -1579,12 +1528,10 @@ class IndicadorController extends Controller
         $indicadoresCollection = $indicadoresQuery->get();
         Log::debug('Indicadores obtenidos de BD para CSV: ' . $indicadoresCollection->count());
 
-        // Mapeo de datos (igual que para Excel, pero asegúrate que los datos sean aptos para CSV)
-        $rangoDeAniosCsv = range(2010, 2030); // O el rango que necesites
+        $rangoDeAniosCsv = range(2010, 2030);
 
         $datosParaCsv = $indicadoresCollection->map(function ($indicador) use ($rangoDeAniosCsv) {
             $fila = [];
-            // Datos del Indicador Principal
             $fila['ID Indicador'] = $indicador->id;
             $fila['Nombre Indicador'] = $indicador->nombre;
             $fila['Programa Derivado'] = $indicador->programa_derivado;
@@ -1593,49 +1540,46 @@ class IndicadorController extends Controller
             $fila['Linea Base (Año)'] = $indicador->linea_base;
             $fila['Linea Base (Dato)'] = $indicador->dato_linea_base;
             $fila['Unidad de Medida'] = $indicador->unidad_medida;
-            $fila['Meta 2030'] = $indicador->meta_2024; // O Meta 2030 si el campo cambió
+            $fila['Año Meta'] = $indicador->meta_anio;
+            $fila['Meta'] = $indicador->meta;
             $fila['Fuente'] = $indicador->fuente;
             $fila['Enlace'] = $indicador->liga;
-            $fila['Descripción'] = $indicador->descripcion; // Cuidado con comas y saltos de línea aquí
+            $fila['Descripción'] = $indicador->descripcion;
             $fila['Periodicidad'] = $indicador->periodicidad;
             $fila['Cobertura'] = $indicador->cobertura;
             $fila['Tendencia'] = $indicador->tendencia;
-            $fila['Resultados Generales'] = $indicador->resultados; // Cuidado con comas/saltos de línea
-            $fila['Fórmula'] = $indicador->formula; // Cuidado con comas/saltos de línea
+            $fila['Resultados Generales'] = $indicador->resultados;
+            $fila['Fórmula'] = $indicador->formula;
             $fila['Fecha Actualización Indicador'] = $indicador->fecha_actualizacion;
             $fila['Institución'] = $indicador->institucion ? $indicador->institucion->nombre : 'N/A';
-            $fila['ODS'] = $indicador->ods->pluck('nombre')->implode('; '); // Usar punto y coma u otro delimitador si los nombres de ODS pueden tener comas
+            $fila['ODS'] = $indicador->ods->pluck('nombre')->implode('; ');
 
-            // Datos Anuales
             foreach ($rangoDeAniosCsv as $year) {
                 $datoAnual = $indicador->datosAnuales->firstWhere('anio', $year);
-                $fila["Dato {$year}"] = $datoAnual ? $datoAnual->valor_dato : ''; // Vacío si no hay dato
+                $fila["Dato {$year}"] = $datoAnual ? $datoAnual->valor_dato : '';
             }
             return $fila;
         });
 
         if ($datosParaCsv->isEmpty()) {
             Log::warning('No hay datos para generar el CSV después del mapeo.');
-            // Podrías redirigir con un mensaje o devolver una respuesta JSON de error
             return redirect()->back()->with('error', 'No hay datos disponibles para exportar en formato CSV con los filtros seleccionados.');
         }
 
-        // --- 2. GENERAR EL CONTENIDO CSV ---
         $nombreArchivoCsv = "indicadores_ped_{$nombreArchivoBase}.csv";
-        $columnas = array_keys($datosParaCsv->first()); // Obtener los encabezados de la primera fila
+        $columnas = array_keys($datosParaCsv->first());
 
         $callback = function () use ($datosParaCsv, $columnas) {
             $file = fopen('php://output', 'w');
-            fwrite($file, "\xEF\xBB\xBF"); // BOM para UTF-8
-            fputcsv($file, $columnas); // Escribir encabezados
+            fwrite($file, "\xEF\xBB\xBF");
+            fputcsv($file, $columnas);
 
             foreach ($datosParaCsv as $fila) {
-                fputcsv($file, $fila); // Escribir cada fila de datos
+                fputcsv($file, $fila);
             }
             fclose($file);
         };
 
-        // --- 3. RESPUESTA HTTP PARA CSV ---
         $headers = [
             "Content-type"        => "text/csv; charset=UTF-8",
             "Content-Disposition" => "attachment; filename={$nombreArchivoCsv}",
@@ -1650,25 +1594,15 @@ class IndicadorController extends Controller
 
     /**
      * Devuelve una respuesta JSON con indicadores filtrados.
-     * @param  \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @param  Request $request
+     * @return JsonResponse
      */
     public function datosAbiertosPedJson(Request $request)
     {
         Log::debug('IndicadorController@datosAbiertosPedJson: Iniciado.', $request->all());
         $parametro = $request->input('parametro');
-        // El 'nombre_archivo' no es tan relevante para una respuesta JSON directa,
-        // pero podrías usarlo si el JSON se guarda en un archivo para descargar,
-        // aunque lo común es devolver el JSON en la respuesta.
-        // $nombreArchivoBase = $request->input('nombre_archivo', 'exportacion_indicadores');
 
-        // --- 1. OBTENER Y PREPARAR DATOS (REUTILIZAR LÓGICA) ---
-        // Asumimos que tienes un método privado como el que sugerí:
-        // $indicadoresCollection = $this->obtenerIndicadoresFiltrados($parametro);
-        // Si no, copia aquí la lógica de consulta y el switch de los otros métodos.
-
-        // Copiando la lógica de consulta para este ejemplo:
-        $indicadoresQuery = Indicador::select(
+        $indicadoresQuery = Indicador::forPlan($this->activePlan->id())->select(
             'id',
             'nombre',
             'programa_derivado',
@@ -1677,7 +1611,8 @@ class IndicadorController extends Controller
             'linea_base',
             'dato_linea_base',
             'unidad_medida',
-            'meta_2024', // O meta_2030
+            'meta_anio',
+            'meta',
             'fuente',
             'liga',
             'descripcion',
@@ -1690,8 +1625,7 @@ class IndicadorController extends Controller
             'formula',
             'fecha_actualizacion'
         )->with([
-            // Para JSON, podrías querer una estructura anidada, que Eloquent maneja bien.
-            'datosAnuales:id,id_indicador,anio,valor_dato,resultados,observaciones,evidencia,fecha_actualizacion', // Cargar más campos si son útiles
+            'datosAnuales:id,id_indicador,anio,valor_dato,resultados,observaciones,evidencia,fecha_actualizacion',
             'ods:id,nombre',
             'institucion:id,nombre'
         ]);
@@ -1705,12 +1639,7 @@ class IndicadorController extends Controller
                 Log::debug("IndicadorController@datosAbiertosPedJSON: Aplicado filtro where programa_derivado = 'Plan Estatal de Desarrollo'");
                 break;
             case 'indicadores-pd-ped':
-                $indicadoresQuery->whereIn('programa_derivado', [
-                    'Programa Sectorial',
-                    'Programa Especial',
-                    'Programa Institucional',
-                    'Programa Regional'
-                ]);
+                $this->applyDerivedProgramFilter($indicadoresQuery);
                 Log::debug("IndicadorController@datosAbiertosPedJSON: Aplicado filtro whereIn programa_derivado.");
                 break;
             case 'indicadores-eje1-ped':
@@ -1724,10 +1653,8 @@ class IndicadorController extends Controller
                 Log::debug("IndicadorController@datosAbiertosPedJSON: Aplicados filtros para Eje 2.");
                 break;
             case 'indicadores-eje3-ped':
-                // OJO: Parece haber un espacio extra al final de 'Estado de Derecho, Seguridad y Justicia '
-                // Asegúrate de que coincida exactamente con tu base de datos o quita el espacio.
                 $indicadoresQuery->where('programa_derivado', 'Plan Estatal de Desarrollo')
-                    ->where('programa', 'Estado de Derecho, Seguridad y Justicia'); // Corregido posible espacio extra
+                    ->where('programa', 'Estado de Derecho, Seguridad y Justicia');
                 Log::debug("IndicadorController@datosAbiertosPedJSON: Aplicados filtros para Eje 3.");
                 break;
             case 'indicadores-eje4-ped':
@@ -1755,71 +1682,65 @@ class IndicadorController extends Controller
 
         if ($indicadoresCollection->isEmpty()) {
             Log::warning('IndicadorController@datosAbiertosPedJson: No hay datos para generar el JSON con los filtros seleccionados.');
-            return response()->json(['success' => true, 'message' => 'No hay datos disponibles para los filtros seleccionados.', 'data' => []], 200); // Devolver un array vacío es común
+            return response()->json(['success' => true, 'message' => 'No hay datos disponibles para los filtros seleccionados.', 'data' => []], 200);
         }
 
-        // --- 2. FORMATEO PARA JSON (OPCIONAL, PERO RECOMENDADO PARA CONSISTENCIA) ---
-        // Eloquent ya serializa bien a JSON, pero si quieres una estructura específica
-        // o añadir/modificar campos, puedes usar ->map() como antes.
-        // Si quieres la estructura tal cual la devuelve Eloquent con las relaciones cargadas,
-        // puedes omitir el ->map() o hacerlo más simple.
-
-        $rangoDeAniosJson = range(2015, 2030); // O el rango que necesites para el "formato ancho" si lo quieres así en JSON
+        $rangoDeAniosJson = range(2015, 2030);
 
         $datosParaJson = $indicadoresCollection->map(function ($indicador) use ($rangoDeAniosJson) {
-            $datosIndicador = $indicador->toArray(); // Convierte el modelo y sus relaciones cargadas a array
+            $datosIndicador = $indicador->toArray();
 
-            // Si quieres mantener el formato "ancho" para los datos anuales en el JSON:
             $datosAnualesFormatoAncho = [];
             foreach ($rangoDeAniosJson as $year) {
                 $datoAnual = $indicador->datosAnuales->firstWhere('anio', $year);
                 $datosAnualesFormatoAncho["dato_{$year}"] = $datoAnual ? $datoAnual->valor_dato : null;
-                // Podrías añadir más campos anuales aquí si los cargaste:
-                // $datosAnualesFormatoAncho["resultados_{$year}"] = $datoAnual ? $datoAnual->resultados : null;
             }
-            // Reemplazar la colección 'datosAnuales' con el formato ancho (si así lo deseas)
             $datosIndicador['datos_anuales_historico'] = $datosAnualesFormatoAncho;
-            unset($datosIndicador['datos_anuales']); // Eliminar la colección original si se reemplaza
+            unset($datosIndicador['datos_anuales']);
 
-            // Puedes limpiar o renombrar campos aquí si es necesario
-            // Por ejemplo, si quieres que la institución aparezca como un string y no un objeto:
             if (isset($datosIndicador['institucion']) && is_array($datosIndicador['institucion'])) {
                 $datosIndicador['nombre_institucion'] = $datosIndicador['institucion']['nombre'] ?? 'N/A';
-                unset($datosIndicador['institucion']); // Opcional: eliminar el objeto institución
+                unset($datosIndicador['institucion']);
             }
             if (isset($datosIndicador['ods']) && is_array($datosIndicador['ods'])) {
                 $datosIndicador['nombres_ods'] = collect($datosIndicador['ods'])->pluck('nombre')->implode(', ');
-                unset($datosIndicador['ods']); // Opcional: eliminar el array de objetos ods
+                unset($datosIndicador['ods']);
             }
 
             return $datosIndicador;
         });
 
-
-        // --- 3. RESPUESTA HTTP PARA JSON ---
-        // Laravel automáticamente convertirá la colección (o array) a una respuesta JSON
-        // y establecerá la cabecera Content-Type a application/json.
         Log::info("IndicadorController@datosAbiertosPedJson: Enviando respuesta JSON con {$datosParaJson->count()} registros.");
         return response()->json([
             'success' => true,
             'parametro_solicitado' => $parametro,
             'total_registros' => $datosParaJson->count(),
-            'data' => $datosParaJson // Aquí va tu colección de indicadores formateada
+            'data' => $datosParaJson
         ], 200);
     }
 
     /**
      * Valida la estructura y contenido básico de un archivo Excel sin guardarlo en la BD.
-     * @param  \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @param  Request $request
+     * @return JsonResponse
      */
+    public function import(Request $request): JsonResponse
+    {
+        $validationResponse = $this->validateFile($request);
+
+        if ($validationResponse->getStatusCode() !== 200) {
+            return $validationResponse;
+        }
+
+        return $this->confirmImport($request);
+    }
+
     public function validateFile(Request $request)
     {
         Log::debug('IndicadorController@validateFile: Iniciado.');
 
-        // 1. Validar el archivo subido
         Log::debug('IndicadorController@validateFile: Antes de validar el request del archivo.');
-        $validatedRequest = $request->validate([ // Guardar el resultado de la validación
+        $validatedRequest = $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv|max:2048',
         ], [
             'file.required' => 'Por favor, selecciona un archivo.',
@@ -1829,8 +1750,7 @@ class IndicadorController extends Controller
         Log::info('IndicadorController@validateFile: Validación del request de archivo exitosa.');
 
         try {
-            // 2. Cargar el archivo
-            $file = $validatedRequest['file']; // Usar el archivo validado
+            $file = $validatedRequest['file'];
             Log::debug('IndicadorController@validateFile: Archivo obtenido del request.', ['original_name' => $file->getClientOriginalName(), 'size' => $file->getSize()]);
 
             $spreadsheet = IOFactory::load($file);
@@ -1841,11 +1761,11 @@ class IndicadorController extends Controller
             $allRowsRaw = $sheet->toArray();
             Log::debug('IndicadorController@validateFile: Todas las filas leídas (raw): ' . count($allRowsRaw) . ' filas.');
 
-            $rows = array_filter($allRowsRaw, function ($row) {
+            $rows = array_values(array_filter($allRowsRaw, function ($row) {
                 return count(array_filter($row, function ($cell) {
-                    return trim((string) $cell) !== ''; // Convertir celda a string antes de trim
+                    return trim((string) $cell) !== '';
                 })) > 0;
-            });
+            }));
             Log::info('IndicadorController@validateFile: Filas filtradas (no vacías): ' . count($rows) . ' filas.');
 
             if (empty($rows)) {
@@ -1853,9 +1773,17 @@ class IndicadorController extends Controller
                 return response()->json(['error' => 'El archivo está vacío o no contiene filas con datos.'], 422);
             }
 
-            // 3. Quitar encabezados
             $headers = array_shift($rows);
             Log::debug('IndicadorController@validateFile: Encabezados extraídos.', ['headers' => $headers]);
+
+            $headerError = $this->validateImportHeaders($headers);
+            if ($headerError) {
+                return response()->json(['error' => $headerError], 422);
+            }
+
+            if (count($rows) > 1000) {
+                return response()->json(['error' => 'El archivo no puede contener más de 1000 indicadores por carga.'], 422);
+            }
 
             if (empty($rows)) {
                 Log::warning('IndicadorController@validateFile: El archivo no contiene datos para procesar después de quitar encabezados.');
@@ -1863,56 +1791,30 @@ class IndicadorController extends Controller
             }
             Log::debug('IndicadorController@validateFile: Número de filas de datos (sin encabezados): ' . count($rows) . ' filas.');
 
-            // 4. Validar campos obligatorios en las filas
-            // NUEVA ESTRUCTURA (ACTUALIZADA con Usuario e Institución):
-            // 0: ID
-            // 1: Nombre
-            // 2: Plan Estatal (REQUIRED)
-            // 3: Tipo Programa (REQUIRED)
-            // 4: Nombre Programa Derivado (REQUIRED)
-            // 5: Eje / Programa (REQUIRED)
-            // 6: ID Usuario (Opcional o Required - User pidió agregarlos "para que el admin sepa")
-            // 7: ID Institución (Opcional o Required)
-            // 8: Temática (REQUIRED)
-            // ...
-
             Log::debug('IndicadorController@validateFile: Iniciando validación de campos obligatorios por fila.');
             foreach ($rows as $index => $row) {
-                $nombre = $row[1] ?? null;
-                $plan = $row[2] ?? null; // Plan
-                $tipoPrograma = $row[3] ?? null; // Tipo
-                $nombrePrograma = $row[4] ?? null; // Nombre Prog
-                $eje = $row[5] ?? null; // Eje
-                // $idUsuario = $row[6] ?? null; // IDs son opcionales en validación estricta del archivo? Mejor validarlos si están.
-                // $idInstitucion = $row[7] ?? null;
-
-                if (
-                    empty(trim((string)$nombre)) ||
-                    empty(trim((string)$plan)) ||
-                    empty(trim((string)$tipoPrograma)) ||
-                    empty(trim((string)$nombrePrograma)) ||
-                    empty(trim((string)$eje))
-                ) {
+                $rowError = $this->validateImportRowShape($row);
+                if ($rowError) {
                     Log::warning('IndicadorController@validateFile: Error de validación en fila.', [
                         'numero_fila_excel' => $index + 2,
                         'contenido_fila' => $row,
-                        'error' => 'Campos obligatorios vacíos (Nombre, Plan, Tipo, Programa o Eje).'
+                        'error' => $rowError,
                     ]);
                     return response()->json([
-                        'error' => "Error en la fila " . ($index + 2) . ": Faltan datos obligatorios (Nombre, Plan, Tipo de Programa, Nombre de Programa o Eje)."
+                        'error' => "Error en la fila " . ($index + 2) . ": {$rowError}"
                     ], 422);
                 }
             }
             Log::info('IndicadorController@validateFile: Validación de campos obligatorios por fila completada exitosamente.');
 
-            // 5. Almacenar el archivo temporalmente y guardar la RUTA en sesión (no las filas)
-            // session(['importRows' => $rows]); // <-- ESTO CAUSABA EL ERROR DE SESSION PAYLOAD
+            if ($oldPath = session('importFilePath')) {
+                Storage::delete($oldPath);
+            }
 
             $path = $file->storeAs('temp_imports', 'import_' . uniqid() . '.' . $file->getClientOriginalExtension());
             session(['importFilePath' => $path]);
             Log::info('IndicadorController@validateFile: Archivo guardado temporalmente en: ' . $path);
 
-            // 6. Respuesta exitosa
             Log::info('IndicadorController@validateFile: Validación de archivo completada. Enviando respuesta exitosa.');
             return response()->json([
                 'success' => true,
@@ -1929,8 +1831,8 @@ class IndicadorController extends Controller
 
     /**
      * Procesa las filas (previamente validadas y guardadas en sesión) para importarlas a la BD.
-     * @param  \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @param  Request $request
+     * @return JsonResponse
      */
     public function confirmImport(Request $request)
     {
@@ -1947,27 +1849,31 @@ class IndicadorController extends Controller
         $filasProcesadas = 0;
 
         try {
-            // Re-leer el archivo desde disco
             $fullPath = storage_path('app/' . $filePath);
             $spreadsheet = IOFactory::load($fullPath);
             $sheet = $spreadsheet->getActiveSheet();
 
-            // Lógica similar a validateFile para obtener filas
             $allRowsRaw = $sheet->toArray();
-            $rows = array_filter($allRowsRaw, function ($row) {
+            $rows = array_values(array_filter($allRowsRaw, function ($row) {
                 return count(array_filter($row, function ($cell) {
                     return trim((string) $cell) !== '';
                 })) > 0;
-            });
-            // Quitar encabezados
+            }));
+            $headers = $rows[0] ?? [];
+            $headerError = $this->validateImportHeaders($headers);
+            if ($headerError) {
+                throw new \RuntimeException($headerError);
+            }
             array_shift($rows);
-        } catch (\Exception $e) {
+            if (!$rows) {
+                throw new \RuntimeException('El archivo no contiene datos para procesar.');
+            }
+        } catch (\Throwable $e) {
             Log::error("IndicadorController@confirmImport: Error al releer el archivo: " . $e->getMessage());
-            return response()->json(['error' => 'Error al procesar el archivo temporal.'], 500);
+            $this->forgetImportFile($filePath);
+            return response()->json(['error' => $e->getMessage()], 422);
         }
 
-        // NUEVO Mapeo anual: Se han insertado 2 columnas nuevas (Usuario, Institucion).
-        // Antes: Inicio en 20. Ahora: 20 + 2 = 22.
         $columnaInicialDatosAnualesExcel = 22;
         $anioInicialDatosAnuales = 2015;
         $anioFinalDatosAnuales = 2030;
@@ -1981,159 +1887,128 @@ class IndicadorController extends Controller
 
         foreach ($rows as $index => $row) {
             $filasProcesadas++;
-            // $index en foreach sobre array filtrado puede saltar si hubo filas vacías intermedias, 
-            // pero normalmente array_filter preserva keys. Resetear keys o usar contador es mejor para logs.
-            // Usaremos contador manual si queremos exactitud con el excel original, 
-            // pero para logs simples $filasProcesadas está bien.
-            //$numeroFilaExcel = $index + 2; // +1 header +1 0-index. Ojo si keys se preservan.
 
             DB::beginTransaction();
             try {
-                // 1. Extraer Datos Clave
-                $nombreIndicador     = trim($row[1] ?? '');
-                $nombrePlan          = trim($row[2] ?? '');
-                $tipoProgramaRaw     = trim($row[3] ?? '');
-                $nombreProgramaDeriv = trim($row[4] ?? '');
-                $ejePrograma         = trim($row[5] ?? '');
+                $nombreIndicador     = $this->importCell($row, 1) ?? '';
+                $nombrePlan          = $this->importCell($row, 2) ?? '';
+                $tipoProgramaRaw     = $this->importCell($row, 3) ?? '';
+                $nombreProgramaDeriv = $this->importCell($row, 4) ?? '';
+                $ejePrograma         = $this->importCell($row, 5) ?? '';
 
-                // Nuevos Campos
-                $idUsuario           = isset($row[6]) && trim((string)$row[6]) !== '' ? trim((string)$row[6]) : null;
-                $idInstitucion       = isset($row[7]) && trim((string)$row[7]) !== '' ? trim((string)$row[7]) : null;
+                $idUsuario           = $this->importIntegerCell($row, 6, 'Usuario');
+                $idInstitucion       = $this->importIntegerCell($row, 7, 'Institución');
+                $idIndicadorExcel    = $this->importIntegerCell($row, 0, 'Indicador');
 
-                // 2. Resolver Plan Estatal
-                $planObj = CatPlanEstatalDesarrollo::where('nombre', $nombrePlan)->first();
+                $planObj = $this->findImportPlan($nombrePlan);
                 if (!$planObj) {
                     throw new \Exception("El Plan Estatal '{$nombrePlan}' no existe en el catálogo.");
                 }
 
-                // 3. Resolver Programa Derivado (Polimórfico)
-                $indicadorableId = null;
-                $indicadorableType = null;
-                $programaDerivadoFinal = $nombreProgramaDeriv;
+                $alignment = $this->resolveImportAlignment($tipoProgramaRaw, $nombreProgramaDeriv, $ejePrograma, $planObj);
+                $indicador = $this->findImportIndicator($idIndicadorExcel, $nombreIndicador, $planObj->id, $alignment);
+                $institutionIdForAuthorization = $idInstitucion ?? $indicador?->id_institucion;
+                $this->authorizeImportRow(auth()->user(), $planObj->id, $institutionIdForAuthorization, $indicador);
 
-                $modelClass = null;
-                if (stripos($tipoProgramaRaw, 'Sectorial') !== false) {
-                    $modelClass = CatProgramaDerivadoSectorial::class;
-                } elseif (stripos($tipoProgramaRaw, 'Especial') !== false) {
-                    $modelClass = CatProgramaDerivadoEspecial::class;
-                } elseif (stripos($tipoProgramaRaw, 'Institucional') !== false) {
-                    $modelClass = CatProgramaDerivadoInstitucional::class;
-                } elseif (stripos($tipoProgramaRaw, 'Regional') !== false) {
-                    $modelClass = CatProgramaDerivadoRegional::class;
-                } else {
-                    throw new \Exception("Tipo de programa '{$tipoProgramaRaw}' no reconocido.");
-                }
-
-                if ($modelClass) {
-                    $programaObj = $modelClass::where('nombre', $nombreProgramaDeriv)->first();
-                    if (!$programaObj) {
-                        throw new \Exception("El programa '{$nombreProgramaDeriv}' no encontrado.");
-                    }
-                    $indicadorableId = $programaObj->id;
-                    $indicadorableType = $modelClass;
-                    $programaDerivadoFinal = $programaObj->nombre;
-                }
-
-                // Validar existencia de Usuario e Institución si se proporcionaron
-                if ($idUsuario && !User::find($idUsuario)) {
+                if ($idUsuario !== null && !User::whereKey($idUsuario)->exists()) {
                     throw new \Exception("El Usuario con ID '{$idUsuario}' no existe.");
                 }
-                if ($idInstitucion && !Institucion::find($idInstitucion)) {
+                if ($idInstitucion !== null && !Institucion::whereKey($idInstitucion)->exists()) {
                     throw new \Exception("La Institución con ID '{$idInstitucion}' no existe.");
                 }
 
-                // 4. Preparar datos del Indicador (Indices desplazados +2)
                 $datosIndicador = [
                     'nombre'             => $nombreIndicador,
-                    'programa_derivado'  => $programaDerivadoFinal,
-                    'programa'           => $ejePrograma,
-                    'plan_id'            => $planObj->id,
-                    'indicadorable_id'   => $indicadorableId,
-                    'indicadorable_type' => $indicadorableType,
-                    // Nuevos campos
-                    'id_usuario'         => $idUsuario,
-                    'id_institucion'     => $idInstitucion,
+                    'programa_derivado'  => $alignment['programaDerivado'],
+                    'programa'           => $alignment['programa'],
+                    'indicadorable_id'   => $alignment['id'],
+                    'indicadorable_type' => $alignment['type'],
+                    'id_usuario'         => $idUsuario ?? $indicador?->id_usuario,
+                    'id_institucion'     => $idInstitucion ?? $indicador?->id_institucion,
 
-                    'tematica'           => $row[8] ?? null, // Antes 6 -> Ahora 8
-                    'linea_base'         => $row[9] ?? null, // Antes 7 -> Ahora 9
-                    'dato_linea_base'    => $row[10] ?? null,
-                    'unidad_medida'      => $row[11] ?? null,
-                    'meta_2024'          => $row[12] ?? null,
-                    'fuente'             => $row[13] ?? null,
-                    'liga'               => $row[14] ?? null,
-                    'descripcion'        => $row[15] ?? null,
-                    'periodicidad'       => $row[16] ?? null,
-                    'cobertura'          => $row[17] ?? null,
-                    'tendencia'          => $row[18] ?? null,
-                    'formula'            => $row[19] ?? null,
-                    'fecha_actualizacion' => $row[21] ?? null, // Antes 19 -> Ahora 21
+                    'tematica'           => $this->importCell($row, 8),
+                    'linea_base'         => $this->importCell($row, 9),
+                    'dato_linea_base'    => $this->importCell($row, 10),
+                    'unidad_medida'      => $this->importCell($row, 11),
+                    'meta_anio'          => $this->importMetaYear($planObj),
+                    'meta'               => $this->importCell($row, 12),
+                    'fuente'             => $this->importCell($row, 13) ?? ($indicador?->fuente ?? ''),
+                    'liga'               => $this->normalizeImportUrl($this->importCell($row, 14)),
+                    'descripcion'        => $this->importCell($row, 15) ?? ($indicador?->descripcion ?? ''),
+                    'periodicidad'       => $this->importCell($row, 16),
+                    'cobertura'          => $this->importCell($row, 17),
+                    'tendencia'          => $this->importCell($row, 18),
+                    'formula'            => $this->importCell($row, 19),
+                    'fecha_actualizacion' => $this->normalizeImportDate($this->importCell($row, 21))
+                        ?? ($indicador?->fecha_actualizacion ?? date('Y-m-d')),
                     'indicador_validado' => false,
                 ];
 
-                // Validar datos básicos
                 $validator = Validator::make($datosIndicador, [
                     'nombre' => 'required|string|max:255',
                     'programa_derivado' => 'required|string|max:255',
                     'programa' => 'required|string|max:255',
                     'tematica' => 'required|string|max:255',
                     'linea_base' => 'required|integer|digits:4',
-                    'dato_linea_base' => 'required',
+                    'dato_linea_base' => 'required|string|max:255',
                     'unidad_medida' => 'required|string|max:255',
-                    'meta_2024' => 'required',
+                    'meta_anio' => 'required|integer|min:1900|max:2100',
+                    'meta' => 'required|string|max:255',
                     'periodicidad' => 'required|string|max:255',
                     'cobertura' => 'required|string|max:255',
                     'tendencia' => 'required|string|max:255',
                     'formula' => 'required|string',
+                    'liga' => 'nullable|url',
+                    'fecha_actualizacion' => 'required|date',
                 ]);
 
                 if ($validator->fails()) {
                     throw new \Exception("Validación fallida: " . $validator->errors()->first());
                 }
 
-                // 5. Guardar/Actualizar
-                $idIndicadorExcel = $row[0] ?? null;
-                $indicador = null;
-
-                if (!empty($idIndicadorExcel)) {
-                    $indicador = Indicador::find($idIndicadorExcel);
-                    if ($indicador) {
-                        $indicador->update($datosIndicador);
-                    } else {
-                        $indicador = Indicador::create($datosIndicador);
-                    }
+                if (!$indicador) {
+                    $datosIndicador['cod_tematica'] = '';
+                    $indicador = Indicador::create($datosIndicador);
                 } else {
-                    $indicador = Indicador::updateOrCreate(
-                        [
-                            'nombre' => $datosIndicador['nombre'],
-                            'programa_derivado' => $datosIndicador['programa_derivado']
-                        ],
-                        $datosIndicador
-                    );
+                    $indicador->update($datosIndicador);
                 }
 
-                // 6. Datos Anuales
+                if ($alignment['type'] === CatProgramaDerivadoInstitucional::class) {
+                    $indicador->programasInstitucionales()->sync([$alignment['id']]);
+                }
+
+                $lineaBase = (int) $datosIndicador['linea_base'];
+                $indicador->datosAnuales()->updateOrCreate(
+                    ['anio' => $lineaBase],
+                    [
+                        'valor_dato' => $datosIndicador['dato_linea_base'],
+                        'validado' => true,
+                        'modificado' => false,
+                    ]
+                );
+
                 foreach ($mapeoColumnasAnios as $indiceColumnaExcel => $anio) {
                     if (!array_key_exists($indiceColumnaExcel, $row)) continue;
-                    $valorDatoAnual = $row[$indiceColumnaExcel];
+                    if ($anio === $lineaBase) continue;
+                    $valorDatoAnual = $this->importCell($row, $indiceColumnaExcel);
 
-                    if ($valorDatoAnual !== null && trim((string)$valorDatoAnual) !== '') {
+                    if ($valorDatoAnual !== null) {
+                        if (!is_numeric($valorDatoAnual)) {
+                            throw new \Exception("El valor anual de {$anio} debe ser numérico.");
+                        }
+
                         $indicador->datosAnuales()->updateOrCreate(
                             ['anio' => $anio],
-                            ['valor_dato' => $valorDatoAnual, 'modificado' => false]
+                            ['valor_dato' => $valorDatoAnual, 'validado' => false, 'modificado' => false]
                         );
                     }
                 }
 
-                // 7. ODS (Ahora Col 20)
-                $odsString = $row[20] ?? null; // Antes 18 -> Ahora 20
-                if (!empty($odsString)) {
-                    $odsIds = array_filter(array_map('trim', explode(',', $odsString)));
-                    $indicador->ods()->sync($odsIds);
-                }
+                $indicador->ods()->sync($this->parseImportOds($this->importCell($row, 20)));
 
                 DB::commit();
                 $indicadoresImportadosExitosamente++;
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 DB::rollBack();
                 $mensajeError = "Fila: " . ($index + 2) . " Error: " . $e->getMessage();
                 Log::error("IndicadorController@confirmImport: " . $mensajeError);
@@ -2141,7 +2016,6 @@ class IndicadorController extends Controller
             }
         }
 
-        // Limpieza: Borrar archivo temporal y olvidar sesión
         try {
             Storage::delete($filePath);
         } catch (\Exception $e) {
@@ -2152,7 +2026,8 @@ class IndicadorController extends Controller
         if (!empty($erroresEnImportacion)) {
             $htmlErrores = "<ul class='text-start'><li>" . implode("</li><li>", array_map('htmlspecialchars', $erroresEnImportacion)) . "</li></ul>";
             return response()->json([
-                'success' => $indicadoresImportadosExitosamente > 0,
+                'success' => false,
+                'partial' => $indicadoresImportadosExitosamente > 0,
                 'message' => "Proceso finalizado. Importados: {$indicadoresImportadosExitosamente}. Errores: {$htmlErrores}",
                 'errors_list' => $erroresEnImportacion
             ], 207);
@@ -2252,7 +2127,7 @@ class IndicadorController extends Controller
             'ID (Opcional)',
             'Nombre Indicador',
             'Plan Estatal (Exacto)',
-            'Tipo Programa (Sectorial, Especial...)',
+            'Tipo Programa (Eje, Sectorial, Especial...)',
             'Nombre Programa Derivado (Exacto)',
             'Eje / Programa',
             'ID Usuario Responsable',
@@ -2261,7 +2136,7 @@ class IndicadorController extends Controller
             'Línea Base (Año)',
             'Dato Línea Base',
             'Unidad de Medida',
-            'Meta 2030',
+            'Meta',
             'Fuente',
             'Liga',
             'Descripción',
@@ -2273,24 +2148,21 @@ class IndicadorController extends Controller
             'Fecha Actualización'
         ];
 
-        // Add Year Columns 2015-2030
         for ($year = 2015; $year <= 2030; $year++) {
             $headers[] = $year;
         }
 
-        // Set Headers
         $sheet->fromArray([$headers], NULL, 'A1');
 
-        // Style Headers
         $headerStyle = [
             'font' => ['bold' => true],
             'fill' => [
-                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'fillType' => Fill::FILL_SOLID,
                 'startColor' => ['argb' => 'FFE0E0E0'],
             ],
             'borders' => [
                 'allBorders' => [
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'borderStyle' => Border::BORDER_THIN,
                 ],
             ],
         ];
@@ -2309,7 +2181,7 @@ class IndicadorController extends Controller
         $sheet->setCellValue('D2', 'Sectorial');
         $sheet->setCellValue('E2', 'Programa Sectorial de Salud');
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer = new Xlsx($spreadsheet);
 
         $response = response()->stream(
             function () use ($writer) {
@@ -2353,9 +2225,349 @@ class IndicadorController extends Controller
             case 'Programa Sectorial':
                 $programas = CatProgramaDerivadoSectorial::where('plan_estatal', $planId)->get(['id', 'nombre']);
                 break;
+            case 'Eje':
+                $programas = CatEje::where('plan_id', $planId)->get(['id', 'nombre']);
+                break;
         }
 
         return response()->json($programas);
+    }
+
+    private function importHeaders(): array
+    {
+        return [
+            'ID (Opcional)',
+            'Nombre Indicador',
+            'Plan Estatal (Exacto)',
+            'Tipo Programa (Eje, Sectorial, Especial...)',
+            'Nombre Programa Derivado (Exacto)',
+            'Eje / Programa',
+            'ID Usuario Responsable',
+            'ID Institución Responsable',
+            'Temática',
+            'Línea Base (Año)',
+            'Dato Línea Base',
+            'Unidad de Medida',
+            'Meta',
+            'Fuente',
+            'Liga',
+            'Descripción',
+            'Periodicidad',
+            'Cobertura',
+            'Tendencia',
+            'Fórmula',
+            'ODS (Sep. comas)',
+            'Fecha Actualización',
+        ];
+    }
+
+    private function normalizeImportHeader($value): string
+    {
+        $value = str_replace("\xEF\xBB\xBF", '', trim((string) $value));
+
+        return mb_strtolower((string) preg_replace('/\s+/u', ' ', $value));
+    }
+
+    private function validateImportHeaders(array $headers): ?string
+    {
+        $expectedHeaders = $this->importHeaders();
+
+        if (count($headers) < count($expectedHeaders)) {
+            return 'La plantilla no contiene todas las columnas obligatorias. Descarga la plantilla actualizada.';
+        }
+
+        foreach ($expectedHeaders as $index => $expectedHeader) {
+            $actual = $this->normalizeImportHeader($headers[$index] ?? '');
+            $allowed = [$this->normalizeImportHeader($expectedHeader)];
+
+            if ($index === 12) {
+                $allowed[] = 'meta 2024';
+                $allowed[] = 'meta 2030';
+            }
+
+            if (!in_array($actual, $allowed, true)) {
+                return "La columna " . chr(65 + $index) . " debe ser '{$expectedHeader}'.";
+            }
+        }
+
+        for ($index = count($expectedHeaders); $index < count($headers); $index++) {
+            $expectedYear = 2015 + ($index - count($expectedHeaders));
+            if ($this->normalizeImportHeader($headers[$index] ?? '') !== (string) $expectedYear) {
+                return "La columna de datos anuales en la posición " . ($index + 1) . " debe corresponder al año {$expectedYear}.";
+            }
+        }
+
+        if (count($headers) > 38) {
+            return 'La plantilla contiene columnas adicionales no soportadas.';
+        }
+
+        return null;
+    }
+
+    private function validateImportRowShape(array $row): ?string
+    {
+        foreach ([1 => 'Nombre del indicador', 2 => 'Plan Estatal', 3 => 'Tipo de programa'] as $index => $label) {
+            if ($this->importCell($row, $index) === null) {
+                return "Falta {$label}.";
+            }
+        }
+
+        $tipo = $this->importCell($row, 3) ?? '';
+        if ($this->isEjeImportType($tipo)) {
+            return $this->importCell($row, 5) === null ? 'Falta el nombre del eje.' : null;
+        }
+
+        if ($this->importCell($row, 4) === null) {
+            return 'Falta el nombre del programa derivado.';
+        }
+
+        if ($this->importCell($row, 5) === null) {
+            return 'Falta el campo Eje / Programa.';
+        }
+
+        return null;
+    }
+
+    private function extractImportRows($spreadsheet): array
+    {
+        $allRows = $spreadsheet->getActiveSheet()->toArray();
+        $rows = array_values(array_filter($allRows, function ($row) {
+            return count(array_filter($row, fn ($cell) => trim((string) $cell) !== '')) > 0;
+        }));
+
+        if (!$rows) {
+            throw new \RuntimeException('El archivo está vacío o no contiene filas con datos.');
+        }
+
+        $headers = array_shift($rows);
+        $headerError = $this->validateImportHeaders($headers);
+        if ($headerError) {
+            throw new \RuntimeException($headerError);
+        }
+
+        if (!$rows) {
+            throw new \RuntimeException('El archivo no contiene datos para procesar (solo encabezados).');
+        }
+
+        return [$headers, $rows];
+    }
+
+    private function importCell(array $row, int $index): ?string
+    {
+        if (!array_key_exists($index, $row) || $row[$index] === null) {
+            return null;
+        }
+
+        $value = trim((string) $row[$index]);
+
+        return $value === '' ? null : $value;
+    }
+
+    private function importIntegerCell(array $row, int $index, string $label): ?int
+    {
+        $value = $this->importCell($row, $index);
+        if ($value === null) {
+            return null;
+        }
+
+        if (!preg_match('/^\d+(?:\.0+)?$/', $value)) {
+            throw new \RuntimeException("El {$label} debe ser un ID entero.");
+        }
+
+        return (int) $value;
+    }
+
+    private function findImportPlan(string $name): ?CatPlanEstatalDesarrollo
+    {
+        $normalized = mb_strtolower(trim($name));
+
+        return CatPlanEstatalDesarrollo::all()->first(
+            fn ($plan) => mb_strtolower(trim($plan->nombre)) === $normalized
+        );
+    }
+
+    private function resolveImportAlignment(string $type, string $programName, string $ejeName, CatPlanEstatalDesarrollo $plan): array
+    {
+        $normalizedType = mb_strtolower(trim($type));
+        $isEje = $this->isEjeImportType($normalizedType);
+
+        if ($isEje) {
+            $name = $ejeName ?: $programName;
+            $eje = CatEje::where('plan_id', $plan->id)->get()->first(
+                fn ($item) => mb_strtolower(trim($item->nombre)) === mb_strtolower(trim($name))
+            );
+
+            if (!$eje) {
+                throw new \RuntimeException("El eje '{$name}' no existe en el plan '{$plan->nombre}'.");
+            }
+
+            return [
+                'id' => $eje->id,
+                'type' => CatEje::class,
+                'programaDerivado' => $plan->nombre,
+                'programa' => $eje->nombre,
+            ];
+        }
+
+        $modelClass = null;
+        foreach ([
+            'sectorial' => CatProgramaDerivadoSectorial::class,
+            'especial' => CatProgramaDerivadoEspecial::class,
+            'regional' => CatProgramaDerivadoRegional::class,
+            'institucional' => CatProgramaDerivadoInstitucional::class,
+        ] as $keyword => $class) {
+            if (str_contains($normalizedType, $keyword)) {
+                $modelClass = $class;
+                break;
+            }
+        }
+
+        if (!$modelClass) {
+            throw new \RuntimeException("Tipo de programa '{$type}' no reconocido.");
+        }
+
+        $program = $modelClass::where('plan_estatal', $plan->id)->get()->first(
+            fn ($item) => mb_strtolower(trim($item->nombre)) === mb_strtolower(trim($programName))
+        );
+
+        if (!$program) {
+            throw new \RuntimeException("El programa '{$programName}' no existe en el plan '{$plan->nombre}'.");
+        }
+
+        return [
+            'id' => $program->id,
+            'type' => $modelClass,
+            'programaDerivado' => $program->nombre,
+            'programa' => $ejeName ?: $program->nombre,
+        ];
+    }
+
+    private function isEjeImportType(string $type): bool
+    {
+        $type = mb_strtolower(trim($type));
+
+        return str_contains($type, 'eje') || str_contains($type, 'plan estatal');
+    }
+
+    private function findImportIndicator(?int $id, string $name, int $planId, array $alignment): ?Indicador
+    {
+        if ($id !== null) {
+            $indicator = Indicador::forPlan($planId)->whereKey($id)->first();
+            if (!$indicator) {
+                throw new \RuntimeException("El indicador con ID {$id} no pertenece al plan indicado o no existe.");
+            }
+
+            return $indicator;
+        }
+
+        $query = Indicador::forPlan($planId)->where('nombre', $name);
+        if ($alignment['type'] === CatProgramaDerivadoInstitucional::class) {
+            $query->whereHas('programasInstitucionales', fn ($program) => $program->whereKey($alignment['id']));
+        } else {
+            $query->where('indicadorable_type', $alignment['type'])
+                ->where('indicadorable_id', $alignment['id']);
+        }
+
+        return $query->first();
+    }
+
+    private function authorizeImportRow(User $user, int $planId, ?int $institutionId, ?Indicador $indicator): void
+    {
+        if ($user->isAdministrator()) {
+            return;
+        }
+
+        if ($planId !== $this->activePlan->id()) {
+            throw new \RuntimeException('Solo puedes importar indicadores del plan activo.');
+        }
+
+        if ($institutionId === null) {
+            throw new \RuntimeException('La institución responsable es obligatoria para tu perfil.');
+        }
+
+        if ($indicator && $indicator->id_institucion && $indicator->id_institucion !== $institutionId) {
+            throw new \RuntimeException('No puedes cambiar la institución responsable de un indicador existente.');
+        }
+
+        if ($user->hasRole('Enlace')) {
+            $allowed = $user->instituciones()->whereKey($institutionId)->exists();
+        } elseif ($user->hasRole(['Enlace dependencia', 'Visualizador'])) {
+            $allowed = (int) $user->id_institucion === $institutionId;
+        } else {
+            $allowed = false;
+        }
+
+        if (!$allowed) {
+            throw new \RuntimeException('No tienes permiso para importar indicadores de esa institución.');
+        }
+    }
+
+    private function importMetaYear(CatPlanEstatalDesarrollo $plan): int
+    {
+        return (int) $plan->id === 3 ? 2030 : 2024;
+    }
+
+    private function normalizeImportUrl(?string $value): ?string
+    {
+        return $value === null ? null : str_replace(' ', '%20', trim($value));
+    }
+
+    private function normalizeImportDate(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        try {
+            if (is_numeric($value) && (float) $value > 20000) {
+                return ExcelDate::excelToDateTimeObject((float) $value)->format('Y-m-d');
+            }
+
+            return \Carbon\Carbon::parse($value)->format('Y-m-d');
+        } catch (\Throwable $e) {
+            throw new \RuntimeException("La fecha '{$value}' no es válida.");
+        }
+    }
+
+    private function parseImportOds(?string $value): array
+    {
+        if ($value === null) {
+            return [];
+        }
+
+        $ids = array_values(array_unique(array_filter(array_map('trim', preg_split('/[,;]+/', $value)))));
+        if (array_filter($ids, fn ($id) => !ctype_digit($id))) {
+            throw new \RuntimeException('La columna ODS solo puede contener IDs numéricos separados por comas.');
+        }
+
+        $ids = array_map('intval', $ids);
+        if (count($ids) !== Odses::whereIn('id', $ids)->count()) {
+            throw new \RuntimeException('Uno o más ODS no existen en el catálogo.');
+        }
+
+        return $ids;
+    }
+
+    private function forgetImportFile(string $filePath): void
+    {
+        try {
+            Storage::delete($filePath);
+        } catch (\Throwable $e) {
+            Log::warning("No se pudo eliminar archivo temporal: {$filePath}");
+        }
+
+        session()->forget('importFilePath');
+    }
+
+    private function applyDerivedProgramFilter($query): void
+    {
+        $query->where(function ($query) {
+            $query->whereHasMorph('indicadorable', [
+                CatProgramaDerivadoSectorial::class,
+                CatProgramaDerivadoEspecial::class,
+                CatProgramaDerivadoRegional::class,
+            ])->orWhereHas('programasInstitucionales');
+        });
     }
 
     private function getProgramaModelClass($type)

@@ -60,10 +60,12 @@
             <div class="col-md-3 mapa-sitio">
                 <h6 class="bold-text"><b>Mapa de sitio</b></h6>
                 <div class="d-flex flex-column justify-content-start mapa">
+
+                    {{-- INICIO Y DATOS GENERALES --}}
                     <a class="text-white mb-2" href="#" data-bs-toggle="collapse" data-bs-target="#inicioSubMenu"
                         aria-expanded="false" aria-controls="inicioSubMenu" rel="noopener">
                         <i class="fa-solid fa-house mr-2"></i>
-                        Inicio
+                        Datos generales
                     </a>
                     <div class="collapse" id="inicioSubMenu">
                         <a class="text-white mb-2 a-sin-decoracion" href="{{ url('/') }}">
@@ -71,9 +73,9 @@
                             Inicio
                         </a>
                         <br>
-                        <a class="text-white mb-2" href="{{ url('/informacion-general') }}">
+                        <a class="text-white mb-2" href="{{ url('/informacion-general/api') }}">
                             <i class="fa fa-angle-right mr-2"></i>
-                            Información General
+                            API Pública
                         </a>
                         <br>
                         <a class="text-white mb-2" href="{{ url('/normatividad') }}">
@@ -89,28 +91,29 @@
                         <div class="collapse" id="datosAbiertosSubMenu">
                             <a class="text-white ml-4 mb-2" href="{{ url('/datos-abiertos-ped') }}" rel="noopener">
                                 <i class="fa fa-angle-right mx-2"></i>
-                                Hist. Plan Estatal de Desarrollo 2019-2024
+                                Plan Estatal de Desarrollo 2024-2030
                             </a>
                             <br>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/datos-abiertos-mod-ped') }}" rel="noopener">
+                            <a class="text-white ml-4 mb-2" href="{{ url('/datos-abiertos-hist-ped') }}" rel="noopener">
                                 <i class="fa fa-angle-right mx-2"></i>
-                                Hist. Mod. y Adec. PED 2019-2024
+                                Hist. Planes Estatales de Desarrollo
                             </a>
                             <br>
-
-                            <a class="text-white ml-4 mb-2" href="{{ url('/datos-abiertos-mod-ped') }}" rel="noopener">
+                            <a class="text-white ml-4 mb-2" href="{{ url('/datos-abiertos-hist-mun') }}" rel="noopener">
                                 <i class="fa fa-angle-right mx-2"></i>
-                                Hist. Indicadores Municipales 2019-2024
+                                Hist. Indicadores Municipales
                             </a>
                         </div>
                     </div>
+
+                    {{-- PLAN ESTATAL DE DESARROLLO --}}
                     <a class="text-white mb-2" href="#" data-bs-toggle="collapse" data-bs-target="#planEstSubmenu"
                         aria-expanded="false" aria-controls="planEstSubmenu" rel="noopener">
                         <i class="fa-solid fa-book mr-2"></i>
                         Plan Estatal de Desarrollo
                     </a>
                     <div class="collapse" id="planEstSubmenu">
-                        <a class="text-white mb-2 a-sin-decoracion" href="{{ url('/') }}">
+                        <a class="text-white mb-2 a-sin-decoracion" href="{{ url('/ped') }}">
                             <i class="fa fa-angle-right mr-2"></i>
                             Visión general
                         </a>
@@ -122,26 +125,22 @@
                         <br>
                         <a class="text-white mb-2" href="{{ url('/ped/eje-2') }}">
                             <i class="fa fa-angle-right mr-2"></i>
-                            Eje 2 - Prosperidad y Estabilidad
-                            Económica
+                            Eje 2 - Prosperidad y Estabilidad Económica
                         </a>
                         <br>
                         <a class="text-white mb-2" href="{{ url('/ped/eje-3') }}">
                             <i class="fa fa-angle-right mr-2"></i>
-                            Eje 3 - Estado de Derecho, Seguridad y
-                            Justicia
+                            Eje 3 - Estado de Derecho, Seguridad y Justicia
                         </a>
                         <br>
                         <a class="text-white mb-2" href="{{ url('/ped/eje-4') }}">
                             <i class="fa fa-angle-right mr-2"></i>
-                            Eje 4 - Desarrollo Urbano y Crecimiento
-                            Sostenible
+                            Eje 4 - Desarrollo Urbano y Crecimiento Sostenible
                         </a>
                         <br>
                         <a class="text-white mb-2" href="{{ url('/ped/eje-5') }}">
                             <i class="fa fa-angle-right mr-2"></i>
-                            Eje 5 - Gobierno Transformador y de
-                            Resultados
+                            Eje 5 - Gobierno Transformador y de Resultados
                         </a>
                         <br>
                         <a class="text-white mb-2" href="{{ url('/ped/eje-6') }}">
@@ -149,175 +148,52 @@
                             Eje Transversal - Por Amor a Puebla
                         </a>
                     </div>
-                    {{-- <a class="text-white mb-2" href="#" data-bs-toggle="collapse"
-                        data-bs-target="#planesEstSubMenu" aria-expanded="false" aria-controls="planesEstSubMenu"
-                        rel="noopener">
-                        <i class="fa-solid fa-book mr-2"></i>
-                        Planes Estatales de Desarrollo
-                    </a>
-                    <div class="collapse" id="planesEstSubMenu">
-                        <a class="text-white mb-2" href="#" data-bs-toggle="collapse"
-                            data-bs-target="#ped1SubMenu" aria-expanded="false" aria-controls="ped1SubMenu"
-                            rel="noopener">
-                            <i class="fa fa-angle-right mr-2"></i>
-                            Plan Estatal de Desarrollo 2019-2024</a>
-                        <div class="collapse" id="ped1SubMenu">
-                            <a class="text-white ml-4 mb-2" href="{{ url('/ped') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Visión General
-                            </a>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/ped/eje-1') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Eje 1
-                            </a>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/ped/eje-2') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Eje 2
-                            </a>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/ped/eje-3') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Eje 3
-                            </a>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/ped/eje-4') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Eje 4
-                            </a>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/ped/eje-5') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Eje Especial
-                            </a>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/ped/eje-6') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Enfoque Transversal
-                            </a>
-                        </div>
-                    </div>
-                    <div class="collapse" id="planesEstSubMenu">
-                        <a class="text-white mb-2" href="#" data-bs-toggle="collapse"
-                            data-bs-target="#ped2SubMenu" aria-expanded="false" aria-controls="ped2SubMenu"
-                            rel="noopener">
-                            <i class="fa fa-angle-right mr-2"></i>
-                            Modificación y Adecuación del PED 2019-2024</a>
-                        <div class="collapse" id="ped2SubMenu">
-                            <a class="text-white ml-4 mb-2" href="{{ url('/mod-ped') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Visión General
-                            </a>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/mod-ped/eje-1') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Eje 1
-                            </a>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/mod-ped/eje-2') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Eje 2
-                            </a>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/mod-ped/eje-3') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Eje 3
-                            </a>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/mod-ped/eje-4') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Eje 4
-                            </a>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/mod-ped/eje-5') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Eje 5
-                            </a>
-                        </div>
-                    </div> --}}
-                    {{-- Se comentan PD por que aun no hay, Recordar usar estructura de submenu del PED --}}
-                    {{-- <a class="text-white mb-2" href="#" data-bs-toggle="collapse"
+
+                    {{-- PROGRAMAS DERIVADOS --}}
+                    <a class="text-white mb-2" href="#" data-bs-toggle="collapse"
                         data-bs-target="#progDeriSubMenu" aria-expanded="false" aria-controls="progDeriSubMenu"
                         rel="noopener">
                         <i class="fa-solid fa-book-open mr-2"></i>
                         Programas Derivados
                     </a>
                     <div class="collapse" id="progDeriSubMenu">
-                        <a class="text-white mb-2" href="#" data-bs-toggle="collapse"
-                            data-bs-target="#progDeri1SubMenu" aria-expanded="false" aria-controls="progDeri1SubMenu"
-                            rel="noopener">
-                            <i class="fa fa-angle-right mr-2"></i>
-                            Plan Estatal de Desarrollo 2019-2024
+                        <a class="text-white ml-4 mb-2" href="{{ url('/ped-programas/sectoriales') }}" rel="noopener">
+                            <i class="fa fa-angle-right mx-2"></i>
+                            Programas Sectoriales
                         </a>
-                        <div class="collapse" id="progDeri1SubMenu">
-                            <a class="text-white ml-4 mb-2" href="{{ url('/ped-programas') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Visión General
-                            </a>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Programas Sectoriales
-                            </a>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Programas Especiales
-                            </a>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Programas institucionales
-                            </a>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Programas Regionales
-                            </a>
-                        </div>
-                        <a class="text-white mb-2" href="#" data-bs-toggle="collapse"
-                            data-bs-target="#progDeri2SubMenu" aria-expanded="false" aria-controls="progDeri2SubMenu"
-                            rel="noopener">
-                            <i class="fa fa-angle-right mr-2"></i>
-                            Modificación y Adecuación del PED 2019-2024
+                        <br>
+                        <a class="text-white ml-4 mb-2" href="{{ url('/ped-programas/especiales') }}" rel="noopener">
+                            <i class="fa fa-angle-right mx-2"></i>
+                            Programas Especiales
                         </a>
-                        <div class="collapse" id="progDeri2SubMenu">
-                            <a class="text-white ml-4 mb-2" href="{{ url('/mod-ped-programas') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Visión General
-                            </a>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Programas Sectoriales
-                            </a>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Programas Especiales
-                            </a>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Programas institucionales
-                            </a>
-                            <a class="text-white ml-4 mb-2" href="{{ url('/') }}" rel="noopener">
-                                <i class="fa fa-angle-right mx-2"></i>
-                                Programas Regional
-                            </a>
-                        </div>
-                    </div> --}}
-                    <a class="text-white mb-2" href="{{ url('/pm') }}">
+                        <br>
+                        <a class="text-white ml-4 mb-2" href="{{ url('/ped-programas/institucionales') }}" rel="noopener">
+                            <i class="fa fa-angle-right mx-2"></i>
+                            Programas Institucionales
+                        </a>
+                    </div>
+
+                    {{-- PLANES MUNICIPALES --}}
+                    <a class="text-white mb-2 mt-2" href="{{ url('/pm') }}">
                         <i class="fa fa-book-bookmark mr-2" rel="noopener"></i>
-                        Indicadores de los Planes Municipales de Desarrollo
+                        Planes Municipales de Desarrollo
                     </a>
-                    {{-- <a class="text-white mb-2" href="#" data-bs-toggle="collapse"
-                        data-bs-target="#agendaSubMenu" aria-expanded="false" aria-controls="agendaSubMenu"
-                        rel="noopener">
-                        <i class="fa-solid fa-book-open mr-2"></i>
-                        Agenda 2030
+
+                    {{-- UTILIDADES (Buscador y Login) --}}
+                    <a class="text-white mb-2" href="#customSearchModal" onclick="openSearchModal(event);">
+                        <i class="fas fa-search mr-2" aria-hidden="true"></i> Buscar
                     </a>
-                    <div class="collapse" id="agendaSubMenu">
-                        <a class="text-white mb-2" href="{{ url('/agenda') }}" rel="noopener">
-                            <i class="fa fa-angle-right mr-2"></i>
-                            Plan Estatal de Desarrollo 2019-2024
-                        </a>
-                        <a class="text-white mb-2" href="{{ url('/agenda-mod') }}" rel="noopener">
-                            <i class="fa fa-angle-right mr-2"></i>
-                            Modificación y Adecuación del PED 2019-2024
-                        </a>
-                    </div> --}}
+                    <a class="text-white mb-2" href="{{ route('login') }}" title="Iniciar sesión" rel="noopener" target="_self">
+                        <i class="fas fa-right-to-bracket mr-2" aria-hidden="true"></i> Entrar
+                    </a>
                 </div>
             </div>
         </div>
     </div>
     <div class="container copy">
         @php
-            use Carbon\Carbon;
-            $currentYear = Carbon::now()->locale('es')->isoFormat('YYYY');
+        use Carbon\Carbon;
+        $currentYear = Carbon::now()->locale('es')->isoFormat('YYYY');
         @endphp
         <p>
             &copy; Secretaría de Planeación, Finanzas y Administración -
@@ -335,5 +211,5 @@
     </div>
 </div>
 <div class="textura-footer">
-    <img src="{{ asset('img/footer.svg') }}" alt="" class="w-100 px-0 mx-0">
+    <img src="{{ asset('img/footer-green-final.svg') }}" alt="" class="w-100 px-0 mx-0">
 </div>

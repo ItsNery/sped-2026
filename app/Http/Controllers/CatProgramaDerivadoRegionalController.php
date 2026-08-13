@@ -28,23 +28,24 @@ class CatProgramaDerivadoRegionalController extends Controller
     public function create()
     {
         $planes = CatPlanEstatalDesarrollo::all();
-        $programa = new CatProgramaDerivadoRegional(); // Instance for the form
+        $programa = new CatProgramaDerivadoRegional();
         return view('panel-programas-derivados-regionales.form', compact('programa', 'planes'));
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
         $request->validate([
             'nombre' => 'required|string|max:255',
-            'imagen' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'descripcion' => 'required|string',
-            'color' => 'required|string|max:7', // Hex color #RRGGBB
+            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'descripcion' => 'nullable|string',
+            'color' => 'required|string|max:7',
+            'icono' => ['required', 'string', 'max:50', 'regex:/^fa-[a-z0-9-]+$/'],
             'plan_estatal' => 'required|exists:cat_planes_estatales_desarrollo,id',
             'documento' => 'required|url',
         ]);
@@ -91,7 +92,7 @@ class CatProgramaDerivadoRegionalController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
@@ -100,8 +101,9 @@ class CatProgramaDerivadoRegionalController extends Controller
        $request->validate([
             'nombre' => 'required|string|max:255',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'descripcion' => 'required|string',
+            'descripcion' => 'nullable|string',
             'color' => 'required|string|max:7',
+            'icono' => ['required', 'string', 'max:50', 'regex:/^fa-[a-z0-9-]+$/'],
             'plan_estatal' => 'required|exists:cat_planes_estatales_desarrollo,id',
             'documento' => 'required|url',
         ]);

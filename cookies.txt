@@ -1,0 +1,9 @@
+# HTTrack Website Copier Cookie File
+# This file format is compatible with Netscape cookies
+.highcharts.com	TRUE	/	FALSE	1999999999	_cfuvid	0uQ2PSmRZo8FbngnulQKv1rVS4nlutgIRkYQrwYfl4w-1729632326921-0.0.1.1-604800000
+code.highcharts.com	TRUE	/	FALSE	1999999999	SameSite	None
+sped.puebla.gob.mx	TRUE	/	FALSE	1999999999	PHPSESSID	bf0e136a9f085b66f7dd4e43eb34e4cb
+sped.puebla.gob.mx	TRUE	/	FALSE	1999999999	BNES_PHPSESSID	qV9r6GNvk5VgiCO2eqce3gFcNWi8xB8LL/81bXlFKX2npZExoZV+NFCi/t1NI/qRh1UgKRqSPi8zGPr6Cs4NYlmPaR3k+ftN
+sped.puebla.gob.mx	TRUE	/	FALSE	1999999999	BNES_$Version	KL4N06civERc551SXxaYcmBq1elr8/mFR+2oImMSBvH4Fxoh6jgvZg==
+sped.puebla.gob.mx	TRUE	/	FALSE	1999999999	BNES_$Path	qtGMrRlGqfc+qLxVJN5QakB4x7zXJn15Y2Rlb/i04Kp0Y0c4zmgmyA==
+

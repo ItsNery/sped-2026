@@ -1,7 +1,7 @@
 <x-app-layout>
     @section('title', 'Indicadores: Inicio')
     <x-slot name="header">
-        <h2 class="font-semibold text-xl leading-tight">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Indicadores') }}
         </h2>
     </x-slot>
@@ -21,7 +21,7 @@
                 <h2>Listado de Indicadores </h2>
             </div>
             @auth
-            @if (auth()->user()->hasRole('Administrador'))
+            @if (auth()->user()->isAdministrator())
             @if (isset($instituciones) && isset($tiposPrograma))
             <div class="container row py-2">
                 <div class="col-md-6">
@@ -56,7 +56,7 @@
                     </button>
                 </a>
                 @can('subida-masiva-indicador')
-                <a href="{{ url('pruebas-indicadores') }}" class="text-decoration-none">
+                <a href="{{ url('subir-indicadores-masivo') }}" class="text-decoration-none">
                     <button class="button-add-new" type="button">
                         <span class="button__text">Masivo</span>
                         <span class="button__icon">
@@ -666,7 +666,7 @@
                             "Content-Type": "application/json"
                         },
                         body: JSON.stringify({
-                            userId: "{{auth() -> id()}}"
+                            userId: "{{ auth()->id() }}"
                         })
                     }).then(response => {
                         if (response.ok) {

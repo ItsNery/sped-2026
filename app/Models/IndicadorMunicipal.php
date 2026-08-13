@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 /**
  * Modelo IndicadorMunicipal.
@@ -43,6 +44,11 @@ class IndicadorMunicipal extends Model
     public function resultados()
     {
         return $this->hasMany(ResultadoIndicadorMunicipal::class, 'id_indicador');
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'slug';
     }
     public function periodicidad()
     {
@@ -94,6 +100,20 @@ class IndicadorMunicipal extends Model
     protected static function booted()
     {
         static::saving(function ($indicadorMunicipal) {
+            if (empty($indicadorMunicipal->slug)) {
+                $baseSlug = Str::slug($indicadorMunicipal->indicador) ?: 'indicador';
+                $slug = $baseSlug;
+                $count = 1;
+
+                while (static::where('slug', $slug)
+                    ->whereKeyNot($indicadorMunicipal->getKey())
+                    ->exists()) {
+                    $slug = $baseSlug . '-' . $count++;
+                }
+
+                $indicadorMunicipal->slug = $slug;
+            }
+
             // Solo cambiar a 0 si el campo validado no fue modificado manualmente
             if (!$indicadorMunicipal->isDirty('validado')) {
                 $indicadorMunicipal->validado = 0;

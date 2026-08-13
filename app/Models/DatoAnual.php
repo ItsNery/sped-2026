@@ -5,17 +5,40 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Class DatoAnual
+ * * Representa un registro de valor anual asociado a un Indicador.
+ * Contiene la lógica para invalidar automáticamente la información si se editan datos sensibles.
+ * * @package App\Models
+ * * Propiedades de la base de datos:
+ * @property int $id
+ * @property int $id_indicador
+ * @property int $anio
+ * @property float|string|null $valor_dato
+ * @property \Illuminate\Support\Carbon|null $fecha_actualizacion
+ * @property string|null $resultados
+ * @property string|null $evidencia
+ * @property string|null $observaciones
+ * @property bool $validado
+ * @property bool $modificado
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * * Relaciones:
+ * @property-read \App\Models\Indicador $indicador
+ */
 class DatoAnual extends Model
 {
     use HasFactory;
+
     /**
-     * The table associated with the model.
+     * La tabla asociada con el modelo.
      *
      * @var string
      */
     protected $table = 'datos_anuales'; // Nombre sugerido para la nueva tabla
+
     /**
-     * The attributes that are mass assignable.
+     * Los atributos que son asignables en masa.
      *
      * @var array<int, string>
      */
@@ -30,20 +53,24 @@ class DatoAnual extends Model
         'validado', // Para indicar si este dato anual ha sido validado por un enlace o el administrador
         'modificado', // Para rastrear si este registro anual específico fue modificado
     ];
+
     /**
-     * The attributes that should be cast.
+     * Los atributos que deben ser convertidos a tipos nativos (Casting).
      *
      * @var array<string, string>
      */
     protected $casts = [
         'fecha_actualizacion' => 'date',
         'anio' => 'integer',
-        'valor_dato' => 'decimal:6', // Ajusta según la precisión que necesites
+        'valor_dato' => 'decimal:6',
         'validado' => 'boolean',
         'modificado' => 'boolean',
     ];
+
     /**
-     * Get the indicador that owns the anio.
+     * Obtiene el indicador al que pertenece este registro anual.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function indicador()
     {
@@ -51,10 +78,12 @@ class DatoAnual extends Model
     }
 
     /**
-     * The "booted" method of the model.
+     * Inicializa eventos del modelo (Booting).
      *
      * Se ejecuta cuando se actualiza un registro de DatoAnual.
-     * Marca este registro como modificado y el indicador principal como no validado.
+     * Si se modifican campos críticos, marca este registro como modificado y
+     * pendiente de validación, sin alterar la validación de otros años.
+     * * @return void
      */
     protected static function booted()
     {
@@ -67,12 +96,6 @@ class DatoAnual extends Model
                 $datoAnual->validado = false;
                 $datoAnual->modificado = true;
 
-                // También desvalidamos el indicador principal para que no se muestre información parcial o no oficial
-                $indicador = $datoAnual->indicador;
-                if ($indicador && $indicador->indicador_validado) {
-                    $indicador->indicador_validado = false;
-                    $indicador->save();
-                }
             }
         });
     }
