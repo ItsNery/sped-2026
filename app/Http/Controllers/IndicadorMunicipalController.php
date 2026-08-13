@@ -457,6 +457,7 @@ class IndicadorMunicipalController extends Controller
             . 'Hoja <span class="pageNumber"></span> de <span class="totalPages"></span></div>';
 
         $pdf = Browsershot::html($html)
+            ->setNodeModulePath(base_path('node_modules'))
             ->paperSize(210, 297, 'mm')
             ->margins(5, 5, 16, 5)
             ->scale(1)

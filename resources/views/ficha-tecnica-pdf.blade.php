@@ -67,7 +67,7 @@
                 </div>
             </article>
 
-            <article class="ficha-pdf__panel ficha-pdf__panel--full">
+            <article class="ficha-pdf__panel ficha-pdf__panel--full ficha-pdf__panel--history">
                 <h2 class="ficha-pdf__heading">Seguimiento al indicador</h2>
                 <div class="ficha-pdf__metrics">
                     <div class="ficha-pdf__metric">
@@ -121,7 +121,7 @@
                 </div>
             </article>
 
-            <article class="ficha-pdf__panel ficha-pdf__panel--full">
+            <article class="ficha-pdf__panel ficha-pdf__panel--full ficha-pdf__panel--history">
                 <h2 class="ficha-pdf__heading">Comportamiento histórico del indicador</h2>
                 @php
                     $ultimoDatoConResultadosPdf = $indicador->datos_anuales_validados
@@ -133,7 +133,6 @@
                 <div class="ficha-pdf__history">
                     <div id="grafica-historica" class="ficha-pdf__chart"></div>
                     <div class="ficha-pdf__result">
-                        <div class="ficha-pdf__result-icon"><i class="fas fa-file-lines"></i></div>
                         <div>
                             <div class="ficha-pdf__label">
                                 Últimos resultados

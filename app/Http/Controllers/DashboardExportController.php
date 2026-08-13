@@ -18,6 +18,7 @@ class DashboardExportController extends Controller
         $html = view('exports.dashboard-executive-pdf', $data)->render();
 
         $pdf = Browsershot::html($html)
+            ->setNodeModulePath(base_path('node_modules'))
             ->paperSize(297, 210, 'mm')
             ->margins(8, 8, 10, 8)
             ->showBackground()

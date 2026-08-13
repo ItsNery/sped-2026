@@ -8876,7 +8876,7 @@ nav {
    ========================================================================= */
 @page {
     size: A4;
-    margin: 8mm;
+    margin: 0;
 }
 
 .ficha-pdf__document {
@@ -8916,7 +8916,8 @@ nav {
 }
 
 .ficha-pdf__sheet {
-    max-width: 190mm;
+    width: 200mm;
+    max-width: 200mm;
     margin: 0 auto;
 }
 
@@ -8953,6 +8954,7 @@ nav {
     height: 100%;
     object-fit: contain;
 }
+
 .ficha-pdf__subtitle {
     color: #484747;
     font-family: 'Gilroy-Bold', Arial, sans-serif;
@@ -8979,6 +8981,15 @@ nav {
     border-radius: 1mm;
     padding: 4mm;
     break-inside: avoid;
+}
+
+.ficha-pdf__panel--history {
+    padding: 2mm;
+    margin-top: 2mm;
+}
+
+.ficha-pdf__panel--history .ficha-pdf__heading {
+    margin-bottom: 1mm;
 }
 
 .ficha-pdf__panel--full {
@@ -9056,16 +9067,16 @@ nav {
 }
 
 .ficha-pdf__chart {
-    height: 95mm;
+    height: 80mm;
     min-width: 0;
 }
 
 .ficha-pdf__result {
     display: flex;
     align-items: flex-start;
-    gap: 2.5mm;
-    margin-top: 3mm;
-    padding: 2.5mm;
+    gap: 1.5mm;
+    margin-top: 1mm;
+    padding: 1.5mm;
     border-radius: 2mm;
     background: #faf8f6;
 }

@@ -66,6 +66,8 @@ jobs:
 
           rm -f bootstrap/cache/*.php
           composer install --no-dev --optimize-autoloader
+          npm ci --omit=dev --no-audit --no-fund
+          node -e "require.resolve('puppeteer')"
 
           php artisan migrate --force
 
@@ -140,6 +142,8 @@ jobs:
 
           rm -f bootstrap/cache/*.php
           composer install --no-dev --optimize-autoloader
+          npm ci --omit=dev --no-audit --no-fund
+          node -e "require.resolve('puppeteer')"
 
           php artisan migrate --force
 

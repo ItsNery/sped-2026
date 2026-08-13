@@ -64,6 +64,7 @@ class HomeController extends Controller
         $footer = '<div style="width: 100vw; margin: 0; padding: 0; color: #706b72; font: 9px Arial, sans-serif; text-align: center;">'
             . 'Hoja <span class="pageNumber"></span> de <span class="totalPages"></span></div>';
         $pdf = Browsershot::html($html)
+            ->setNodeModulePath(base_path('node_modules'))
             ->format('a4')
             ->margins(5, 5, 16, 5)
             ->showBrowserHeaderAndFooter()
@@ -72,8 +73,8 @@ class HomeController extends Controller
             ->protocolTimeout(120)
             ->showBackground()
             ->setOption('viewport', [
-                'width' => 1240,
-                'height' => 1754,
+                'width' => 794,
+                'height' => 1123,
                 'deviceScaleFactor' => 2,
             ])
             ->setOption('args', [

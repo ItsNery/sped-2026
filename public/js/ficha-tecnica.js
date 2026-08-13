@@ -25,7 +25,9 @@ function initFicha() {
         // =====================================================================
         if (!config.esDatoLineaBase && document.querySelector("#gauge-ficha")) {
         var gaugeElement = document.getElementById('gauge-ficha');
-        var chartGauge = echarts.init(gaugeElement);
+         var chartGauge = echarts.init(gaugeElement, null, {
+             renderer: config.pdfMode ? 'svg' : 'canvas'
+         });
         chartGauge.setOption({
             animation: config.pdfMode ? false : true,
             series: [{
@@ -111,7 +113,9 @@ function initFicha() {
             });
         }
 
-        var chartHistorico = echarts.init(document.getElementById('grafica-historica'));
+        var chartHistorico = echarts.init(document.getElementById('grafica-historica'), null, {
+            renderer: config.pdfMode ? 'svg' : 'canvas'
+        });
         var datosTendencia = calcularTendencia(config.categoriasEjeX, config.datosParaGraficaPrincipal);
         var seriesHistorico = [
             {
@@ -146,13 +150,13 @@ function initFicha() {
                             : formatNumber(params.value);
                     },
                     color: config.colorIndicador,
-                    fontSize: 11,
+                    fontSize: config.pdfMode ? 10 : 11,
                     fontWeight: 'bold',
                     backgroundColor: 'rgba(255, 255, 255, 0.94)',
                     borderColor: config.colorIndicador,
                     borderWidth: 1,
                     borderRadius: 4,
-                    padding: [3, 5]
+                    padding: config.pdfMode ? [2, 3] : [3, 5]
                 }
             },
             {
@@ -171,12 +175,13 @@ function initFicha() {
                     distance: 8,
                     formatter: function(params) { return params.value ? formatNumber(params.value) : ''; },
                     color: '#FF0000',
+                    fontSize: config.pdfMode ? 10 : 11,
                     fontWeight: 'bold',
                     backgroundColor: 'rgba(255, 255, 255, 0.94)',
                     borderColor: '#FF0000',
                     borderWidth: 1,
                     borderRadius: 4,
-                    padding: [3, 5]
+                    padding: config.pdfMode ? [2, 3] : [3, 5]
                 }
             }
         ];
@@ -225,18 +230,23 @@ function initFicha() {
             grid: {
                 left: '3%',
                 right: '4%',
-                bottom: 64,
+                bottom: config.pdfMode ? 58 : 64,
                 containLabel: true
             },
             xAxis: {
                 type: 'category',
                 data: config.categoriasEjeX,
                 name: 'Año',
+                nameLocation: 'middle',
+                nameGap: config.pdfMode ? 24 : 30,
                 axisLabel: {
                     interval: 0,
                     hideOverlap: false,
-                    rotate: window.innerWidth < 768 ? 35 : 0,
-                    margin: 12
+                    rotate: config.pdfMode ? 0 : (window.innerWidth < 768 ? 35 : 0),
+                    fontSize: config.pdfMode ? 11 : 12,
+                    margin: 12,
+                    align: 'center',
+                    verticalAlign: 'middle'
                 }
             },
             yAxis: {
