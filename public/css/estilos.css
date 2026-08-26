@@ -6876,7 +6876,7 @@ nav {
 
 .inicio-vision__grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 4fr 8fr;
     gap: 3rem;
     align-items: center;
 }

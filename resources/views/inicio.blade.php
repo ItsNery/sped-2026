@@ -407,7 +407,7 @@
 
             <div class="inicio-vision__grid">
                 <div class="inicio-vision__image-wrapper">
-                    <img src="{{ asset('img/esquemas/esuqema-about.png') }}" alt="Esquema PED 2024-2030"
+                    <img src="{{ asset('img/esquemas/dorito.png') }}" alt="Esquema PED 2024-2030"
                         class="inicio-vision__image">
                 </div>
                 <div class="inicio-vision__text">
