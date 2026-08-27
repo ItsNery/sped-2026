@@ -332,104 +332,249 @@
     color: var(--semaforo-color) !important;
 }
 
-/* Grid: conserva el patrón compacto existente */
-.eje-dashboard [id^="contenedor-eje-"].modo-grid > .container {
+/* Grid: composición vertical inspirada en las tarjetas de coyuntura */
+.eje-dashboard .eje-indicator-grid-card {
+    display: none;
+}
+
+.eje-dashboard [id^="contenedor-eje-"].modo-grid > .container,
+.eje-dashboard #contenedor-programa.modo-grid {
     display: grid !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.75rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
     width: 100% !important;
     max-width: none !important;
+}
+
+.eje-dashboard [id^="contenedor-eje-"].modo-grid > .container {
     margin: 0 !important;
     padding: 0 !important;
+}
+
+.eje-dashboard #contenedor-programa.modo-grid {
+    margin: 0 auto !important;
 }
 
 .eje-dashboard [id^="contenedor-eje-"].modo-grid .tematica-group {
     display: contents;
 }
 
-.eje-dashboard .modo-grid .card-indicador {
-    height: 8rem;
-    min-height: 8rem;
+.eje-dashboard .modo-grid .titulo-tematica {
+    grid-column: 1 / -1;
+    margin-top: 1.25rem !important;
     margin-bottom: 0 !important;
-    border-left: 0 !important;
-    border-radius: 0.5rem !important;
 }
 
-.eje-dashboard .modo-grid.row.ficha > .container {
-    display: flex;
+.eje-dashboard .modo-grid .eje-indicator-item {
+    width: auto;
     min-width: 0;
-    align-items: stretch;
-}
-
-.eje-dashboard .modo-grid.row.ficha > .container > .card-indicador {
-    width: 100%;
-}
-
-.eje-dashboard .modo-grid .card-indicador .card-body {
-    display: flex;
-    min-height: 0;
-    height: 100%;
-    padding: 0.5rem !important;
-}
-
-.eje-dashboard .modo-grid .card-indicador .card-body > .row {
-    display: flex !important;
-    width: 100%;
-    height: 100%;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    max-width: none;
     margin: 0;
+    padding: 0;
 }
 
-.eje-dashboard .modo-grid .eje-indicador__identity {
+.eje-dashboard .modo-grid .eje-indicator__list-card {
+    display: none;
+}
+
+.eje-dashboard .modo-grid .eje-indicator-grid-card {
     display: flex;
+}
+
+.eje-indicator-grid-card {
+    position: relative;
+    height: 100%;
+    min-height: 440px;
+    overflow: hidden;
+    flex-direction: column;
+    padding: 1.35rem;
+    border: 1px solid rgba(44, 62, 80, 0.1);
+    border-top: 4px solid var(--semaforo-color);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 5px 18px rgba(29, 43, 40, 0.08);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.eje-indicator-grid-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(29, 43, 40, 0.12);
+}
+
+.eje-indicator-grid-card__header {
+    min-height: 5.25rem;
+}
+
+.eje-indicator-grid-card__header > a {
+    display: block;
+    color: var(--color-texto-principal-ultimos);
+    font-family: Corra-Montserra-Bold, sans-serif;
+    font-size: 1rem;
+    line-height: 1.25;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+.eje-indicator-grid-card__header > a:hover {
+    color: var(--semaforo-color);
+}
+
+.eje-indicator-grid-card__ods {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.65rem;
+}
+
+.eje-indicator-grid-card__ods img {
+    width: 27px;
+    height: 27px;
+    border-radius: 4px;
+    object-fit: cover;
+}
+
+.eje-indicator-grid-card__main {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 125px;
+    margin-top: 0.85rem;
+}
+
+.eje-indicator-grid-card__result {
+    min-width: 0;
+}
+
+.eje-indicator-grid-card__result > span,
+.eje-indicator-grid-card__details dt {
+    display: block;
+    color: #84908c;
+    font-family: "Gilroy-SemiBold", sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.eje-indicator-grid-card__result > strong {
+    display: block;
+    margin: 0.35rem 0 0.25rem;
+    color: var(--color-texto-principal-ultimos);
+    font-family: Corra-Montserra-Bold, sans-serif;
+    font-size: 1.55rem;
+    line-height: 1;
+    overflow-wrap: anywhere;
+}
+
+.eje-indicator-grid-card__result > small {
+    display: block;
+    overflow: hidden;
+    color: #78827f;
+    font-size: 0.68rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.eje-indicator-mini-chart {
     width: 100%;
-    min-height: 100%;
+    height: 112px;
+    pointer-events: none;
+    user-select: none;
+}
+
+.eje-indicator-grid-card__chart-empty {
+    display: flex;
+    height: 112px;
     align-items: center;
     justify-content: center;
+    color: #8a9490;
+    font-size: 0.72rem;
     text-align: center;
 }
 
-.eje-dashboard .modo-grid .eje-indicador__identity > a {
-    width: 100%;
-    display: -webkit-box;
-    max-height: 3.6rem;
-    overflow: hidden;
-    margin-bottom: 0 !important;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    font-size: 0.82rem !important;
-    line-height: 1.2 !important;
-    text-overflow: ellipsis;
+.eje-indicator-grid-card__details {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin: 0.85rem 0 0;
 }
 
-.eje-dashboard .modo-grid .eje-indicador__identity .d-flex {
-    display: none !important;
+.eje-indicator-grid-card__details > div {
+    min-width: 0;
+    padding-top: 0.65rem;
+    border-top: 1px solid #eef0ee;
 }
 
-.eje-dashboard .modo-grid .eje-indicador__metrics {
-    display: none !important;
+.eje-indicator-grid-card__details > div:last-child {
+    grid-column: 1 / -1;
 }
 
-.eje-dashboard .modo-grid .eje-indicador__status,
-.eje-dashboard .modo-grid .eje-indicador__progress {
-    display: none !important;
+.eje-indicator-grid-card__details dd {
+    margin: 0.2rem 0 0;
+    color: #43534f;
+    font-family: "Gilroy-SemiBold", sans-serif;
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
 }
 
-.eje-dashboard .modo-grid .card-indicador .card-body > .row > .col-6.col-md-4.col-lg-2.text-center.mb-4.eje-indicador__status {
-    display: none !important;
+.eje-indicator-grid-card__status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    margin-top: auto;
+    padding-top: 0.85rem;
+    border-top: 1px solid #eef0ee;
+    color: var(--semaforo-color);
+    cursor: help;
 }
 
-@media (min-width: 992px) {
-    .eje-dashboard [id^="contenedor-eje-"].modo-grid > .container {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
+.eje-indicator-grid-card__status span {
+    font-family: "Gilroy-Bold", sans-serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.eje-indicator-grid-card__status strong {
+    font-family: "Gilroy-SemiBold", sans-serif;
+    font-size: 0.78rem;
+    text-align: right;
+}
+
+.eje-indicator-grid-card__footer {
+    margin-top: 0.9rem;
+}
+
+.eje-indicator-grid-card__footer a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.42rem 0.85rem;
+    border: 1px solid var(--semaforo-color);
+    border-radius: 999px;
+    color: var(--semaforo-color);
+    font-family: "Gilroy-SemiBold", sans-serif;
+    font-size: 0.76rem;
+    text-decoration: none;
+}
+
+.eje-indicator-grid-card__footer a:hover {
+    background: var(--semaforo-color);
+    color: #fff;
 }
 
 @media (max-width: 1199.98px) {
-    .eje-dashboard [id^="contenedor-eje-"].modo-grid > .container {
+    .eje-dashboard [id^="contenedor-eje-"].modo-grid > .container,
+    .eje-dashboard #contenedor-programa.modo-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 991.98px) {
+    .eje-dashboard [id^="contenedor-eje-"].modo-grid > .container,
+    .eje-dashboard #contenedor-programa.modo-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -452,10 +597,6 @@
         padding: 1rem;
     }
 
-    .eje-dashboard [id^="contenedor-eje-"].modo-grid > .container {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
     .eje-dashboard .card-indicador .card-body > .row > [class*="col-"] {
         flex: 0 0 100%;
         max-width: 100%;
@@ -463,8 +604,9 @@
     }
 }
 
-@media (max-width: 479.98px) {
-    .eje-dashboard [id^="contenedor-eje-"].modo-grid > .container {
+@media (max-width: 575.98px) {
+    .eje-dashboard [id^="contenedor-eje-"].modo-grid > .container,
+    .eje-dashboard #contenedor-programa.modo-grid {
         grid-template-columns: 1fr;
     }
 }

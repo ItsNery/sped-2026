@@ -156,8 +156,9 @@
              @endphp
 
             {{-- 2. TARJETA COMPACTA DEL INDICADOR --}}
-            <div class="card shadow-sm mb-4 border-0 rounded-4 card-indicador"
-                data-filter-item data-semaforo="{{ $semKey }}" style="--semaforo-color: {{ $colorSemaforo }};">
+            <div class="eje-indicator-item" data-filter-item data-semaforo="{{ $semKey }}"
+                style="--semaforo-color: {{ $colorSemaforo }};">
+            <div class="card shadow-sm mb-4 border-0 rounded-4 card-indicador eje-indicator__list-card">
                 <div class="card-body p-4">
                     <div class="row align-items-center">
 
@@ -247,6 +248,9 @@
                     </div>
                 </div>
             </div>
+            @php($decimalesIndicador = 2)
+            @include('partials.indicador-grid-card')
+            </div>
             @endforeach
             @else
             <p class="text-muted">No hay indicadores disponibles para esta temática.</p>
@@ -264,6 +268,7 @@
 </main>
 
 {{-- 5. Scripts Unificados (Gráfica General, Popovers y Toggle) --}}
+<script src="{{ asset('js/indicator-mini-charts.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Inicializar Gauge General
@@ -316,6 +321,7 @@
                 // Aplicar modo
                 if (view === 'grid') {
                     container.classList.add('modo-grid');
+                    window.renderIndicatorMiniCharts(container);
                 } else {
                     container.classList.remove('modo-grid');
                 }

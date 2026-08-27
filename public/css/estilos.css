@@ -6505,7 +6505,7 @@ nav {
     /* background: var(--bg-content); */
     /* background-image: url('../img/fondo-pajaro.png'); */
      background-image:
-        linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.5)),
+        linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.1)),
         url('../img/fondo-pajaro.png');
 
     padding: 4.5rem 0;
@@ -10173,6 +10173,7 @@ nav {
 
 .ped-dashboard__semaforo-result {
     display: inline-block;
+    text-align: center;
     padding: 0.25rem 0.5rem;
     border-radius: var(--radio-borde);
     color: #fff;

@@ -109,15 +109,17 @@
 
     $avanceVal = $indicador->avance_validado ?: 0;
     $chartVal = $avanceVal > 100 ? 100 : $avanceVal;
+    $decimalesIndicador = $indicador->id == 100 ? 6 : 2;
     $resultadoTexto = isset($indicador->dato_reciente_validado)
-        ? number_format((float) str_replace(',', '', $indicador->dato_reciente_validado), $indicador->id == 100 ? 6 : 2, '.', ',')
+        ? number_format((float) str_replace(',', '', $indicador->dato_reciente_validado), $decimalesIndicador, '.', ',')
         : 'N/D';
     $resultadoClase = strlen($resultadoTexto) > 16
         ? 'indicador-cifra--muy-larga'
         : (strlen($resultadoTexto) > 11 ? 'indicador-cifra--larga' : '');
     @endphp
-    <div class="container" data-filter-item data-semaforo="{{ $semKey }}">
-        <div class="card shadow-sm mb-4 border-0 rounded-4 card-indicador" style="--semaforo-color: {{ $colorSemaforo }};">
+    <div class="container eje-indicator-item" data-filter-item data-semaforo="{{ $semKey }}"
+        style="--semaforo-color: {{ $colorSemaforo }};">
+        <div class="card shadow-sm mb-4 border-0 rounded-4 card-indicador eje-indicator__list-card">
             <div class="card-body p-4">
                 <div class="row align-items-center">
 
@@ -179,6 +181,7 @@
                 </div>
             </div>
         </div>
+        @include('partials.indicador-grid-card')
     </div>
 
     @empty
@@ -191,6 +194,7 @@
 </section>
 </main>
 @section('jss-final')
+<script src="{{ asset('js/indicator-mini-charts.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Inicializar Toggle Lista/Grid
@@ -213,6 +217,7 @@
 
                 if (view === 'grid') {
                     container.classList.add('modo-grid');
+                    window.renderIndicatorMiniCharts(container);
                 } else {
                     container.classList.remove('modo-grid');
                 }

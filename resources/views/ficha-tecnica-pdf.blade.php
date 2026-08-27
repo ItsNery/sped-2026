@@ -121,30 +121,29 @@
                 </div>
             </article>
 
-            <article class="ficha-pdf__panel ficha-pdf__panel--full ficha-pdf__panel--history">
-                <h2 class="ficha-pdf__heading">Comportamiento histórico del indicador</h2>
-                @php
-                    $ultimoDatoConResultadosPdf = $indicador->datos_anuales_validados
-                        ->filter(fn ($dato) => trim((string) $dato->valor_dato) !== '')
-                        ->sortByDesc('anio')
-                        ->first();
-                    $resultadosUltimoAnioPdf = trim((string) ($ultimoDatoConResultadosPdf?->resultados ?? ''));
-                @endphp
-                <div class="ficha-pdf__history">
-                    <div id="grafica-historica" class="ficha-pdf__chart"></div>
-                    <div class="ficha-pdf__result">
-                        <div>
-                            <div class="ficha-pdf__label">
-                                Últimos resultados
-                                @if ($ultimoDatoConResultadosPdf)
-                                    <span class="ficha-pdf__result-year">({{ $ultimoDatoConResultadosPdf->anio }})</span>
-                                @endif
-                            </div>
-                            <div class="ficha-pdf__value ficha-pdf__result-text">
-                                {{ $resultadosUltimoAnioPdf !== '' ? $resultadosUltimoAnioPdf : 'Sin resultados registrados para el último año.' }}
-                            </div>
+            @php
+                $ultimoDatoConResultadosPdf = $indicador->datos_anuales_validados
+                    ->filter(fn ($dato) => trim((string) $dato->valor_dato) !== '')
+                    ->sortByDesc('anio')
+                    ->first();
+                $resultadosUltimoAnioPdf = trim((string) ($ultimoDatoConResultadosPdf?->resultados ?? ''));
+            @endphp
+            <article class="ficha-pdf__panel ficha-pdf__panel--full">
+                <h2 class="ficha-pdf__heading">Principales resultados</h2>
+                <div class="ficha-pdf__result">
+                    <div>
+                        <div class="ficha-pdf__label">Resultado</div>
+                        <div class="ficha-pdf__value ficha-pdf__result-text">
+                            {{ $resultadosUltimoAnioPdf !== '' ? $resultadosUltimoAnioPdf : 'Sin resultados registrados para el último año.' }}
                         </div>
                     </div>
+                </div>
+            </article>
+
+            <article class="ficha-pdf__panel ficha-pdf__panel--full ficha-pdf__panel--history">
+                <h2 class="ficha-pdf__heading">Comportamiento histórico del indicador</h2>
+                <div class="ficha-pdf__history">
+                    <div id="grafica-historica" class="ficha-pdf__chart"></div>
                 </div>
             </article>
         </section>

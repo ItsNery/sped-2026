@@ -90,7 +90,8 @@
                     <div class="col-lg-6">
                         <div class="card card-ficha-moderna ficha-panel ficha-panel--planning h-100 p-4">
                             <h3 class="ficha-section-title" style="color: {{ $indicador->color ?? '#484747' }};"><span
-                                    class="ficha-section-icon"><i class="fas fa-compass"></i></span>Alineación a la planeación</h3>
+                                    class="ficha-section-icon"><i class="fas fa-compass"></i></span>Alineación a la
+                                planeación</h3>
                             <div class="row g-3">
                                 <div class="col-12">
                                     <div class="ficha-label">Institución Responsable</div>
@@ -138,7 +139,8 @@
                     <div class="col-lg-6 mt-3 mt-lg-0">
                         <div class="card card-ficha-moderna ficha-panel ficha-panel--technical h-100 p-4">
                             <h3 class="ficha-section-title" style="color: {{ $indicador->color ?? '#484747' }};"><span
-                                    class="ficha-section-icon"><i class="fas fa-sliders-h"></i></span>Detalle técnico del indicador</h3>
+                                    class="ficha-section-icon"><i class="fas fa-sliders-h"></i></span>Detalle técnico del
+                                indicador</h3>
                             <div class="row g-3">
                                 <div class="col-12">
                                     <div class="ficha-label">Descripción</div>
@@ -315,36 +317,44 @@
                     </div>
                 </div>
 
-
-                <div class="card card-ficha-moderna ficha-panel ficha-panel--history p-4 mt-2 mb-5 pdf-page-break">
+                <div class="card card-ficha-moderna ficha-panel ficha-panel--quality p-4 mt-2">
                     <h3 class="ficha-section-title" style="color: {{ $indicador->color ?? '#484747' }};"><span
-                            class="ficha-section-icon"><i class="fas fa-chart-area"></i></span>Comportamiento histórico del indicador</h3>
-                    <div class="row">
-                        <div class="col-12 text-center">
-                            <div id="grafica-historica" class="w-100 grafico-historico-ficha"></div>
-                            @php
-                                $ultimoDatoConResultados = $indicador->datos_anuales_validados
-                                    ->filter(fn ($dato) => trim((string) $dato->valor_dato) !== '')
-                                    ->sortByDesc('anio')
-                                    ->first();
-                                $resultadosUltimoAnio = trim((string) ($ultimoDatoConResultados?->resultados ?? ''));
-                            @endphp
-                            <div class="ficha-metric-card ficha-history-result text-start mt-3">
-                                <div class="ficha-metric-card__icon">
-                                    <i class="fas fa-file-lines" aria-hidden="true"></i>
-                                </div>
+                            class="ficha-section-icon">
+                            <i class="fas fa-file-lines"></i></span> Principales resultados
+                    </h3>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <div class="ficha-label">Resultado</div>
+                            <div class="ficha-value">
                                 <div class="ficha-history-result__content">
                                     <div class="ficha-label">
-                                        Últimos resultados
-                                        @if ($ultimoDatoConResultados)
-                                            <span class="fw-normal text-muted">({{ $ultimoDatoConResultados->anio }})</span>
-                                        @endif
+                                        @php
+                                            $ultimoDatoConResultados = $indicador->datos_anuales_validados
+                                                ->filter(fn($dato) => trim((string) $dato->valor_dato) !== '')
+                                                ->sortByDesc('anio')
+                                                ->first();
+                                            $resultadosUltimoAnio = trim(
+                                                (string) ($ultimoDatoConResultados?->resultados ?? ''),
+                                            );
+                                        @endphp
                                     </div>
-                                    <div class="ficha-metric-card__value ficha-metric-card__value--text ficha-history-result__text">
+                                    <div
+                                        class="ficha-metric-card__value ficha-metric-card__value--text ficha-history-result__text">
                                         {{ $resultadosUltimoAnio !== '' ? $resultadosUltimoAnio : 'Sin resultados registrados para el último año.' }}
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-ficha-moderna ficha-panel ficha-panel--history p-4 mt-2 mb-5 pdf-page-break">
+                    <h3 class="ficha-section-title" style="color: {{ $indicador->color ?? '#484747' }};"><span
+                            class="ficha-section-icon"><i class="fas fa-chart-area"></i></span>Comportamiento histórico
+                        del indicador</h3>
+                    <div class="row">
+                        <div class="col-12 text-center">
+                            <div id="grafica-historica" class="w-100 grafico-historico-ficha"></div>
                         </div>
                     </div>
                 </div>
