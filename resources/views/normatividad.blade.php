@@ -117,14 +117,42 @@
                     </li>
                     <li class="normatividad-item">
                         <div class="normatividad-info">
-                            <h3 class="normatividad-titulo">Guía para la modificación de indicadores</h3>
+                            <h3 class="normatividad-titulo">Guía para la Actualización de Indicadores</h3>
                             <span class="normatividad-formato">
                                 <i class="fas fa-file-pdf"></i>
                                 PDF
                             </span>
                         </div>
-                        <a href="{{ asset('docs/normatividad/GuiaModInd.pdf') }}" class="normatividad-descarga"
+                        <a href="{{ asset('docs/normatividad/guia-para-la-actulizacion-de-indicadores.pdf') }}" class="normatividad-descarga"
                             target="_blank">
+                            <i class="fas fa-globe"></i>
+                            Consultar
+                        </a>
+                    </li>
+                    <li class="normatividad-item">
+                        <div class="normatividad-info">
+                            <h3 class="normatividad-titulo">Manual para la Construcción de Indicadores Estratégicos</h3>
+                            <span class="normatividad-formato">
+                                <i class="fas fa-file-pdf"></i>
+                                PDF
+                            </span>
+                        </div>
+                        <a href="{{ asset('docs/normatividad/MANUAL-PARA-LA-CONSTRUCCION-DE-INDICADORES-ESTRATEGICOS.pdf') }}"
+                            class="normatividad-descarga" target="_blank">
+                            <i class="fas fa-globe"></i>
+                            Consultar
+                        </a>
+                    </li>
+                    <li class="normatividad-item">
+                        <div class="normatividad-info">
+                            <h3 class="normatividad-titulo">Nota Metodológica para la semaforización de Indicadores</h3>
+                            <span class="normatividad-formato">
+                                <i class="fas fa-file-pdf"></i>
+                                PDF
+                            </span>
+                        </div>
+                        <a href="{{ asset('docs/normatividad/NOTA-METODOLOGICA-PARA-LA-SEMAFORIZACION-DE-INDICADORES.pdf') }}"
+                            class="normatividad-descarga" target="_blank">
                             <i class="fas fa-globe"></i>
                             Consultar
                         </a>
