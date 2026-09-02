@@ -50,14 +50,55 @@ jobs:
     steps:
       - name: Deploy PRODUCCION
         run: |
+          set -euo pipefail
 
           cd /var/www/html/sped
+
+          test -f .env
+
+          DB_HOST="$(sed -n 's/^DB_HOST=//p' .env | head -n 1 | tr -d '\"' | tr -d "'")"
+          DB_PORT="$(sed -n 's/^DB_PORT=//p' .env | head -n 1 | tr -d '\"' | tr -d "'")"
+          DB_DATABASE="$(sed -n 's/^DB_DATABASE=//p' .env | head -n 1 | tr -d '\"' | tr -d "'")"
+          DB_USERNAME="$(sed -n 's/^DB_USERNAME=//p' .env | head -n 1 | tr -d '\"' | tr -d "'")"
+          DB_PASSWORD="$(sed -n 's/^DB_PASSWORD=//p' .env | head -n 1 | tr -d '\"' | tr -d "'")"
+          BACKUP_DIR="/var/www/html/sped/storage/public/backups"
+          BACKUP_NAME="sped_production_$(date +%Y-%m-%d_%H-%M-%S)_${GITHUB_SHA}.sql.gz"
+          TEMP_BACKUP="/tmp/${BACKUP_NAME}"
+
+          DUMP_BIN="$(command -v mariadb-dump || command -v mysqldump)"
+          test -n "$DB_DATABASE"
+          test -n "$DB_USERNAME"
+
+          MYSQL_PWD="$DB_PASSWORD" "$DUMP_BIN" \
+            --host="${DB_HOST:-127.0.0.1}" \
+            --port="${DB_PORT:-3306}" \
+            --user="$DB_USERNAME" \
+            --single-transaction \
+            --routines \
+            --triggers \
+            --events \
+            --hex-blob \
+            "$DB_DATABASE" | gzip > "$TEMP_BACKUP"
+
+          test -s "$TEMP_BACKUP"
+          (cd "$(dirname "$TEMP_BACKUP")" && sha256sum "$(basename "$TEMP_BACKUP")") > "${TEMP_BACKUP}.sha256"
+          sudo install -d -m 750 -o user_planeacion -g www-data "$BACKUP_DIR"
+          sudo mv "$TEMP_BACKUP" "$BACKUP_DIR/$BACKUP_NAME"
+          sudo mv "${TEMP_BACKUP}.sha256" "$BACKUP_DIR/$BACKUP_NAME.sha256"
+          sudo chown user_planeacion:www-data "$BACKUP_DIR/$BACKUP_NAME" "$BACKUP_DIR/$BACKUP_NAME.sha256"
+          sudo chmod 640 "$BACKUP_DIR/$BACKUP_NAME" "$BACKUP_DIR/$BACKUP_NAME.sha256"
+          sudo sh -c "cd '$BACKUP_DIR' && sha256sum -c '$BACKUP_NAME.sha256'"
+          sudo find "$BACKUP_DIR" -type f -name '*.sql.gz' -mtime +30 -delete
+          sudo find "$BACKUP_DIR" -type f -name '*.sha256' -mtime +30 -delete
 
           git fetch origin
           git reset --hard origin/main
           sudo chown -R user_planeacion:www-data storage bootstrap/cache
           sudo chmod -R 775 storage bootstrap/cache
           sudo chmod -R g+s storage bootstrap/cache
+          sudo chmod 750 "$BACKUP_DIR"
+          sudo find "$BACKUP_DIR" -type f -name '*.sql.gz' -exec chmod 640 {} +
+          sudo find "$BACKUP_DIR" -type f -name '*.sha256' -exec chmod 640 {} +
 
           composer install --no-dev --optimize-autoloader
 
