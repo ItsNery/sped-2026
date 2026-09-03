@@ -117,7 +117,7 @@
                     </li>
                     <li class="normatividad-item">
                         <div class="normatividad-info">
-                            <h3 class="normatividad-titulo">Guía para la Actualización de Indicadores</h3>
+                            <h3 class="normatividad-titulo">Guía para la Actualización, Revisión y Validación de Avances de los Indicadores del Plan Estatal de Desarrollo y sus Documentos Derivados</h3>
                             <span class="normatividad-formato">
                                 <i class="fas fa-file-pdf"></i>
                                 PDF
