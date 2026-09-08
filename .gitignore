@@ -36,3 +36,11 @@ yarn-error.log
 /fade.gif
 /index.html
 /unpkg.com/
+
+# Laravel Boost - archivos regenerables con `php artisan boost:install/update`
+# AGENTS.md se versiona porque contiene reglas/guidelines específicas del proyecto
+/.agents/
+/.codex/
+/.github/skills/
+/boost.json
+/opencode.json
