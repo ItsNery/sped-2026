@@ -7,6 +7,15 @@ use Illuminate\Http\Request;
 
 class InstitucionController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            abort_unless(auth()->user()?->isAdministrator(), 403);
+
+            return $next($request);
+        });
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -14,8 +23,12 @@ class InstitucionController extends Controller
      */
     public function index()
     {
-        $instituciones = Institucion::all();
-        return view('panel-instituciones.index', compact('instituciones'));
+        $instituciones = Institucion::with('sectorizadora')->orderBy('nombre')->get();
+        $institucionesSectorizadoras = Institucion::whereNull('institucion_sectorizadora_id')
+            ->orderBy('nombre')
+            ->get(['id', 'nombre']);
+
+        return view('panel-instituciones.index', compact('instituciones', 'institucionesSectorizadoras'));
     }
 
     /**
@@ -36,12 +49,9 @@ class InstitucionController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'titular' => 'required|string|max:255',
-        ]);
+        $validated = $request->validate($this->rules());
 
-        Institucion::create($request->all());
+        Institucion::create($validated);
 
         return redirect()->route('panel-cat-instituciones.index')
             ->with('success', 'Institución creada exitosamente.');
@@ -78,12 +88,9 @@ class InstitucionController extends Controller
      */
     public function update(Request $request, Institucion $institucion)
     {
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'titular' => 'required|string|max:255',
-        ]);
+        $validated = $request->validate($this->rules($institucion));
 
-        $institucion->update($request->all());
+        $institucion->update($validated);
 
         return redirect()->route('panel-cat-instituciones.index')
             ->with('success', 'Institución actualizada exitosamente.');
@@ -101,12 +108,13 @@ class InstitucionController extends Controller
         // Usamos exists() que es más rápido que contar todos los registros
         $tieneDependencias = $institucion->indicadores()->exists() ||
             $institucion->usuario()->exists() ||
-            $institucion->usuarios()->exists();
+            $institucion->usuarios()->exists() ||
+            $institucion->sectorizadas()->exists();
 
         if ($tieneDependencias) {
             // 2. Si tiene relaciones, regresamos con un error
             return redirect()->route('panel-cat-instituciones.index')
-                ->with('error', 'No se puede eliminar la institución porque tiene indicadores o usuarios asociados.');
+                ->with('error', 'No se puede eliminar la institución porque tiene indicadores, usuarios o instituciones sectorizadas asociadas.');
         }
 
         // 3. Si está limpio, procedemos a borrar
@@ -114,5 +122,36 @@ class InstitucionController extends Controller
 
         return redirect()->route('panel-cat-instituciones.index')
             ->with('success', 'Institución eliminada exitosamente.');
+    }
+
+    private function rules(?Institucion $institucion = null): array
+    {
+        return [
+            'nombre' => ['required', 'string', 'max:255'],
+            'titular' => ['required', 'string', 'max:255'],
+            'institucion_sectorizadora_id' => [
+                'nullable',
+                'integer',
+                'exists:instituciones,id',
+                function (string $attribute, mixed $value, \Closure $fail) use ($institucion) {
+                    if ($value === null) {
+                        return;
+                    }
+
+                    if ($institucion && (int) $value === (int) $institucion->id) {
+                        $fail('Una institución no puede sectorizarse a sí misma.');
+                        return;
+                    }
+
+                    if (Institucion::whereKey($value)->whereNotNull('institucion_sectorizadora_id')->exists()) {
+                        $fail('La institución sectorizadora seleccionada ya depende de otra institución.');
+                    }
+
+                    if ($institucion?->sectorizadas()->exists()) {
+                        $fail('Una institución que ya tiene sectorizadas no puede depender de otra institución.');
+                    }
+                },
+            ],
+        ];
     }
 }

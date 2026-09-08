@@ -1,9 +1,17 @@
 <x-app-layout>
     @section('title', 'Municipios: Inicio')
+    @section('jss-inicial')
+        <link rel="stylesheet" href="{{ asset('css/choices.min.css') }}">
+        <script src="{{ asset('js/choices.min.js') }}" defer></script>
+    @endsection
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Municipios con convenio') }}
-        </h2>
+        <div class="exec-header admin-index-header">
+            <div>
+                <span class="exec-eyebrow">Gestión municipal</span>
+                <h2 class="exec-header__title">Municipios con convenio</h2>
+            </div>
+            <span class="exec-header__plan">Convenios e indicadores</span>
+        </div>
     </x-slot>
     @if ($message = Session::get('success'))
         <script>
@@ -25,16 +33,17 @@
             });
         </script>
     @endif
-    <link rel="stylesheet" href="{{ asset('css/choices.min.css') }}">
-    <script src="{{ asset('js/choices.min.js') }}"></script>
-
-    <div class="container mx-auto">
-        <div class="contenedor-principal mx-auto">
-            <div class="encabezado-lista my-2">
-                <h2>Listado de municipios con convenio</h2>
+    <div class="admin-index municipality-index">
+        <div class="contenedor-principal admin-index__surface mx-auto">
+            <div class="admin-index__heading">
+                <div>
+                    <span class="exec-eyebrow">Cobertura municipal</span>
+                    <h1>Listado de municipios con convenio</h1>
+                </div>
+                <span class="admin-index__count">{{ $municipiosConConvenio->count() }} registros</span>
             </div>
-            @can('crear-municipios-convenio ')
-                <div class="d-flex justify-content-end mx-4 my-2">
+            @can('crear-municipios-convenio')
+                <div class="admin-index__actions">
                     <button class="button-add-new" type="button" data-bs-toggle="modal" data-bs-target="#modalMunConvenio"
                         data-action="create">
                         <span class="button__text">Agregar</span>
@@ -47,14 +56,8 @@
                     </button>
                 </div>
             @endcan
-            {{-- <div class="d-flex justify-content-end mx-4">
-                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalMunConvenio"
-                    data-action="create">
-                    <i class="fa-solid fa-plus"></i> Subir nuevo
-                </button>
-            </div> --}}
-            <div class="container table-responsive" id="contenedor-tabla-indicadores">
-                <table id="tabla-municipios" class="table table-striped table-bordered">
+            <div class="table-responsive admin-index-table-wrap">
+                <table id="tabla-municipios" class="table table-striped table-bordered admin-index-table">
                     <thead>
                         <tr>
                             <th scope="col">No.</th>
@@ -62,8 +65,10 @@
                             <th>Objetivo</th>
                             <th>Convenio</th>
                             <th>Ícono</th>
-                            <th>Indicadores</th>
-                            <th>Opciones</th>
+                            <th>Seguimiento</th>
+                            @canany(['editar-municipios-convenio', 'borrar-municipios-convenio'])
+                                <th class="no-export">Opciones</th>
+                            @endcanany
                         </tr>
                     </thead>
                     <tbody>
@@ -75,62 +80,42 @@
                                 <td>
                                     {{ $municipioConConvenio->municipio->nombre }}
                                 </td>
-                                <td>
-                                    {{ $municipioConConvenio->objetivo }}
+                                <td class="municipality-index__objective">
+                                    <p class="municipality-index__objective-text">{{ $municipioConConvenio->objetivo }}</p>
                                 </td>
                                 <td>
-                                    <a href="{{ $municipioConConvenio->convenio }}" target="_blank">
-                                        <i class="fa-regular fa-file-pdf fs-2 text-danger"></i>
-
+                                    <a href="{{ $municipioConConvenio->convenio }}" target="_blank" rel="noopener noreferrer"
+                                        class="admin-index-table-action admin-index-table-action--document"
+                                        aria-label="Abrir convenio de {{ $municipioConConvenio->municipio->nombre }} en PDF">
+                                        <i class="fa-regular fa-file-pdf" aria-hidden="true"></i>
+                                        Ver PDF
                                     </a>
                                 </td>
                                 <td>
-                                    <img src="{{ $municipioConConvenio->icono }}" alt="Miniatura"
-                                        style="width: 100px; height: 100px; object-fit: cover;">
-                                    {{-- {{ $municipioConConvenio->icono }} --}}
+                                    <img src="{{ $municipioConConvenio->icono }}"
+                                        alt="Ícono del municipio de {{ $municipioConConvenio->municipio->nombre }}"
+                                        class="municipality-index__icon">
                                 </td>
                                 <td>
-                                    <ul>
-                                        @if ($municipioConConvenio->municipio && $municipioConConvenio->municipio->indicadores->count() > 0)
-                                            @foreach ($municipioConConvenio->municipio->indicadores as $indicador)
-                                                <details class="indicador-details">
-
-                                                    {{-- Lo que está en <summary> es el título visible --}}
-                                                    <summary>
-                                                        {{-- Usamos Str::limit para mantener el título corto y limpio --}}
-                                                        <strong>{{ \Illuminate\Support\Str::limit($indicador->indicador, 80, '...') }}</strong>
-                                                    </summary>
-
-                                                    {{-- Este es el contenido que se expande/contrae --}}
-                                                    <div class="indicador-contenido-completo">
-                                                        <p>
-                                                            <strong>Nombre completo:</strong>
-                                                            {{ $indicador->indicador }}
-                                                        </p>
-                                                        <p>
-                                                            <strong>Descripción:</strong>
-                                                            {{ $indicador->descripcion ?? 'No disponible' }}
-                                                        </p>
-                                                        <p>
-                                                            <strong>Fuente:</strong> {{ $indicador->fuente }}
-                                                        </p>
-                                                        <p>
-                                                            <a
-                                                                href="{{ route('indicadores.show_municipal', $indicador->id) }}">Ver
-                                                                detalle</a>
-                                                        </p>
-                                                    </div>
-                                                </details>
-                                            @endforeach
-                                        @else
-                                            <li>Sin indicadores públicos creados</li>
-                                        @endif
-                                    </ul>
+                                    <div class="municipality-index__indicator-access">
+                                        <span class="municipality-index__indicator-count">
+                                            {{ $municipioConConvenio->indicadores_publicos_count }}
+                                            {{ $municipioConConvenio->indicadores_publicos_count === 1 ? 'indicador' : 'indicadores' }}
+                                        </span>
+                                        <a href="{{ route('panel-municipios-convenio.indicadores', $municipioConConvenio) }}"
+                                            class="admin-index-table-action admin-index-table-action--document">
+                                            <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+                                            Ver indicadores
+                                        </a>
+                                    </div>
                                 </td>
-                                <td>
-                                    <div class="d-flex justify-content-center rounded-lg text-lg " role="group">
+                                @canany(['editar-municipios-convenio', 'borrar-municipios-convenio'])
+                                <td class="no-export">
+                                    <div class="admin-index-table-actions" role="group"
+                                        aria-label="Acciones de {{ $municipioConConvenio->municipio->nombre }}">
                                         <!-- botón editar -->
-                                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                        @can('editar-municipios-convenio')
+                                        <button type="button" class="admin-index-table-action admin-index-table-action--edit" data-bs-toggle="modal"
                                             data-bs-target="#modalMunConvenio" data-action="edit"
                                             data-id="{{ $municipioConConvenio->id }}"
                                             data-municipio="{{ $municipioConConvenio->id_municipio }}"
@@ -138,23 +123,28 @@
                                             data-convenio="{{ $municipioConConvenio->convenio }}"
                                             data-icono="{{ $municipioConConvenio->icono }}"
                                             data-banner="{{ $municipioConConvenio->banner }}">
-                                            <i class="fa-solid fa-pen-to-square"></i>
+                                            <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                                            Editar
                                         </button>
+                                        @endcan
 
+                                        @can('borrar-municipios-convenio')
                                         <form id="delete-form-{{ $municipioConConvenio->id }}"
                                             action="{{ route('panel-municipios-convenio.destroy', $municipioConConvenio->id) }}"
-                                            method="POST" style="display:inline-block;">
+                                            method="POST">
                                             @csrf
                                             @method('DELETE')
                                             <button type="button"
-                                                class="btn btn-danger btn-sm text-white delete-button"
+                                                class="admin-index-table-action admin-index-table-action--delete delete-button"
                                                 data-form-id="delete-form-{{ $municipioConConvenio->id }}">
-                                                <i class="fa-solid fa-trash-can"></i>
+                                                <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                                                Borrar
                                             </button>
                                         </form>
-
+                                        @endcan
                                     </div>
                                 </td>
+                                @endcanany
                             </tr>
                         @endforeach
                     </tbody>
@@ -165,15 +155,17 @@
                             <th>Objetivo</th>
                             <th>Convenio</th>
                             <th>Ícono</th>
-                            <th>Indicadores</th>
-                            <th>Opciones</th>
+                            <th>Seguimiento</th>
+                            @canany(['editar-municipios-convenio', 'borrar-municipios-convenio'])
+                                <th class="no-export">Opciones</th>
+                            @endcanany
                         </tr>
                     </tfoot>
                 </table>
             </div>
         </div>
     </div>
-    <div class="modal fade" id="modalMunConvenio" tabindex="-1" aria-labelledby="modalMunConvenioLabel"
+    <div class="modal fade admin-index-modal" id="modalMunConvenio" tabindex="-1" aria-labelledby="modalMunConvenioLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -183,15 +175,15 @@
                     <input type="hidden" id="method" name="_method" value="POST">
                     <input type="hidden" id="id_municipio_convenio" name="id_municipio_convenio" value="">
 
-                    <div class="modal-header">
-                        <h5 class="modal-title encabezado-lista w-100 text-white" id="modalMunConvenioLabel">Nuevo
-                            Municipio</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="modal-header admin-index-modal__header">
+                        <h5 class="modal-title" id="modalMunConvenioLabel">Nuevo municipio</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Cerrar"></button>
                     </div>
 
                     <div class="modal-body">
                         <div class="row">
-                            <div class="col-4 mb-3">
+                            <div class="col-12 col-md-4 mb-3">
                                 <label for="id_municipio" class="form-label custom-section-title"><i
                                         class="fa-solid fa-building-wheat"></i> Municipio</label>
                                 <select id="id_municipio" name="id_municipio" class="form-select" required>
@@ -206,7 +198,7 @@
                                     </small>
                                 @enderror
                             </div>
-                            <div class="col-8 mb-3">
+                            <div class="col-12 col-md-8 mb-3">
                                 <label for="objetivo" class="form-label custom-section-title"><i
                                         class="fa-solid fa-file-lines"></i> Objetivo</label>
                                 <textarea id="objetivo" name="objetivo" placeholder="Ej. El gobierno del municipio..."
@@ -217,7 +209,7 @@
                                     </small>
                                 @enderror
                             </div>
-                            <div class="col-8 mb-3">
+                            <div class="col-12 col-md-8 mb-3">
                                 <label for="convenio" class="form-label custom-section-title"><i
                                         class="fa-solid fa-file-contract"></i> Convenio</label>
                                 <input type="file" id="convenio" class="form-control" name="convenio"
@@ -229,14 +221,14 @@
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="col-4 mb-3">
+                            <div class="col-12 col-md-4 mb-3">
                                 <label for="convenioActual" class="form-text text-muted custom-section-title"><i
                                         class="fa-solid fa-folder-open"></i> Convenio Actual</label>
                                 <div id="convenioActual">
                                     <!-- El enlace se agregará dinámicamente aquí -->
                                 </div>
                             </div>
-                            <div class="col-md-8 mb-3">
+                            <div class="col-12 col-md-8 mb-3">
                                 <label for="icono" class="form-label custom-section-title"><i
                                         class="fa-solid fa-images"></i> Ícono</label>
                                 <input type="file" id="icono" class="form-control" name="icono"
@@ -248,14 +240,14 @@
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="col-4 mb-3">
+                            <div class="col-12 col-md-4 mb-3">
                                 <label for="previewIcono" class="form-label custom-section-title"><i
                                         class="fa-solid fa-file-image"></i> Vista Previa del Ícono</label>
                                 <div id="previewIcono">
                                     <!-- Vista previa del ícono se mostrará aquí -->
                                 </div>
                             </div>
-                            <div class="col-md-8 mb-3">
+                            <div class="col-12 col-md-8 mb-3">
                                 <label for="banner" class="form-label custom-section-title"><i
                                         class="fa-solid fa-panorama"></i> Banner</label>
                                 <input type="file" id="banner" class="form-control" name="banner"
@@ -269,7 +261,7 @@
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="col-4 mb-3">
+                            <div class="col-12 col-md-4 mb-3">
                                 <label for="previewBanner" class="form-label custom-section-title"><i
                                         class="fa-solid fa-panorama"></i> Vista Previa del Banner</label>
                                 <div id="previewBanner">
@@ -295,7 +287,7 @@
         </div>
     </div>
 
-</x-app-layout>
+    @push('scripts')
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         // Inicialización global de Choices.js
@@ -311,23 +303,27 @@
             order: [],
             buttons: [{
                     extend: "excelHtml5",
-                    text: '<i class="fa-regular fa-file-excel text-white"></i>',
-                    className: "btn btn-success",
+                    text: '<i class="fa-regular fa-file-excel"></i> Excel',
+                    className: "admin-index-export-button admin-index-export-button--excel",
+                    exportOptions: { columns: ':not(.no-export)' },
                 },
                 {
                     extend: "csvHtml5",
-                    text: '<i class="fa-solid fa-file-csv text-white"></i>',
-                    className: "btn btn-primary",
+                    text: '<i class="fa-solid fa-file-csv"></i> CSV',
+                    className: "admin-index-export-button admin-index-export-button--csv",
+                    exportOptions: { columns: ':not(.no-export)' },
                 },
                 {
                     extend: "pdfHtml5",
-                    text: '<i class="fa-regular fa-file-pdf text-white"></i>',
-                    className: "btn btn-danger",
+                    text: '<i class="fa-regular fa-file-pdf"></i> PDF',
+                    className: "admin-index-export-button admin-index-export-button--pdf",
+                    exportOptions: { columns: ':not(.no-export)' },
                 },
                 {
                     extend: "copy",
-                    className: "btn btn-info",
-                    text: '<i class="fa-regular fa-copy text-white"></i>',
+                    className: "admin-index-export-button admin-index-export-button--copy",
+                    text: '<i class="fa-regular fa-copy"></i> Copiar',
+                    exportOptions: { columns: ':not(.no-export)' },
                 },
             ],
             language: {
@@ -416,8 +412,8 @@
                 // Actualizar convenio actual
                 if (convenio) {
                     modal.querySelector("#convenioActual").innerHTML = `
-                <a href="${convenio}" target="_blank">
-                    <i class="fa-regular fa-file-pdf fs-1 text-danger"></i>
+                <a href="${convenio}" target="_blank" rel="noopener noreferrer" class="admin-index-modal__document">
+                    <i class="fa-regular fa-file-pdf" aria-hidden="true"></i> Ver PDF
                 </a>`;
                 } else {
                     modal.querySelector("#convenioActual").innerHTML =
@@ -452,30 +448,30 @@
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('Script cargado'); // Verifica que este mensaje aparezca en la consola
-
-        // Delegación de eventos
         document.addEventListener('click', function(event) {
-            if (event.target.classList.contains('delete-button')) {
-                console.log('Botón clickeado'); // Verifica que este mensaje aparezca al hacer clic
-                const formId = event.target.getAttribute('data-form-id');
+            const deleteButton = event.target.closest('.delete-button');
+            if (deleteButton) {
+                const formId = deleteButton.getAttribute('data-form-id');
                 const form = document.getElementById(formId);
+                const rootStyles = getComputedStyle(document.documentElement);
 
                 Swal.fire({
                     title: '¿Estás seguro?',
                     text: "Esta acción no se puede deshacer.",
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
+                    confirmButtonColor: rootStyles.getPropertyValue('--brand-burgundy-700').trim(),
+                    cancelButtonColor: rootStyles.getPropertyValue('--brand-green-900').trim(),
                     confirmButtonText: 'Sí, eliminar',
                     cancelButtonText: 'Cancelar'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        form.submit(); // Envía el formulario si el usuario confirma
+                        form.submit();
                     }
                 });
             }
         });
     });
 </script>
+    @endpush
+</x-app-layout>

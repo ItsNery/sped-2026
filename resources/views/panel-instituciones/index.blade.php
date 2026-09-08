@@ -1,10 +1,13 @@
 <x-app-layout>
-    <!-- local -->
     @section('title', 'Instituciones')
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Instituciones') }}
-        </h2>
+        <div class="exec-header admin-index-header">
+            <div>
+                <span class="exec-eyebrow">Catálogo institucional</span>
+                <h2 class="exec-header__title">Gestión de instituciones</h2>
+            </div>
+            <span class="exec-header__plan">Sectorización y dependencias</span>
+        </div>
     </x-slot>
     @if ($message = Session::get('success'))
         <script>
@@ -16,34 +19,37 @@
     @endif
     @if (session('error'))
         <div class="alert alert-danger">
-            <i class="fa-solid fa-circle-exclamation"></i> {{ session('error') }}
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> {{ session('error') }}
         </div>
     @endif
-    <div class="container mx-auto">
-        <div class="contenedor-principal">
-            <div class="encabezado-lista my-2">
-                <h2>Gestión de Instituciones</h2>
+    <div class="admin-index">
+        <div class="contenedor-principal admin-index__surface mx-auto">
+            <div class="admin-index__heading">
+                <div>
+                    <span class="exec-eyebrow">Universo registrado</span>
+                    <h1>Listado de instituciones</h1>
+                </div>
+                <span class="admin-index__count">{{ count($instituciones) }} registros</span>
             </div>
-            <div class="d-flex justify-content-end mx-4 my-4">
-                {{-- Use data-bs-toggle and data-bs-target for Bootstrap 5 --}}
+
+            <div class="admin-index__actions">
                 <button class="button-add-new" type="button" id="btnAddInstitucion" data-bs-toggle="modal"
                     data-bs-target="#modalInstitucion">
                     <span class="button__text">Agregar</span>
-                    <span class="button__icon"><svg class="svg" fill="none" height="24" stroke="currentColor"
-                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"
-                            width="24" xmlns="http://www.w3.org/2000/svg">
-                            <line x1="12" x2="12" y1="5" y2="19"></line>
-                            <line x1="5" x2="19" y1="12" y2="12"></line>
-                        </svg></span>
+                    <span class="button__icon">
+                        @include('components.svg-add')
+                    </span>
                 </button>
             </div>
-            <div class="container table-responsive">
-                <table class="table table-striped table-users" id="table-instituciones">
+
+            <div class="table-responsive admin-index-table-wrap">
+                <table class="table table-striped table-bordered admin-index-table" id="table-instituciones" style="width:100%">
                     <thead>
                         <tr>
-                            <th>Nombre</th>
-                            <th>Titular</th>
-                            <th class="text-center">Opciones</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Titular</th>
+                            <th scope="col">Dependencia sectorizadora</th>
+                            <th scope="col" class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -51,22 +57,27 @@
                             <tr>
                                 <td>{{ $institucion->nombre }}</td>
                                 <td>{{ $institucion->titular }}</td>
+                                <td>{{ $institucion->sectorizadora?->nombre ?? 'Sin sectorización' }}</td>
                                 <td class="text-center">
-                                    {{-- Use distinct class for edit buttons to attach listeners --}}
-                                    <button class="btn btn-warning btn-sm text-black btn-edit-institucion"
-                                        title="Editar" data-bs-toggle="modal" data-bs-target="#modalInstitucion"
-                                        data-institucion='@json($institucion)'>
-                                        <i class="fa-regular fa-pen-to-square"></i>
-                                    </button>
-                                    <form action="{{ route('panel-cat-instituciones.destroy', $institucion->id) }}"
-                                        method="POST" class="d-inline" id="form-delete-{{ $institucion->id }}">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm text-white"
-                                            title="Eliminar">
-                                            <i class="fa-solid fa-trash-can"></i>
+                                    <div class="admin-index-table-actions" role="group" aria-label="Acciones de la institución">
+                                        <button class="admin-index-table-action admin-index-table-action--edit btn-edit-institucion"
+                                            title="Editar" data-bs-toggle="modal" data-bs-target="#modalInstitucion"
+                                            data-institucion='@json($institucion)'>
+                                            <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+                                            <span class="visually-hidden">Editar</span>
                                         </button>
-                                    </form>
+                                        <form action="{{ route('panel-cat-instituciones.destroy', $institucion->id) }}"
+                                            method="POST" class="confirmable-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="admin-index-table-action admin-index-table-action--delete"
+                                                data-action="borrar" title="Eliminar">
+                                                <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                                                <span class="visually-hidden">Eliminar</span>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -75,14 +86,15 @@
             </div>
         </div>
     </div>
+
     {{-- MODAL --}}
-    <div class="modal fade" id="modalInstitucion" tabindex="-1" aria-labelledby="modalInstitucionLabel"
+    <div class="modal fade admin-index-modal" id="modalInstitucion" tabindex="-1" aria-labelledby="modalInstitucionLabel"
         aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header admin-index-modal__header">
                     <h5 class="modal-title" id="modalInstitucionLabel">Agregar Institución</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <form id="formInstitucion" method="POST">
                     @csrf
@@ -96,92 +108,111 @@
                             <label for="titular">Titular <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="titular" name="titular" required>
                         </div>
+                        <div class="form-group mb-3">
+                            <label for="institucion_sectorizadora_id">Dependencia sectorizadora</label>
+                            <select class="form-select" id="institucion_sectorizadora_id" name="institucion_sectorizadora_id">
+                                <option value="">Sin sectorización</option>
+                                @foreach ($institucionesSectorizadoras as $sectorizadora)
+                                    <option value="{{ $sectorizadora->id }}">{{ $sectorizadora->nombre }}</option>
+                                @endforeach
+                            </select>
+                            <small class="form-text text-muted">Solo se permite un nivel de sectorización.</small>
+                        </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <button type="button" class="indicator-detail-button indicator-detail-button--neutral"
+                            data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="indicator-detail-button indicator-detail-button--primary">Guardar</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-</x-app-layout>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // DataTable (keeps jQuery because DataTables usually requires it unless using the vanilla version, and app.js loads jquery)
-        if (typeof $ !== 'undefined' && $.fn.dataTable) {
-            $('#table-instituciones').DataTable({
-                "pagingType": "simple_numbers",
-                "order": [],
-                "language": {
-                    "search": "Buscar:",
-                    "lengthMenu": "Mostrar _MENU_ entradas",
-                    "info": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-                    "paginate": {
-                        "previous": "Anterior",
-                        "next": "Siguiente"
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const language = {
+                    search: 'Buscar:',
+                    lengthMenu: 'Mostrar _MENU_ entradas',
+                    info: 'Mostrando _START_ a _END_ de _TOTAL_ entradas',
+                    paginate: { previous: 'Anterior', next: 'Siguiente' }
+                };
+                const buttons = [
+                    { extend: 'excelHtml5', text: '<i class="fas fa-file-excel"></i> Excel', className: 'admin-index-export-button admin-index-export-button--excel' },
+                    { extend: 'csvHtml5', text: '<i class="fas fa-file-csv"></i> CSV', className: 'admin-index-export-button admin-index-export-button--csv' },
+                    { extend: 'pdfHtml5', text: '<i class="fas fa-file-pdf"></i> PDF', className: 'admin-index-export-button admin-index-export-button--pdf' },
+                    { extend: 'copy', text: '<i class="fas fa-copy"></i> Copiar', className: 'admin-index-export-button admin-index-export-button--copy' }
+                ];
+
+                if (typeof $ !== 'undefined' && $.fn.dataTable) {
+                    $('#table-instituciones').DataTable({
+                        pagingType: 'simple_numbers',
+                        order: [],
+                        dom: 'Bfrtip',
+                        buttons: buttons,
+                        language: language
+                    });
+                }
+
+                const modalElement = document.getElementById('modalInstitucion');
+                const form = document.getElementById('formInstitucion');
+                const methodField = document.getElementById('methodField');
+                const modalTitle = document.getElementById('modalInstitucionLabel');
+                const inputNombre = document.getElementById('nombre');
+                const inputTitular = document.getElementById('titular');
+                const sectorizadoraSelect = document.getElementById('institucion_sectorizadora_id');
+
+                const btnAdd = document.getElementById('btnAddInstitucion');
+                if (btnAdd) {
+                    btnAdd.addEventListener('click', function() {
+                        modalTitle.innerText = 'Agregar Institución';
+                        form.action = "{{ route('panel-cat-instituciones.store') }}";
+                        methodField.value = 'POST';
+                        inputNombre.value = '';
+                        inputTitular.value = '';
+                        sectorizadoraSelect.value = '';
+                    });
+                }
+
+                document.body.addEventListener('click', function(e) {
+                    const btn = e.target.closest('.btn-edit-institucion');
+                    if (btn) {
+                        const data = JSON.parse(btn.getAttribute('data-institucion'));
+
+                        modalTitle.innerText = 'Editar Institución';
+                        let url = "{{ route('panel-cat-instituciones.update', ':id') }}";
+                        url = url.replace(':id', data.id);
+                        form.action = url;
+                        methodField.value = 'PUT';
+
+                        inputNombre.value = data.nombre;
+                        inputTitular.value = data.titular;
+                        sectorizadoraSelect.value = data.institucion_sectorizadora_id || '';
                     }
-                }
+                });
+
+                document.querySelectorAll('.confirmable-form').forEach((form) => {
+                    form.addEventListener('submit', function(e) {
+                        e.preventDefault();
+
+                        Swal.fire({
+                            title: '¿Estás seguro de eliminar esta institución?',
+                            text: '¡No se podrán revertir los cambios!',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: 'Sí, eliminar',
+                            cancelButtonText: 'Cancelar'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                form.submit();
+                            }
+                        });
+                    });
+                });
             });
-        }
-
-        // Vanilla JS for Modal Logic
-        const modalElement = document.getElementById('modalInstitucion');
-        const form = document.getElementById('formInstitucion');
-        const methodField = document.getElementById('methodField');
-        const modalTitle = document.getElementById('modalInstitucionLabel');
-        const inputNombre = document.getElementById('nombre');
-        const inputTitular = document.getElementById('titular');
-
-        // Add Button Listener
-        const btnAdd = document.getElementById('btnAddInstitucion');
-        if (btnAdd) {
-            btnAdd.addEventListener('click', function() {
-                modalTitle.innerText = 'Agregar Institución';
-                form.action = "{{ route('panel-cat-instituciones.store') }}";
-                methodField.value = 'POST';
-                inputNombre.value = '';
-                inputTitular.value = '';
-            });
-        }
-
-        // Edit Buttons Listener - Delegation might be better if DT redraws, but direct attach works for initial page
-        // Using delegation to handle DataTable pages if necessary (though simple loop works if no ajax pagination)
-        document.body.addEventListener('click', function(e) {
-            const btn = e.target.closest('.btn-edit-institucion');
-            if (btn) {
-                const data = JSON.parse(btn.getAttribute('data-institucion'));
-
-                modalTitle.innerText = 'Editar Institución';
-                let url = "{{ route('panel-cat-instituciones.update', ':id') }}";
-                url = url.replace(':id', data.id);
-                form.action = url;
-                methodField.value = 'PUT';
-
-                inputNombre.value = data.nombre;
-                inputTitular.value = data.titular;
-            }
-        });
-    });
-
-    // Validacion Eliminar (Vanilla-ish, uses Swal global)
-    document.addEventListener("submit", (e) => {
-        if (e.target.id && e.target.id.startsWith('form-delete-')) {
-            e.preventDefault();
-            Swal.fire({
-                title: "¿Estás seguro de eliminarlo?",
-                text: "¡No se podrán revertir los cambios!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "¡Si, borralo!",
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    e.target.submit();
-                }
-            });
-        }
-    });
-</script>
+        </script>
+    @endpush
+</x-app-layout>

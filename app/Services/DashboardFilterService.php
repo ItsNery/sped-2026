@@ -62,20 +62,35 @@ class DashboardFilterService
         $query = Indicador::forPlan($planId);
 
         if ($filters['eje_id']) {
-            $query->whereHasMorph('indicadorable', CatEje::class, fn ($q) => $q->whereIn('id', $filters['eje_id']));
+            $query->whereHasMorph('indicadorable', CatEje::class, fn ($q) => $q->whereIn('cat_ejes.id', $filters['eje_id']));
         }
 
         if ($filters['programa_tipo']) {
             $class = self::PROGRAM_TYPES[$filters['programa_tipo']];
             if ($filters['programa_id']) {
                 if ($class === CatProgramaDerivadoInstitucional::class) {
-                    $query->whereHas('programasInstitucionales', fn ($q) => $q->whereIn('id', $filters['programa_id']));
+                    $query->whereHas('programasInstitucionales', fn ($q) => $q->whereIn('cat_programas_derivados_institucionales.id', $filters['programa_id']));
                 } else {
-                    $query->whereHasMorph('indicadorable', $class, fn ($q) => $q->whereIn('id', $filters['programa_id']));
+                    $table = (new $class)->getTable();
+                    $query->whereHasMorph('indicadorable', $class, fn ($q) => $q->whereIn("{$table}.id", $filters['programa_id']));
                 }
             } else {
                 $query->whereHasMorph('indicadorable', $class);
             }
+        } elseif ($filters['programa_id']) {
+            // Si se eligió un programa sin especificar tipo, se filtra en todos los orígenes posibles.
+            $programaIds = $filters['programa_id'];
+            $query->where(function ($q) use ($programaIds) {
+                $q->whereHasMorph('indicadorable', [
+                    CatProgramaDerivadoSectorial::class,
+                    CatProgramaDerivadoEspecial::class,
+                    CatProgramaDerivadoRegional::class,
+                ], function ($q) use ($programaIds) {
+                    $table = $q->getModel()->getTable();
+                    $q->whereIn("{$table}.id", $programaIds);
+                })
+                    ->orWhereHas('programasInstitucionales', fn ($q) => $q->whereIn('cat_programas_derivados_institucionales.id', $programaIds));
+            });
         }
 
         if ($filters['institucion_id']) {

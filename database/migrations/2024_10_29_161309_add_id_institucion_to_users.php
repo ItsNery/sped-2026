@@ -15,7 +15,7 @@ class AddIdInstitucionToUsers extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->unsignedBigInteger('id_institucion')->nullable(); // nullable si el campo puede estar vacío
-            $table->foreign('id_institucion')->references('id')->on('institucions')->onDelete('cascade');
+            $table->foreign('id_institucion')->references('id')->on('instituciones')->onDelete('cascade');
         });
     }
 

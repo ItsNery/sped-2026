@@ -20,7 +20,7 @@ class CreateInstitucionUserTable extends Migration
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('institucion_id')->references('id')->on('institucions')->onDelete('cascade');
+            $table->foreign('institucion_id')->references('id')->on('instituciones')->onDelete('cascade');
         });
     }
 

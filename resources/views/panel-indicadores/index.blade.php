@@ -1,9 +1,17 @@
 <x-app-layout>
     @section('title', 'Indicadores: Inicio')
+    @section('jss-inicial')
+        <link rel="stylesheet" href="{{ asset('vendor/tom-select/tom-select.bootstrap5.min.css') }}">
+        <script src="{{ asset('vendor/tom-select/tom-select.complete.min.js') }}" defer></script>
+    @endsection
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Indicadores') }}
-        </h2>
+        <div class="exec-header admin-index-header">
+            <div>
+                <span class="exec-eyebrow">Seguimiento operativo</span>
+                <h2 class="exec-header__title">Gestión de indicadores</h2>
+            </div>
+            <span class="exec-header__plan">Consulta y actualización</span>
+        </div>
     </x-slot>
     @if ($message = Session::get('success'))
     <script>
@@ -15,64 +23,74 @@
         });
     </script>
     @endif
-    <div class="container mx-auto">
-        <div class="contenedor-principal mx-auto">
-            <div class="encabezado-lista">
-                <h2>Listado de Indicadores </h2>
+    <div class="admin-index">
+        <div class="contenedor-principal admin-index__surface mx-auto">
+            <div class="admin-index__heading">
+                <div>
+                    <span class="exec-eyebrow">Universo registrado</span>
+                    <h1>Listado de indicadores</h1>
+                </div>
+                <span class="admin-index__count">{{ count($indicadores) }} registros</span>
             </div>
             @auth
             @if (auth()->user()->isAdministrator())
             @if (isset($instituciones) && isset($tiposPrograma))
-            <div class="container row py-2">
-                <div class="col-md-6">
+            <section class="admin-index-filter" aria-labelledby="indicator-filter-title">
+                <div class="admin-index-filter__heading">
+                    <div>
+                        <span class="exec-eyebrow">Filtros de consulta</span>
+                        <h2 id="indicator-filter-title">Acota el listado</h2>
+                    </div>
+                    <span>Busca por institución o programa derivado</span>
+                </div>
+                <div class="admin-index-filter__grid">
+                <div class="admin-index-filter__field">
                     <!-- Select de Instituciones -->
                     <label for="institucionSelect" class="label-select">Institución:</label>
-                    <select id="institucionSelect" class="form-control" name="institucion">
+                    <select id="institucionSelect" name="institucion" autocomplete="off">
                         <option value="todos">Selecciona una Institución</option>
                         @foreach ($instituciones as $institucion)
                         <option value="{{ $institucion->id }}">{{ $institucion->nombre }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-6">
+                <div class="admin-index-filter__field">
                     <!-- Select de Programas -->
                     <label for="programa" class="label-select">Programa Derivado:</label>
-                    <select id="programa" name="programa" class="form-control">
+                    <select id="programa" name="programa" autocomplete="off">
                         <option value="">Selecciona un Programa</option>
                         @foreach ($tiposPrograma as $programa)
                         <option value="{{ $programa }}">{{ $programa }}</option>
                         @endforeach
                     </select>
                 </div>
-            </div>
+                </div>
+            </section>
             @can('crear-indicador')
-            <div class="boton d-flex justify-content-end mx-3 my-3">
-                <a href="{{ route('panel-indicadores.create') }}" class="text-decoration-none">
-                    <button class="button-add-new" type="button">
-                        <span class="button__text">Agregar</span>
-                        <span class="button__icon">
-                            @include('components.svg-add')
-                        </span>
-                    </button>
+            <div class="admin-index__actions">
+                <a href="{{ route('panel-indicadores.create') }}" class="button-add-new text-decoration-none">
+                    <span class="button__text">Agregar</span>
+                    <span class="button__icon">
+                        @include('components.svg-add')
+                    </span>
                 </a>
                 @can('subida-masiva-indicador')
-                <a href="{{ url('subir-indicadores-masivo') }}" class="text-decoration-none">
-                    <button class="button-add-new" type="button">
-                        <span class="button__text">Masivo</span>
-                        <span class="button__icon">
-                            @include('components.svg-add')
-                        </span>
-                    </button>
+                <a href="{{ url('subir-indicadores-masivo') }}" class="button-add-new text-decoration-none">
+                    <span class="button__text">Masivo</span>
+                    <span class="button__icon">
+                        @include('components.svg-add')
+                    </span>
                 </a>
                 @endcan
             </div>
             @endcan
-            <div class="container table-responsive" id="contenedor-tabla-indicadores">
-                <table id="tabla-indicadores" class="table table-striped table-bordered">
+            <div class="table-responsive admin-index-table-wrap" id="contenedor-tabla-indicadores">
+                <table id="tabla-indicadores" class="table table-striped table-bordered admin-index-table">
                     <thead>
                         <tr>
                             <th scope="col">No.</th>
                             <th>Indicador</th>
+                            <th>Institución responsable</th>
                             <th>Programa Derivado</th>
                             <th>Programa</th>
                             <th>Periodicidad</th>
@@ -97,6 +115,7 @@
                                     {{ $indicador->nombre }}
                                 </a>
                             </td>
+                            <td>{{ $indicador->institucion?->nombre ?? 'Sin institución' }}</td>
                             <td>
                                 {{ $indicador->programa_derivado }}
                             </td>
@@ -120,25 +139,24 @@
                             </td>
 
                             <td>
-                                <div class="d-flex justify-content-center rounded-lg text-lg"
-                                    role="group">
+                                <div class="admin-index-table-actions" role="group" aria-label="Acciones del indicador">
                                     <!-- botón editar -->
                                     @if ($indicador->indicador_validado == 1)
-                                    <span class="badge text-bg-success"> Validado </span>
+                                    <span class="admin-index-table-action admin-index-table-action--validated">Validado</span>
                                     @else
                                     <a href="{{ route('panel-indicadores.show', $indicador->id) }}"
-                                        class="badge text-bg-warning py-2">
+                                        class="admin-index-table-action admin-index-table-action--review">
                                         Revisar
                                     </a>
                                     @endif
-                                    @can('borrar-indicador')
+                                    @can('delete', $indicador)
                                     <!-- botón borrar -->
                                     <form action="{{ route('panel-indicadores.destroy', $indicador) }}"
                                         method="POST" class="formEliminar">
                                         @csrf
                                         @method('DELETE')
-                                        <button style="color: black" type="submit"
-                                            class="badge text-bg-danger">Borrar</button>
+                                        <button type="submit"
+                                            class="admin-index-table-action admin-index-table-action--delete">Borrar</button>
                                     </form>
                                     @endcan
                                 </div>
@@ -169,35 +187,45 @@
             </div>
             @endif
             @elseif(auth()->user()->hasRole('Enlace'))
-            <div class="container table-responsive">
-                <div class="container row py-2">
-                    <div class="col-6">
+            <div>
+                <section class="admin-index-filter" aria-labelledby="indicator-filter-title">
+                    <div class="admin-index-filter__heading">
+                        <div>
+                            <span class="exec-eyebrow">Filtros de consulta</span>
+                            <h2 id="indicator-filter-title">Acota el listado</h2>
+                        </div>
+                        <span>Busca por institución o programa derivado</span>
+                    </div>
+                    <div class="admin-index-filter__grid">
+                    <div class="admin-index-filter__field">
                         <!-- Select de Instituciones -->
-                        <label for="institucion">Institución:</label>
-                        <select id="institucionSelect" class="form-control" name="institucion">
+                        <label for="institucionSelect">Institución:</label>
+                        <select id="institucionSelect" name="institucion" autocomplete="off">
                             <option value="todos">Selecciona una Institución</option>
                             @foreach ($instituciones as $institucion)
                             <option value="{{ $institucion->id }}">{{ $institucion->nombre }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-6">
+                    <div class="admin-index-filter__field">
                         <!-- Select de Programas -->
                         <label for="programa">Programa Derivado:</label>
-                        <select id="programa" name="programa" class="form-control">
+                        <select id="programa" name="programa" autocomplete="off">
                             <option value="">Selecciona un Programa</option>
                             @foreach ($tiposPrograma as $programa)
                             <option value="{{ $programa }}">{{ $programa }}</option>
                             @endforeach
                         </select>
                     </div>
-                </div>
-                <div class="container" id="contenedor-tabla-indicadores">
-                    <table id="tabla-indicadores" class="table table-striped table-bordered">
+                    </div>
+                </section>
+                <div class="table-responsive admin-index-table-wrap" id="contenedor-tabla-indicadores">
+                    <table id="tabla-indicadores" class="table table-striped table-bordered admin-index-table">
                         <thead>
                             <tr>
                                 <th scope="col">No.</th>
                                 <th>Indicador</th>
+                                <th>Institución responsable</th>
                                 <th>Programa Derivado</th>
                                 <th>Programa</th>
                                 <th>Periodicidad</th>
@@ -219,6 +247,12 @@
 
                                 </td>
                                 <td>
+                                    {{ $indicador->institucion?->nombre ?? 'Sin institución' }}
+                                    @if (isset($institucionesDirectas) && !$institucionesDirectas->contains((int) $indicador->id_institucion))
+                                        <span class="badge text-bg-light border">Sectorizada</span>
+                                    @endif
+                                </td>
+                                <td>
                                     {{ $indicador->programa_derivado }}
                                 </td>
                                 <td>
@@ -231,16 +265,14 @@
                                     {{ $indicador->fecha_actualizacion }}
                                 </td>
                                 <td>
-                                    <div class="flex justify-center rounded-lg text-lg" role="group">
+                                    <div class="admin-index-table-actions" role="group" aria-label="Acciones del indicador">
                                         <!-- botón editar -->
                                         @if ($indicador->indicador_validado == 1)
-                                        <span class="badge text-bg-success"> Validado </span>
+                                        <span class="admin-index-table-action admin-index-table-action--validated">Validado</span>
                                         @else
                                         <a href="{{ route('panel-indicadores.show', $indicador->id) }}"
-                                            class="">
-                                            <button class="badge text-bg-warning">
-                                                Pendiente
-                                            </button>
+                                            class="admin-index-table-action admin-index-table-action--review">
+                                            Pendiente
                                         </a>
 
                                         <!-- botón borrar -->
@@ -319,12 +351,13 @@
             {{-- No mostrar nada --}}
             @endif
 
-            <div class="container table-responsive mt-2">
-                <table id="myTable" class="table table-striped" style="width:100%">
+            <div class="table-responsive admin-index-table-wrap mt-2">
+                <table id="myTable" class="table table-striped admin-index-table" style="width:100%">
                     <thead>
                         <tr>
                             <td scope="col">No.</td>
                             <th>Indicador</th>
+                            <th>Institución responsable</th>
                             <th>Programa Derivado</th>
                             <th>Programa</th>
                             <th>Periodicidad</th>
@@ -345,6 +378,12 @@
                                 </a>
                             </td>
                             <td>
+                                {{ $indicador->institucion?->nombre ?? 'Sin institución' }}
+                                @if (isset($institucionesDirectas) && !$institucionesDirectas->contains((int) $indicador->id_institucion))
+                                    <span class="badge text-bg-light border">Sectorizada</span>
+                                @endif
+                            </td>
+                            <td>
                                 {{ $indicador->programa_derivado }}
                             </td>
                             <td>
@@ -358,20 +397,18 @@
                             </td>
                             <td>
 
-                                <div class="flex justify-center rounded-lg text-lg" role="group">
+                                <div class="admin-index-table-actions" role="group" aria-label="Acciones del indicador">
                                     <!-- botón editar -->
                                     @if ($indicador->indicador_validado == 1)
-                                    <span class="badge text-bg-success"> Validado </span>
+                                    <span class="admin-index-table-action admin-index-table-action--validated">Validado</span>
                                     @elseif($indicador->indicador_validado == null)
                                     <a href="{{ route('panel-indicadores.show', $indicador->id) }}"
-                                        class="">
-                                        <button class="badge text-bg-warning">
-                                            Revisar
-                                        </button>
+                                        class="admin-index-table-action admin-index-table-action--review">
+                                        Revisar
                                     </a>
                                     @else
-                                    <span class="badge text-bg-warning"> Actualizado </span>
-                                    <span class="badge text-bg-info"> Sin Validar </span>
+                                    <span class="admin-index-table-action admin-index-table-action--updated">Actualizado</span>
+                                    <span class="admin-index-table-action admin-index-table-action--pending">Sin validar</span>
                                     @endif
                                 </div>
                             </td>
@@ -383,6 +420,7 @@
                         <tr>
                             <td scope="col">No.</td>
                             <th>Indicador</th>
+                            <th>Institución responsable</th>
                             <th>Programa Derivado</th>
                             <th>Programa</th>
                             <th>Periodicidad</th>
@@ -397,8 +435,7 @@
         </div>
     </div>
 
-</x-app-layout>
-
+    @push('scripts')
 <script>
     (function() {
         'use strict'
@@ -429,218 +466,199 @@
     })()
 </script>
 <script>
-    $(document).ready(function() {
-        $('#tabla-indicadores').DataTable({
-            "pagingType": "simple_numbers",
-            stateSave: true,
-            "order": [],
-            dom: 'Bfrtip',
-            buttons: [{
-                    extend: 'excelHtml5',
-                    text: '<i class="fas fa-file-excel"></i> Excel',
-                    className: 'btn btn-success'
-                },
-                {
-                    extend: 'csvHtml5',
-                    text: '<i class="fas fa-file-csv"></i> CSV',
-                    className: 'btn btn-primary'
-                },
-                {
-                    extend: 'pdfHtml5',
-                    text: '<i class="fas fa-file-pdf"></i> PDF',
-                    className: 'btn btn-danger'
-                },
-                {
-                    extend: 'copy',
-                    text: '<i class="fas fa-copy"></i> Copiar',
-                    className: 'btn btn-info'
-                }
-            ],
+    document.addEventListener('DOMContentLoaded', function () {
+        const language = {
+            search: 'Buscar:',
+            lengthMenu: 'Mostrar _MENU_ entradas',
+            info: 'Mostrando _START_ a _END_ de _TOTAL_ entradas',
+            paginate: { previous: 'Anterior', next: 'Siguiente' }
+        };
+        const buttons = [
+            { extend: 'excelHtml5', text: '<i class="fas fa-file-excel"></i> Excel', className: 'admin-index-export-button admin-index-export-button--excel' },
+            { extend: 'csvHtml5', text: '<i class="fas fa-file-csv"></i> CSV', className: 'admin-index-export-button admin-index-export-button--csv' },
+            { extend: 'pdfHtml5', text: '<i class="fas fa-file-pdf"></i> PDF', className: 'admin-index-export-button admin-index-export-button--pdf' },
+            { extend: 'copy', text: '<i class="fas fa-copy"></i> Copiar', className: 'admin-index-export-button admin-index-export-button--copy' }
+        ];
 
-            "language": {
-                "search": "Buscar:",
-                "lengthMenu": "Mostrar _MENU_ entradas",
-                "info": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-                "paginate": {
-                    "previous": "Anterior",
-                    "next": "Siguiente"
-                }
-            }
-        });
-        const institucionSelect = document.getElementById("institucionSelect");
-        const programaSelect = document.getElementById("programa");
+        function initializeTable(selector, stateSave) {
+            if (!document.querySelector(selector) || $.fn.DataTable.isDataTable(selector)) return;
 
-        // Función para guardar filtros en localStorage
-        function guardarFiltros() {
-            localStorage.setItem("institucionSeleccionada", institucionSelect.value);
-            localStorage.setItem("programaSeleccionado", programaSelect.value);
-        }
-
-        // Función para recuperar y aplicar filtros guardados
-        function aplicarFiltrosGuardados() {
-            let institucionGuardada = localStorage.getItem("institucionSeleccionada");
-            let programaGuardado = localStorage.getItem("programaSeleccionado");
-
-            if (institucionGuardada) {
-                institucionSelect.value = institucionGuardada;
-            }
-            if (programaGuardado) {
-                programaSelect.value = programaGuardado;
-            }
-
-            if (institucionGuardada !== "todos" || programaGuardado !== "") {
-                // Disparar manualmente los eventos de cambio para aplicar los filtros
-                institucionSelect.dispatchEvent(new Event("change"));
-                programaSelect.dispatchEvent(new Event("change"));
-            }
-        }
-
-        // Guardar filtros cuando el usuario cambia los selects
-        institucionSelect.addEventListener("change", () => {
-            guardarFiltros();
-        });
-
-        programaSelect.addEventListener("change", () => {
-            guardarFiltros();
-        });
-
-        // Aplicar filtros guardados al cargar la página
-        aplicarFiltrosGuardados();
-    });
-    $(document).ready(function() {
-        $('#myTable').DataTable({
-            "pagingType": "simple_numbers",
-            "order": [],
-            dom: 'Bfrtip',
-            buttons: [{
-                    extend: 'excelHtml5',
-                    text: '<i class="fas fa-file-excel"></i> Excel',
-                    className: 'btn btn-success'
-                },
-                {
-                    extend: 'csvHtml5',
-                    text: '<i class="fas fa-file-csv"></i> CSV',
-                    className: 'btn btn-primary'
-                },
-                {
-                    extend: 'pdfHtml5',
-                    text: '<i class="fas fa-file-pdf"></i> PDF',
-                    className: 'btn btn-danger'
-                },
-                {
-                    extend: 'copy',
-                    className: 'btn btn-info',
-                    text: '<i class="fas fa-copy"></i> Copiar',
-                }
-            ],
-            "language": {
-                "search": "Buscar:",
-                "lengthMenu": "Mostrar _MENU_ entradas",
-                "info": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-                "paginate": {
-                    "previous": "Anterior",
-                    "next": "Siguiente"
-                }
-            }
-        });
-    });
-
-    const institucionSelect = document.getElementById("institucionSelect")
-    const contenedorTablaIndicadores = document.getElementById("contenedor-tabla-indicadores")
-    const programa = document.getElementById("programa")
-
-    function selectIndicadores(url) {
-        fetch(url)
-            .then((response) => {
-                if (response.ok) {
-                    return response.text()
-                }
-            })
-            .then((data) => {
-                // contenedorTablaIndicadores.innerHTML = data
-                // Destruye DataTables si ya está inicializado
-                if ($.fn.DataTable.isDataTable('#tabla-indicadores')) {
-                    $('#tabla-indicadores').DataTable().destroy();
-                }
-
-                // Reemplaza el contenido de la tabla
-                contenedorTablaIndicadores.innerHTML = data;
-
-                // Inicializa DataTables nuevamente
-                $('#tabla-indicadores').DataTable({
-                    paging: true,
-                    searching: true,
-                    ordering: true,
-                    info: true,
-                    language: {
-                        "search": "Buscar:",
-                        "lengthMenu": "Mostrar _MENU_ entradas",
-                        "info": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-                        "paginate": {
-                            "previous": "Anterior",
-                            "next": "Siguiente"
-                        }
-                    },
-                    dom: 'Bfrtip',
-                    buttons: [{
-                            extend: 'excel',
-                            text: '<i class="fas fa-file-excel"></i> Excel',
-                            className: 'btn btn-success',
-                            filename: 'indicadores_excel'
-                        },
-                        {
-                            extend: 'csv',
-                            className: 'btn btn-success',
-                            text: '<i class="fas fa-file-csv"></i> CSV',
-                            className: 'btn btn-primary',
-                            filename: 'indicadores_csv'
-                        },
-                        {
-                            extend: 'pdf',
-                            text: '<i class="fas fa-file-pdf"></i> PDF',
-                            className: 'btn btn-danger',
-                            filename: 'indicadores_pdf'
-                        },
-                        {
-                            extend: 'copy',
-                            className: 'btn btn-info',
-                            text: '<i class="fas fa-copy"></i> Copiar',
-                        }
-                    ]
-                });
-            })
-            .catch((err) => {
-                console.err(err)
-            })
-    }
-
-    institucionSelect.addEventListener("change", (e) => {
-        let idInstitucion = e.target.value
-        let url = `filtrar-indicadores/${idInstitucion}`
-        selectIndicadores(url)
-    })
-
-    programa.addEventListener("change", (e) => {
-        let idInstitucion = institucionSelect.value
-        let programa = e.target.value
-
-        if (idInstitucion != '') {
-            let url = `filtrar-indicadores/${idInstitucion}/${programa}`
-            selectIndicadores(url)
-        } else {
-            // Si no se selecciona una institución, muestra una alerta
-            Swal.fire({
-                icon: 'warning',
-                title: '¡Atención!',
-                text: 'Por favor, selecciona una institución primero.',
-                confirmButtonText: 'Entendido'
-            }).then(() => {
-                institucionSelect.focus(); // Enfoca el select de institución
+            $(selector).DataTable({
+                pagingType: 'simple_numbers',
+                stateSave: stateSave,
+                order: [],
+                dom: 'Bfrtip',
+                buttons: buttons,
+                language: language
             });
-            // console.log("selecciona institución")
-            // institucionSelect.focus()
         }
-    })
+
+        initializeTable('#tabla-indicadores', true);
+        initializeTable('#myTable', false);
+
+        const institucionSelect = document.getElementById('institucionSelect');
+        const programaSelect = document.getElementById('programa');
+        const tableContainer = document.getElementById('contenedor-tabla-indicadores');
+
+        if (!institucionSelect || !programaSelect || !tableContainer) return;
+
+        const storedInstitution = localStorage.getItem('institucionSeleccionada');
+        const storedProgram = localStorage.getItem('programaSeleccionado');
+        const hasOption = (select, value) => Array.from(select.options).some((option) => option.value === value);
+
+        if (storedInstitution && hasOption(institucionSelect, storedInstitution)) {
+            institucionSelect.value = storedInstitution;
+        }
+        if (storedProgram && hasOption(programaSelect, storedProgram)) {
+            programaSelect.value = storedProgram;
+        }
+
+        let institutionControl = null;
+        let programControl = null;
+
+        if (typeof TomSelect !== 'undefined') {
+            const selectSettings = {
+                create: false,
+                allowEmptyOption: true,
+                render: {
+                    no_results: () => '<div class="no-results">Sin opciones compatibles</div>'
+                }
+            };
+            institutionControl = new TomSelect(institucionSelect, {
+                ...selectSettings,
+                placeholder: 'Buscar una institución...'
+            });
+            programControl = new TomSelect(programaSelect, {
+                ...selectSettings,
+                placeholder: 'Buscar un programa...'
+            });
+        }
+
+        let currentRequest;
+        let optionsRequest;
+
+        function replaceOptions(select, control, options, selectedValue, fallbackValue) {
+            const nextValue = options.some((option) => option.value === selectedValue)
+                ? selectedValue
+                : fallbackValue;
+
+            if (control) {
+                control.clear(true);
+                control.clearOptions();
+                control.addOptions(options);
+                control.setValue(nextValue, true);
+                return;
+            }
+
+            select.replaceChildren(...options.map((option) => new Option(option.text, option.value)));
+            select.value = nextValue;
+        }
+
+        function syncDependentOptions(source) {
+            if (optionsRequest) optionsRequest.abort();
+            optionsRequest = new AbortController();
+
+            const params = new URLSearchParams();
+            if (source !== 'programa') params.set('institucion', institucionSelect.value || 'todos');
+            if (source !== 'institucion' && programaSelect.value) params.set('programa', programaSelect.value);
+
+            return fetch(@json(route('filtros-indicadores.opciones')) + '?' + params.toString(), {
+                headers: { Accept: 'application/json' },
+                signal: optionsRequest.signal
+            })
+                .then((response) => {
+                    if (!response.ok) throw new Error('No fue posible actualizar las opciones de filtro.');
+                    return response.json();
+                })
+                .then((data) => {
+                    if (source !== 'institucion') {
+                        const institutionOptions = [
+                            { value: 'todos', text: 'Todas las instituciones' },
+                            ...data.instituciones.map((institution) => ({
+                                value: String(institution.id),
+                                text: institution.nombre
+                            }))
+                        ];
+                        replaceOptions(
+                            institucionSelect,
+                            institutionControl,
+                            institutionOptions,
+                            institucionSelect.value,
+                            'todos'
+                        );
+                    }
+
+                    if (source !== 'programa') {
+                        const programOptions = [
+                            { value: '', text: 'Todos los programas' },
+                            ...data.programas.map((program) => ({ value: program, text: program }))
+                        ];
+                        replaceOptions(
+                            programaSelect,
+                            programControl,
+                            programOptions,
+                            programaSelect.value,
+                            ''
+                        );
+                    }
+
+                    return true;
+                })
+                .catch((error) => {
+                    if (error.name !== 'AbortError') console.error(error);
+                    return false;
+                });
+        }
+
+        function refreshIndicators() {
+            const institution = institucionSelect.value || 'todos';
+            const program = programaSelect.value;
+            const url = @json(url('/filtrar-indicadores')) + '/' + encodeURIComponent(institution)
+                + (program ? '/' + encodeURIComponent(program) : '');
+
+            localStorage.setItem('institucionSeleccionada', institution);
+            localStorage.setItem('programaSeleccionado', program);
+
+            if (currentRequest) currentRequest.abort();
+            currentRequest = new AbortController();
+            tableContainer.setAttribute('aria-busy', 'true');
+
+            fetch(url, { signal: currentRequest.signal })
+                .then((response) => {
+                    if (!response.ok) throw new Error('No fue posible actualizar los indicadores.');
+                    return response.text();
+                })
+                .then((html) => {
+                    if ($.fn.DataTable.isDataTable('#tabla-indicadores')) {
+                        $('#tabla-indicadores').DataTable().destroy();
+                    }
+                    tableContainer.innerHTML = html;
+                    document.getElementById('tabla-indicadores')?.classList.add('admin-index-table');
+                    initializeTable('#tabla-indicadores', false);
+                })
+                .catch((error) => {
+                    if (error.name !== 'AbortError') console.error(error);
+                })
+                .finally(() => tableContainer.removeAttribute('aria-busy'));
+        }
+
+        institucionSelect.addEventListener('change', function () {
+            syncDependentOptions('institucion').then((updated) => {
+                if (updated) refreshIndicators();
+            });
+        });
+        programaSelect.addEventListener('change', function () {
+            syncDependentOptions('programa').then((updated) => {
+                if (updated) refreshIndicators();
+            });
+        });
+
+        syncDependentOptions().then(function (updated) {
+            if (updated && (institucionSelect.value !== 'todos' || programaSelect.value !== '')) {
+                refreshIndicators();
+            }
+        });
+    });
 </script>
 <script>
     const finalizarCapturaBtn = document.getElementById('finalizarCapturaBtn');
@@ -687,3 +705,5 @@
         });
     }
 </script>
+    @endpush
+</x-app-layout>

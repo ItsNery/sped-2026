@@ -13,6 +13,11 @@ return new class extends Migration
     public function up()
     {
         DB::statement("DROP VIEW IF EXISTS vista_consulta_indicadores");
+
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement("
             CREATE VIEW vista_consulta_indicadores AS
             SELECT 
@@ -30,7 +35,7 @@ return new class extends Migration
                 i.formula,
                 inst.nombre AS institucion_nombre,
                 inst.titular AS institucion_titular,
-                (SELECT GROUP_CONCAT(o.nombre SEPARATOR ', ') 
+                (SELECT GROUP_CONCAT(o.nombre SEPARATOR ', ')
                  FROM ods o 
                  INNER JOIN indicador_ods io ON io.id_ods = o.id 
                  WHERE io.id_indicador = i.id) AS ods_relacionados,

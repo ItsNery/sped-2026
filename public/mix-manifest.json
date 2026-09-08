@@ -1,4 +1,6 @@
 {
     "/js/app.js": "/js/app.js",
-    "/css/app.css": "/css/app.css"
+    "/css/app.css": "/css/app.css",
+    "/vendor/tom-select/tom-select.bootstrap5.min.css": "/vendor/tom-select/tom-select.bootstrap5.min.css",
+    "/vendor/tom-select/tom-select.complete.min.js": "/vendor/tom-select/tom-select.complete.min.js"
 }

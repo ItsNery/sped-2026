@@ -176,6 +176,13 @@ class DashboardController extends Controller
                 'programas' => $programas,
             ]);
 
+        $programasPrioritarios = $programasData
+            ->flatMap(fn ($grupo) => $grupo['programas'])
+            ->filter(fn ($programa) => ($programa['evaluables'] ?? 0) > 0 && $programa['avance'] !== null)
+            ->sortBy('avance')
+            ->take(8)
+            ->values();
+
         $institucionesData = $indicadoresPlan
             ->filter(fn ($indicador) => $indicador->id_institucion && $indicador->institucion)
             ->groupBy('id_institucion')
@@ -221,6 +228,36 @@ class DashboardController extends Controller
         );
         $filterOptions = $this->dashboardFilters->options($plan->id);
 
+        $indicadoresResumen = $indicadoresPlan
+            ->map(function ($indicador) use ($soloValidados) {
+                $resultado = $indicador->calcularSemaforizacion($soloValidados);
+                $datos = $indicador->datosAnuales
+                    ->filter(fn ($dato) => $dato->valor_dato !== null && trim((string) $dato->valor_dato) !== '');
+                $datosDisponibles = $soloValidados ? $datos->where('validado', true) : $datos;
+                $ultimoDato = $datosDisponibles->sortByDesc('anio')->first();
+                $fechaDato = $ultimoDato?->fecha_actualizacion;
+                try {
+                    $fechaDato = $fechaDato ? Carbon::parse($fechaDato)->format('d/m/Y') : 'Sin fecha';
+                } catch (\Throwable) {
+                    $fechaDato = 'Sin fecha';
+                }
+
+                return [
+                    'id' => $indicador->id,
+                    'nombre' => $indicador->nombre,
+                    'institucion' => $indicador->institucion?->nombre ?? 'Sin institución',
+                    'avance' => $resultado['avance'],
+                    'semaforizacion' => in_array($resultado['semaforizacion'], ['Excedido', 'Aceptable', 'Moderado', 'Insuficiente'], true)
+                        ? $resultado['semaforizacion']
+                        : 'No clasificado',
+                    'semaforo_color' => $this->getSemaforoColor($resultado['avance'] ?? null),
+                    'anio' => $resultado['anio_ultimo_dato'],
+                    'fecha_dato' => $fechaDato,
+                ];
+            })
+            ->sortBy('nombre')
+            ->values();
+
         return view('dashboard', compact(
             'plan',
             'planes',
@@ -243,7 +280,9 @@ class DashboardController extends Controller
             'fechaCorte',
             'trend',
             'filters',
-            'filterOptions'
+            'filterOptions',
+            'programasPrioritarios',
+            'indicadoresResumen'
         ));
     }
 

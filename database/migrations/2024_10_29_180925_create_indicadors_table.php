@@ -21,7 +21,7 @@ class CreateIndicadorsTable extends Migration
             $table->string('cod_tematica');
             $table->string('tematica');
             $table->unsignedBigInteger('id_institucion')->nullable(); 
-            $table->foreign('id_institucion')->references('id')->on('institucions')->onDelete('cascade');
+            $table->foreign('id_institucion')->references('id')->on('instituciones')->onDelete('cascade');
             $table->string('linea_base');
             $table->string('dato_linea_base');
             $table->string('meta_2024');
@@ -40,7 +40,6 @@ class CreateIndicadorsTable extends Migration
             $table->text('formula');
             $table->boolean('version_2024')->default(false);
             $table->boolean('indicador_validado')->default(false);
-            $table->integer('id_semaforo')->nullable();
             $table->timestamps();
         });
     }

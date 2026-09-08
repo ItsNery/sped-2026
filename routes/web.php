@@ -180,6 +180,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     ]);
 
     // --- Indicadores Base y Datos Anuales ---
+    Route::get('/filtros-indicadores/opciones', [IndicadorController::class, 'opcionesFiltro'])->name('filtros-indicadores.opciones');
     Route::resource('panel-indicadores', IndicadorController::class)->parameters([
         'panel-indicadores' => 'indicador'
     ]);
@@ -199,6 +200,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/panel-indicadores/generar-reporte/{id}', [IndicadorController::class, 'generarReporte'])->name('generarReporte');
 
     // --- Indicadores Municipales ---
+    Route::get('panel-municipios-convenio/{municipioConvenio}/indicadores', [MunicipioConvenioController::class, 'indicadores'])
+        ->name('panel-municipios-convenio.indicadores');
     Route::resource('panel-municipios-convenio', MunicipioConvenioController::class);
     Route::resource('panel-indicadores-municipales', IndicadorMunicipalController::class);
     Route::get('/indicadores-municipales/{id}', [MunicipioConvenioController::class, 'showMunicipal'])->name('indicadores.show_municipal');

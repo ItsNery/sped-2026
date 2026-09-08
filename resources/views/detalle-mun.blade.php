@@ -1,7 +1,7 @@
 @extends('layouts.plantilla')
 @section('title', 'Indicadores del Plan Municipal de Desarrollo de ' . $municipio->municipio->nombre)
 @section('meta-description',
-    'Sección dedicada al seguimiento a los Indicadores del Plan Municipal de Desarollo de ' .
+    'Sección dedicada al seguimiento a los Indicadores del Plan Municipal de Desarrollo de ' .
     $municipio->municipio->nombre .
     ' dentro del Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
     del Estado de Puebla')
@@ -13,7 +13,7 @@
     Evaluación del Desarrollo
     del Estado de Puebla')
 @section('og-description',
-    'Sección dedicada al seguimiento a los Indicadores del Plan Municipal de Desarollo de ' .
+    'Sección dedicada al seguimiento a los Indicadores del Plan Municipal de Desarrollo de ' .
     $municipio->municipio->nombre .
     ' dentro del Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
     del Estado de Puebla')
@@ -25,7 +25,7 @@
     Evaluación del Desarrollo
     del Estado de Puebla')
 @section('twitter-description',
-    'Sección dedicada al seguimiento a los Indicadores del Plan Municipal de Desarollo de ' .
+    'Sección dedicada al seguimiento a los Indicadores del Plan Municipal de Desarrollo de ' .
     $municipio->municipio->nombre .
     ' dentro del Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
     del Estado de Puebla')
@@ -49,14 +49,16 @@
         <div class="municipales-detalle__container">
             <section class="municipales-detalle__overview" aria-labelledby="municipal-objetivo-title">
                 <div class="municipales-detalle__municipio-icon">
-                    <img src="{{ asset($municipio->icono) }}" alt="{{ $municipio->municipio->nombre }}">
+                    <img src="{{ asset($municipio->icono) }}"
+                        alt="Ícono del municipio de {{ $municipio->municipio->nombre }}">
                 </div>
                 <div class="municipales-detalle__overview-content">
                     <span class="municipales__hero-tag">Seguimiento municipal</span>
                     <h2 id="municipal-objetivo-title">Objetivo</h2>
                     <p>{{ $municipio->objetivo ?? 'No disponible' }}</p>
-                    <a target="_blank" href="{{ asset($municipio->convenio) }}" class="municipales-detalle__document">
-                        <i class="fas fa-file-arrow-down"></i> Consultar convenio
+                    <a target="_blank" rel="noopener noreferrer" href="{{ asset($municipio->convenio) }}"
+                        class="municipales-detalle__document">
+                        <i class="fas fa-file-arrow-down" aria-hidden="true"></i> Consultar convenio
                     </a>
                 </div>
             </section>
@@ -67,21 +69,21 @@
                         <span class="municipales__hero-tag">Datos disponibles</span>
                         <h2 id="municipal-indicators-title">{{ $totalIndicadores }} indicadores</h2>
                     </div>
-                    <span class="municipales-detalle__section-icon"><i class="fas fa-chart-line"></i></span>
+                    <span class="municipales-detalle__section-icon" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
                 </div>
 
                 <div class="municipales-detalle__list">
-                    @foreach ($indicadores as $indicador)
+                    @forelse ($indicadores as $indicador)
                         <article class="municipales-indicador-card">
                             <a href="{{ route('mostrarFicha', ['indicador' => $indicador->slug]) }}" class="municipales-indicador-card__main">
                                 <div class="municipales-indicador-card__heading">
                                     <h3>{{ $indicador->indicador }}</h3>
                                 </div>
                                 <div class="municipales-indicador-card__result">
-                                    <span>Resultado {{ $indicador->aniomasreciente }}</span>
+                                    <span>{{ $indicador->aniomasreciente ? 'Resultado ' . $indicador->aniomasreciente : 'Último resultado' }}</span>
                                     <strong>{{ $indicador->datoaniomasreciente ?? 'N/D' }}</strong>
                                 </div>
-                                <i class="fas fa-arrow-up-right-from-square municipales-indicador-card__arrow"></i>
+                                <i class="fas fa-arrow-up-right-from-square municipales-indicador-card__arrow" aria-hidden="true"></i>
                             </a>
 
                             <div class="municipales-indicador-card__ods">
@@ -98,11 +100,17 @@
                                 <div><span>Meta 2027</span><strong>{{ $indicador->meta_2024 ?? 'N/D' }}</strong></div>
                             </div>
                         </article>
-                    @endforeach
+                    @empty
+                        <div class="municipales-detalle__empty" role="status">
+                            <i class="fas fa-chart-line" aria-hidden="true"></i>
+                            <h3>Sin indicadores publicados</h3>
+                            <p>Este municipio todavía no cuenta con indicadores públicos disponibles.</p>
+                        </div>
+                    @endforelse
                 </div>
 
                 <p class="municipales__note">
-                    <i class="fas fa-circle-info"></i>
+                    <i class="fas fa-circle-info" aria-hidden="true"></i>
                     La información contenida en esta sección es responsabilidad de los municipios, de acuerdo con lo establecido en sus Planes Municipales de Desarrollo.
                 </p>
             </section>

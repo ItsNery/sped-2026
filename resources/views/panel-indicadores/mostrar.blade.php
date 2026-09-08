@@ -1,9 +1,13 @@
 <x-app-layout>
     @section('title', 'Indicadores: Detalle')
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Indicador') }}
-        </h2>
+        <div class="exec-header indicator-detail-header">
+            <div>
+                <span class="exec-eyebrow">Ficha técnica</span>
+                <h2 class="exec-header__title">Detalle del indicador</h2>
+            </div>
+            <span class="exec-header__plan">Consulta y seguimiento</span>
+        </div>
     </x-slot>
     @if ($message = Session::get('success'))
         <script>
@@ -28,41 +32,37 @@
     @section('jss-inicial')
         <script src="{{ asset('assets-administrador/js/popper.min.js') }}"></script>
     @endsection
-    <div class="container py-12 mx-auto">
-        <div class="mx-auto contenedor-principal">
+    <div class="indicator-detail mx-auto">
+        <div class="mx-auto contenedor-principal indicator-detail__surface">
             <div class="encabezado-lista">
                 <h2>Detalles del indicador</h2>
             </div>
 
-            <div class="d-flex justify-content-end gap-3 pb-2 mx-2">
+            <div class="indicator-detail__actions">
                 @can('ver-indicador')
-                    <a href="{{ route('panel-indicadores.index') }}" class="text-decoration-none mt-2">
-                        <button type="button" class="button-action button-back">
-                            <span class="button__text">Regresar</span>
-                            <span class="button__icon">
-                                <svg class="svg" viewBox="0 0 24 24">
-                                    <path d="M15 18l-6-6 6-6" />
-                                </svg>
-                            </span>
-                        </button>
+                    <a href="{{ route('panel-indicadores.index') }}" class="button-action button-back text-decoration-none">
+                        <span class="button__text">Regresar</span>
+                        <span class="button__icon">
+                            <svg class="svg" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M15 18l-6-6 6-6" />
+                            </svg>
+                        </span>
                     </a>
                 @endcan
 
-                @can('editar-indicador')
-                    <a href="{{ route('panel-indicadores.edit', $indicador->id) }}" class="text-decoration-none mt-2">
-                        <!-- Botón Editar -->
-                        <button type="button" class="button-action button-edit">
-                            <span class="button__text">Editar</span>
-                            <span class="button__icon">
-                                <svg class="svg" viewBox="0 0 24 24">
-                                    <path
-                                        d="M3 17.25V21h3.75l11.06-11.06-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-                                </svg>
-                            </span>
-                        </button>
+                @can('update', $indicador)
+                    <a href="{{ route('panel-indicadores.edit', $indicador->id) }}"
+                        class="button-action button-edit text-decoration-none">
+                        <span class="button__text">Editar</span>
+                        <span class="button__icon">
+                            <svg class="svg" viewBox="0 0 24 24" aria-hidden="true">
+                                <path
+                                    d="M3 17.25V21h3.75l11.06-11.06-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                            </svg>
+                        </span>
                     </a>
                 @endcan
-                @can('validar-indicador')
+                @can('validate', $indicador)
                     <form action="{{ route('indicadores.toggleValidacion', $indicador->id) }}" method="POST"
                         style="display:inline;">
                         @csrf
@@ -71,10 +71,10 @@
                         <!-- Botón Validar -->
                         <button type="submit"
                             name="estado" value="1"
-                            class="button-action button-validate {{ $indicador->indicador_validado ? 'd-none' : '' }} mt-2">
+                            class="button-action button-validate {{ $indicador->indicador_validado ? 'd-none' : '' }}">
                             <span class="button__text">Validar ficha</span>
                             <span class="button__icon">
-                                <svg class="svg" viewBox="0 0 24 24">
+                                <svg class="svg" viewBox="0 0 24 24" aria-hidden="true">
                                     <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" fill="none"
                                         stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
@@ -84,10 +84,10 @@
                         <!-- Botón Desvalidar -->
                         <button type="submit"
                             name="estado" value="0"
-                            class="button-action button-unvalidate {{ $indicador->indicador_validado ? '' : 'd-none' }} mt-2">
+                            class="button-action button-unvalidate {{ $indicador->indicador_validado ? '' : 'd-none' }}">
                             <span class="button__text">Invalidar ficha</span>
                             <span class="button__icon">
-                                <svg class="svg" viewBox="0 0 24 24">
+                                <svg class="svg" viewBox="0 0 24 24" aria-hidden="true">
                                     <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" fill="none"
                                         stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
@@ -159,26 +159,24 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="custom-section-title"><i class="fa-solid fa-signal"></i>Estatus</div>
-                                <p class="d-flex justify-content-center">
+                                <div class="indicator-detail__status">
                                     @if ($indicador->indicador_validado === 1)
-                                        {{-- @can('validar-indicador') --}}
-                                        <div class="btn btn-sm btn-success text-white">
-                                            <i class="fa-solid fa-check"></i> Validado
-                                        </div>
-                                        {{-- @endcan --}}
+                                        <span class="indicator-detail-status indicator-detail-status--validated">
+                                            <i class="fa-solid fa-check" aria-hidden="true"></i> Validado
+                                        </span>
                                     @elseif ($indicador->indicador_validado === null)
-                                        <div class="btn btn-sm btn-danger">
-                                            <i class="fa-solid fa-times"></i> Sin Actualizar
-                                        </div>
+                                        <span class="indicator-detail-status indicator-detail-status--unavailable">
+                                            <i class="fa-solid fa-times" aria-hidden="true"></i> Sin actualizar
+                                        </span>
                                     @else
-                                        <div class="btn btn-sm btn-info">
-                                            <i class="fa-solid fa-minus"></i> Actualizado
-                                        </div>
-                                        <div class="btn btn-sm btn-warning">
-                                            <i class="fa-solid fa-exclamation-triangle"></i> No Validado
-                                        </div>
+                                        <span class="indicator-detail-status indicator-detail-status--updated">
+                                            <i class="fa-solid fa-minus" aria-hidden="true"></i> Actualizado
+                                        </span>
+                                        <span class="indicator-detail-status indicator-detail-status--pending">
+                                            <i class="fa-solid fa-exclamation-triangle" aria-hidden="true"></i> No validado
+                                        </span>
                                     @endif
-                                </p>
+                                </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="custom-section-title"><i class="fa-regular fa-bookmark"></i>Temática</div>
@@ -216,7 +214,7 @@
                                 </div>
                                 <p>
                                     @if ($indicador->liga)
-                                        <a href="{{ $indicador->liga }}" target="_blank"
+                                        <a href="{{ $indicador->liga }}" target="_blank" rel="noopener noreferrer"
                                             title="Fuente de {{ $indicador->nombre }}">
                                             Enlace
                                         </a>
@@ -280,10 +278,10 @@
                 </div>
 
             </div>
-            <div class="encabezado-lista d-flex justify-content-between align-items-center">
+            <div class="encabezado-lista indicator-detail__section-heading">
                 <h2>Resultados Históricos Anuales</h2>
-                @can('agregar-dato-anual')
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                @can('addAnnualData', $indicador)
+                    <button type="button" class="indicator-detail-button indicator-detail-button--primary" data-bs-toggle="modal"
                         data-bs-target="#addYearModal">
                         <i class="fa fa-plus"></i> Añadir Año
                     </button>
@@ -291,7 +289,7 @@
             </div>
             @if (!auth()->user()->hasRole('Enlace dependencia'))
                 <div class="alert alert-light border mx-2 mt-3 mb-3 small" role="note">
-                    <i class="fa-solid fa-circle-info me-1 text-primary"></i>
+                    <i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i>
                     Los nuevos datos anuales y las actualizaciones deben validarse desde su propio año antes de publicarse.
                 </div>
             @endif
@@ -319,18 +317,26 @@
                     ->all();
             @endphp
 
-            <ul class="nav nav-tabs custom-tab-nav" id="myTab" role="tablist">
-                @foreach ($aniosTabs as $index => $year)
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link {{ $index == 0 ? 'active' : '' }}" id="tab-{{ $year }}"
-                            data-bs-toggle="tab" data-bs-target="#content-{{ $year }}" type="button"
-                            role="tab" aria-controls="content-{{ $year }}"
-                            aria-selected="{{ $index == 0 ? 'true' : 'false' }}">{{ $year }}</button>
-                    </li>
-                @endforeach
-            </ul>
+            @if (empty($aniosTabs))
+                <div class="indicator-detail__empty" role="status">
+                    <i class="fa-regular fa-calendar-xmark" aria-hidden="true"></i>
+                    No hay resultados anuales registrados para este indicador.
+                </div>
+            @else
+                <div class="indicator-detail__tabs-scroll">
+                    <ul class="nav nav-tabs custom-tab-nav" id="myTab" role="tablist">
+                        @foreach ($aniosTabs as $index => $year)
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link {{ $index == 0 ? 'active' : '' }}" id="tab-{{ $year }}"
+                                    data-bs-toggle="tab" data-bs-target="#content-{{ $year }}" type="button"
+                                    role="tab" aria-controls="content-{{ $year }}"
+                                    aria-selected="{{ $index == 0 ? 'true' : 'false' }}">{{ $year }}</button>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
 
-            <div class="tab-content custom-tab-content" id="myTabContent">
+                <div class="tab-content custom-tab-content" id="myTabContent">
                 @foreach ($aniosTabs as $index => $year)
                     @php
                         // Busca el objeto DatoAnual específico para este año en la colección
@@ -366,19 +372,7 @@
                             </div>
                             <div class="col-md-4">
                                 @if ($datoAnualDelAnio)
-                                    @can('validar-indicador')
-                                        <form action="{{ route('indicadores.toggleValidacionAnual', ['id' => $indicador->id, 'year' => $year]) }}" method="POST" class="mb-3">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit"
-                                                name="estado" value="{{ $datoAnualDelAnio->validado ? 0 : 1 }}"
-                                                class="btn btn-sm {{ $datoAnualDelAnio->validado ? 'btn-outline-danger' : 'btn-outline-success' }}">
-                                                <i class="fa-solid {{ $datoAnualDelAnio->validado ? 'fa-xmark' : 'fa-check' }} me-1"></i>
-                                                {{ $datoAnualDelAnio->validado ? 'Invalidar dato ' : 'Validar dato ' }}{{ $year }}
-                                            </button>
-                                        </form>
-                                    @endcan
-                                    <span class="badge {{ $datoAnualDelAnio->validado ? 'text-bg-success' : 'text-bg-warning' }} mb-3">
+                                    <span class="indicator-detail-status {{ $datoAnualDelAnio->validado ? 'indicator-detail-status--validated' : 'indicator-detail-status--pending' }} mb-3">
                                         {{ $datoAnualDelAnio->validado ? 'Dato anual validado' : 'Pendiente de validación anual' }}
                                     </span>
                                 @endif
@@ -390,24 +384,24 @@
                                             <div class="pdfFound">
                                                 <a href="{{ asset('assets-administrador/docs/' . $datoAnualDelAnio->evidencia) }}"
                                                     download class="cursor-pointer">
-                                                    <img
-                                                        src="{{ asset('assets-administrador/img/Iconos captura-PDF_D.png') }}">
+                                                    <img src="{{ asset('assets-administrador/img/Iconos captura-PDF_D.png') }}"
+                                                        alt="Descargar evidencia de {{ $year }}">
                                                 </a>
                                                 <a href="{{ asset('assets-administrador/docs/' . $datoAnualDelAnio->evidencia) }}"
-                                                    title="Consultar evidencia" target="_blank"
+                                                    title="Consultar evidencia" target="_blank" rel="noopener noreferrer"
                                                     class="cursor-pointer">
-                                                    <label class="control-label cursor-pointer">
+                                                    <span class="control-label cursor-pointer">
                                                         Consultar Evidencia
                                                         {{ $year }}
-                                                    </label>
+                                                    </span>
                                                 </a>
                                             </div>
                                         @else
                                             <div class="notFound">
                                                 <img src="{{ asset('assets-administrador/img/sin_PDF.png') }}"
-                                                    class="downnotfound">
-                                                <label class="control-label">Sin Evidencia para
-                                                    {{ $year }}</label>
+                                                    class="downnotfound" alt="Sin evidencia disponible">
+                                                <span class="control-label">Sin Evidencia para
+                                                    {{ $year }}</span>
                                             </div>
                                         @endif
                                     </div>
@@ -427,27 +421,45 @@
                                     $puedeEditar = $esAdmin || (!$datoAnualValidado && !$usuarioFinalizado);
                                 @endphp
 
-                                @if ($puedeEditar)
-                                    {{-- Muestra el botón --}}
-                                    @can('editar-indicador-anual')
-                                        <button type="button" class="btn btn-sm btn-warning mt-3" data-bs-toggle="modal"
-                                            data-bs-target="#editModal-{{ $year }}">
-                                            <i class="fa-regular fa-pen-to-square"></i> Editar datos {{ $year }}
-                                        </button>
-                                    @endcan
-                                @else
-                                    {{-- Si NO puede editar, mostramos la razón (Solo para no-admins) --}}
-                                    @if ($datoAnualValidado)
-                                        <span class="badge text-bg-info"> No se puede editar (Dato anual validado) </span>
-                                    @elseif ($usuarioFinalizado)
-                                        <span class="badge text-bg-danger"> Periodo Finalizado </span>
+                                <div class="indicator-detail__year-actions">
+                                    @if ($puedeEditar)
+                                        {{-- Muestra el botón --}}
+                                        @can('updateAnnualData', $indicador)
+                                            <button type="button" class="indicator-detail-button indicator-detail-button--review" data-bs-toggle="modal"
+                                                data-bs-target="#editModal-{{ $year }}">
+                                                <i class="fa-regular fa-pen-to-square"></i> Editar datos {{ $year }}
+                                            </button>
+                                        @endcan
+                                    @else
+                                        {{-- Si NO puede editar, mostramos la razón (Solo para no-admins) --}}
+                                        @if ($datoAnualValidado)
+                                            <span class="indicator-detail-status indicator-detail-status--updated">No se puede editar: dato anual validado</span>
+                                        @elseif ($usuarioFinalizado)
+                                            <span class="indicator-detail-status indicator-detail-status--unavailable">Periodo finalizado</span>
+                                        @endif
                                     @endif
-                                @endif
+
+                                    @if ($datoAnualDelAnio)
+                                        @can('validate', $indicador)
+                                            <form action="{{ route('indicadores.toggleValidacionAnual', ['id' => $indicador->id, 'year' => $year]) }}" method="POST" class="indicator-detail__validate-form">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit"
+                                                    name="estado" value="{{ $datoAnualDelAnio->validado ? 0 : 1 }}"
+                                                    class="indicator-detail-button {{ $datoAnualDelAnio->validado ? 'indicator-detail-button--danger' : 'indicator-detail-button--primary' }}">
+                                                    <i class="fa-solid {{ $datoAnualDelAnio->validado ? 'fa-xmark' : 'fa-check' }} me-1"></i>
+                                                    {{ $datoAnualDelAnio->validado ? 'Invalidar dato ' : 'Validar dato ' }}{{ $year }}
+                                                </button>
+                                            </form>
+                                        @endcan
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </div>
                 @endforeach
-            </div>
+                </div>
+            @endif
 
             {{-- Modales para editar datos anuales --}}
             @foreach ($aniosTabs as $year)
@@ -455,16 +467,16 @@
                     // Busca el objeto DatoAnual específico para este año para el modal
                     $datoAnualParaModal = $indicador->datosAnuales->firstWhere('anio', $year);
                 @endphp
-                <div class="modal fade" id="editModal-{{ $year }}" tabindex="-1"
+                <div class="modal fade admin-index-modal" id="editModal-{{ $year }}" tabindex="-1"
                     aria-labelledby="editModalLabel-{{ $year }}" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
-                            <div class="modal-header">
+                            <div class="modal-header admin-index-modal__header">
                                 <h5 class="modal-title" id="editModalLabel-{{ $year }}">Editar Datos Anuales
                                     {{ $year }}
                                 </h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                    aria-label="Cerrar"></button>
                             </div>
                             <form
                                 action="{{ route('indicador.updateAnual', ['id' => $indicador->id, 'year' => $year]) }}"
@@ -476,7 +488,7 @@
                                         <label for="modal_valor_dato_{{ $year }}"
                                             class="form-label">Resultado/Dato
                                             {{ $year }}</label>
-                                        <input type="number" step="any"
+                                        <input type="number" step="any" id="modal_valor_dato_{{ $year }}"
                                             class="form-control @error('valor_dato', " updateAnualValidation_{$year}") is-invalid @enderror"
                                             name="valor_dato"
                                             value="{{ old('valor_dato', $datoAnualParaModal ? number_format((float) $datoAnualParaModal->valor_dato, 2, '.', '') : '') }}">
@@ -489,7 +501,8 @@
                                         <label for="modal_resultados_anual_{{ $year }}"
                                             class="form-label">Principales
                                             Resultados ({{ $year }})</label>
-                                        <textarea class="form-control @error('resultados_anual', " updateAnualValidation_{$year}") is-invalid @enderror"
+                                        <textarea id="modal_resultados_anual_{{ $year }}"
+                                            class="form-control @error('resultados_anual', " updateAnualValidation_{$year}") is-invalid @enderror"
                                             name="resultados_anual" rows="3">{{ old('resultados_anual', $datoAnualParaModal ? $datoAnualParaModal->resultados : '') }}</textarea>
                                         @error('resultados_anual', "updateAnualValidation_{$year}")
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -499,7 +512,8 @@
                                     <div class="mb-3">
                                         <label for="modal_observaciones_anual_{{ $year }}"
                                             class="form-label">Consideraciones Generales ({{ $year }})</label>
-                                        <textarea class="form-control @error('observaciones_anual', " updateAnualValidation_{$year}") is-invalid @enderror"
+                                        <textarea id="modal_observaciones_anual_{{ $year }}"
+                                            class="form-control @error('observaciones_anual', " updateAnualValidation_{$year}") is-invalid @enderror"
                                             name="observaciones_anual" rows="3">{{ old('observaciones_anual', $datoAnualParaModal ? $datoAnualParaModal->observaciones : '') }}</textarea>
                                         @error('observaciones_anual', "updateAnualValidation_{$year}")
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -510,7 +524,7 @@
                                         <label for="modal_evidencia_anual_{{ $year }}"
                                             class="form-label">Documento
                                             Evidencia ({{ $year }})</label>
-                                        <input type="file"
+                                        <input type="file" id="modal_evidencia_anual_{{ $year }}"
                                             class="form-control @error('evidencia_anual', " updateAnualValidation_{$year}") is-invalid @enderror"
                                             name="evidencia_anual" accept="application/pdf">
                                         @error('evidencia_anual', "updateAnualValidation_{$year}")
@@ -520,7 +534,7 @@
                                             <div class="mt-2">
                                                 Archivo actual:
                                                 <a href="{{ asset('assets-administrador/docs/' . $datoAnualParaModal->evidencia) }}"
-                                                    target="_blank">
+                                                     target="_blank" rel="noopener noreferrer">
                                                     Ver archivo ({{ $datoAnualParaModal->evidencia }})
                                                 </a>
                                                 <div class="form-check mt-1">
@@ -542,7 +556,7 @@
                                             Fecha de Actualización
                                             ({{ $year }})
                                         </label>
-                                        <input type="date"
+                                        <input type="date" id="modal_fecha_actualizacion_anual_{{ $year }}"
                                             class="form-control @error('fecha_actualizacion_anual', " updateAnualValidation_{$year}") is-invalid @enderror"
                                             name="fecha_actualizacion_anual"
                                             value="{{ old('fecha_actualizacion_anual', $datoAnualParaModal && $datoAnualParaModal->fecha_actualizacion ? Carbon\Carbon::parse($datoAnualParaModal->fecha_actualizacion)->format('Y-m-d') : '') }}">
@@ -552,9 +566,9 @@
                                     </div>
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary"
+                                    <button type="button" class="indicator-detail-button indicator-detail-button--neutral"
                                         data-bs-dismiss="modal">Cancelar</button>
-                                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                                    <button type="submit" class="indicator-detail-button indicator-detail-button--primary">Guardar cambios</button>
                                 </div>
                             </form>
                         </div>
@@ -573,15 +587,15 @@
             @endforeach
 
             {{-- Modal para añadir nuevo año --}}
-            @can('agregar-dato-anual')
-                <div class="modal fade" id="addYearModal" tabindex="-1" aria-labelledby="addYearModalLabel"
+            @can('addAnnualData', $indicador)
+                <div class="modal fade admin-index-modal" id="addYearModal" tabindex="-1" aria-labelledby="addYearModalLabel"
                     aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
-                            <div class="modal-header">
+                            <div class="modal-header admin-index-modal__header">
                                 <h5 class="modal-title" id="addYearModalLabel">Añadir Nuevo Año al Histórico</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                    aria-label="Cerrar"></button>
                             </div>
                             <form action="{{ route('indicador.storeAnual', $indicador->id) }}" method="POST"
                                 enctype="multipart/form-data">
@@ -652,9 +666,9 @@
                                     </div>
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary"
+                                    <button type="button" class="indicator-detail-button indicator-detail-button--neutral"
                                         data-bs-dismiss="modal">Cancelar</button>
-                                    <button type="submit" class="btn btn-primary">Guardar</button>
+                                    <button type="submit" class="indicator-detail-button indicator-detail-button--primary">Guardar</button>
                                 </div>
                             </form>
                         </div>

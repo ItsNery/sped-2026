@@ -12,6 +12,7 @@ class Institucion extends Model
     protected $fillable = [
         'nombre',
         'titular',
+        'institucion_sectorizadora_id',
     ];
     // Relación uno a muchos con Indicador
     public function indicadores()
@@ -28,5 +29,15 @@ class Institucion extends Model
     public function usuarios()
     {
         return $this->belongsToMany(User::class, 'institucion_user')->withTimestamps();
+    }
+
+    public function sectorizadora()
+    {
+        return $this->belongsTo(self::class, 'institucion_sectorizadora_id');
+    }
+
+    public function sectorizadas()
+    {
+        return $this->hasMany(self::class, 'institucion_sectorizadora_id');
     }
 }

@@ -13,7 +13,7 @@ class CreateInstitucionsTable extends Migration
      */
     public function up()
     {
-        Schema::create('institucions', function (Blueprint $table) {
+        Schema::create('instituciones', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
             $table->string('titular');
@@ -28,6 +28,6 @@ class CreateInstitucionsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('institucions');
+        Schema::dropIfExists('instituciones');
     }
 }

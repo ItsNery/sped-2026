@@ -1,8 +1,9 @@
-<table id="tabla-indicadores" class="table table-striped table-bordered">
+<table id="tabla-indicadores" class="table table-striped table-bordered admin-index-table">
     <thead>
         <tr>
             <th scope="col">No.</th>
             <th>Indicador</th>
+            <th>Institución responsable</th>
             <th>Programa Derivado</th>
             <th>Programa</th>
             <th>Periodicidad</th>
@@ -23,6 +24,12 @@
                     </a>
                 </td>
                 <td>
+                    {{ $indicador->institucion?->nombre ?? 'Sin institución' }}
+                    @if (isset($institucionesDirectas) && !$institucionesDirectas->contains((int) $indicador->id_institucion))
+                        <span class="badge text-bg-light border">Sectorizada</span>
+                    @endif
+                </td>
+                <td>
                     {{ $indicador->programa_derivado }}
                 </td>
                 <td>
@@ -35,16 +42,22 @@
                     {{ $indicador->fecha_actualizacion }}
                 </td>
                 <td>
-                    <div class="flex justify-center rounded-lg text-lg" role="group">
+                    <div class="admin-index-table-actions" role="group" aria-label="Acciones del indicador">
                         <!-- botón editar -->
                         @if ($indicador->indicador_validado == 1)
-                            <span class="badge text-bg-success"> Validado </span>
+                            <span class="admin-index-table-action admin-index-table-action--validated">Validado</span>
                         @else
-                            <a href="{{ route('panel-indicadores.edit', $indicador->id) }}" class="">
-                                <button class="btn btn-secondary">
-                                    Editar
-                                </button>
+                            @can('update', $indicador)
+                            <a href="{{ route('panel-indicadores.edit', $indicador->id) }}"
+                                class="admin-index-table-action admin-index-table-action--edit">
+                                Editar
                             </a>
+                            @else
+                                <a href="{{ route('panel-indicadores.show', $indicador->id) }}"
+                                    class="admin-index-table-action admin-index-table-action--review">
+                                    Revisar
+                                </a>
+                            @endcan
                             <!-- botón borrar -->
                             {{-- @if (auth()->user()->id === 1)
                                 <form action="{{ route('panel-indicadores.destroy', $indicador->id) }}" method="POST"

@@ -34,12 +34,14 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Services\AuditLogger;
 use App\Services\ActivePlanResolver;
+use App\Services\InstitutionAccessService;
 
 class IndicadorController extends Controller
 {
     public function __construct(
         private AuditLogger $auditLogger,
-        private ActivePlanResolver $activePlan
+        private ActivePlanResolver $activePlan,
+        private InstitutionAccessService $institutionAccess
     )
     {
     /**
@@ -62,37 +64,53 @@ class IndicadorController extends Controller
     {
         $user = auth()->user();
         $activePlanId = $this->activePlan->id();
-        $tiposPrograma = Indicador::select('programa_derivado')
-            ->whereNotNull('programa_derivado')
-            ->where('programa_derivado', '!=', '')
-            ->distinct()
-            ->orderBy('programa_derivado')
-            ->pluck('programa_derivado')
-            ->toArray();
 
         if ($user->isAdministrator()) {
-            $indicadores = Indicador::forPlan($activePlanId)->with('datosAnuales')->get();
+            $indicadores = Indicador::forPlan($activePlanId)->with(['datosAnuales', 'institucion'])->get();
+            $tiposPrograma = Indicador::forPlan($activePlanId)
+                ->whereNotNull('programa_derivado')
+                ->where('programa_derivado', '!=', '')
+                ->distinct()
+                ->orderBy('programa_derivado')
+                ->pluck('programa_derivado')
+                ->toArray();
             $instituciones = Institucion::whereHas('indicadores', fn ($query) => $query->forPlan($activePlanId))
                 ->where('id', '!=', 1)
                 ->get();
             return view('panel-indicadores.index', compact('indicadores', 'instituciones', 'tiposPrograma'));
         }
 
-        if ($user->hasRole('Enlace')) {
-            $institucionesAsignadas = $user->instituciones()->pluck('institucion_id');
+        if (!$user->isAdministrator() && $user->hasRole('Enlace')) {
+            $institucionesAsignadas = $this->institutionAccess->visibleInstitutionIds($user);
+            $institucionesDirectas = $this->institutionAccess->directInstitutionIds($user);
             $indicadores = Indicador::forPlan($activePlanId)
                 ->whereIn('id_institucion', $institucionesAsignadas)
+                ->with(['datosAnuales', 'institucion'])
                 ->orderBy('id')
                 ->paginate(1000);
-            $instituciones = $user->instituciones;
+            $tiposPrograma = Indicador::forPlan($activePlanId)
+                ->whereIn('id_institucion', $institucionesAsignadas)
+                ->whereNotNull('programa_derivado')
+                ->where('programa_derivado', '!=', '')
+                ->distinct()
+                ->orderBy('programa_derivado')
+                ->pluck('programa_derivado')
+                ->toArray();
+            $instituciones = Institucion::whereIn('id', $institucionesAsignadas)
+                ->whereHas('indicadores', fn ($query) => $query->forPlan($activePlanId))
+                ->orderBy('nombre')
+                ->get();
 
-            return view('panel-indicadores.index', compact('indicadores', 'tiposPrograma', 'instituciones'));
+            return view('panel-indicadores.index', compact('indicadores', 'tiposPrograma', 'instituciones', 'institucionesDirectas'));
         }
 
         if ($user->hasRole(['Enlace dependencia', 'Visualizador'])) {
+            $institucionesVisibles = $this->institutionAccess->visibleInstitutionIds($user);
+            $institucionesDirectas = $this->institutionAccess->directInstitutionIds($user);
             $indicadores = Indicador::forPlan($activePlanId)
-                ->where('id_institucion', $user->id_institucion)
+                ->whereIn('id_institucion', $institucionesVisibles)
                 ->where('id', '!=', 608)
+                ->with('institucion')
                 ->orderBy('id')
                 ->get();
 
@@ -101,7 +119,7 @@ class IndicadorController extends Controller
             $mostrarBotonFinalizar = $todosValidados && $user->finalizado != 1;
             $mostrarBotonGenerarReporte = $todosValidados && $user->finalizado == 1 && $user->reporte_generado != 1;
 
-            return view('panel-indicadores.index', compact('indicadores', 'mostrarBotonFinalizar', 'user', 'mostrarBotonGenerarReporte'));
+            return view('panel-indicadores.index', compact('indicadores', 'mostrarBotonFinalizar', 'user', 'mostrarBotonGenerarReporte', 'institucionesDirectas'));
         }
 
         $indicadores = Indicador::forPlan($activePlanId)
@@ -437,18 +455,7 @@ class IndicadorController extends Controller
 
         $indicador = $query->findOrFail($id);
 
-        if ($user->hasRole('Enlace')) {
-            $institucionesAsignadas = $user->instituciones->pluck('id');
-            if (!$institucionesAsignadas->contains($indicador->id_institucion)) {
-                abort(403, 'No tienes permiso para acceder a este indicador.');
-            }
-        }
-
-        if ($user->hasRole(['Enlace dependencia', 'Visualizador'])) {
-            if ($user->id_institucion !== $indicador->id_institucion) {
-                abort(403, 'No tienes permiso para acceder a este indicador.');
-            }
-        }
+        $this->authorize('view', $indicador);
 
         if ($user->isAdministrator()) {
             return view('panel-indicadores.mostrar', compact('indicador'));
@@ -464,25 +471,11 @@ class IndicadorController extends Controller
      */
     public function edit($id)
     {
-        /** @var User */
-        $user = auth()->user();
-
         $indicador = Indicador::forPlan($this->activePlan->id())
             ->with(['datosAnuales', 'programasInstitucionales'])
             ->findOrFail($id);
 
-        if ($user->hasRole('Enlace')) {
-            $institucionesAsignadas = $user->instituciones->pluck('id');
-            if (!$institucionesAsignadas->contains($indicador->id_institucion)) {
-                abort(403, 'No tienes permiso para editar este indicador.');
-            }
-        }
-
-        if ($user->hasRole(['Enlace dependencia', 'Visualizador'])) {
-            if ($user->id_institucion !== $indicador->id_institucion) {
-                abort(403, 'No tienes permiso para editar este indicador.');
-            }
-        }
+        $this->authorize('update', $indicador);
 
         $instituciones = Institucion::where('id', '!=', 1)->get();
         $odeses = Odses::all();
@@ -525,20 +518,7 @@ class IndicadorController extends Controller
      */
     public function update(Request $request, Indicador $indicador)
     {
-        $user = auth()->user();
-
-        if ($user->hasRole('Enlace')) {
-            $institucionesAsignadas = $user->instituciones->pluck('id');
-            if (!$institucionesAsignadas->contains($indicador->id_institucion)) {
-                abort(403, 'No tienes permiso para actualizar este indicador.');
-            }
-        }
-
-        if ($user->hasRole(['Enlace dependencia', 'Visualizador'])) {
-            if ($user->id_institucion !== $indicador->id_institucion) {
-                abort(403, 'No tienes permiso para actualizar este indicador.');
-            }
-        }
+        $this->authorize('update', $indicador);
 
         if (!$indicador || !$indicador->exists) {
             return redirect()->route('panel-indicadores.index')->with('error', 'Indicador no encontrado.');
@@ -870,21 +850,7 @@ class IndicadorController extends Controller
      */
     public function destroy(Indicador $indicador)
     {
-        /** @var User */
-        $user = auth()->user();
-
-        if ($user->hasRole('Enlace')) {
-            $institucionesAsignadas = $user->instituciones->pluck('id');
-            if (!$institucionesAsignadas->contains($indicador->id_institucion)) {
-                abort(403, 'No tienes permiso para eliminar este indicador.');
-            }
-        }
-
-        if ($user->hasRole(['Enlace dependencia', 'Visualizador'])) {
-            if ($user->id_institucion !== $indicador->id_institucion) {
-                abort(403, 'No tienes permiso para eliminar este indicador.');
-            }
-        }
+        $this->authorize('delete', $indicador);
 
         Log::debug("IndicadorController@destroy: Iniciando eliminación para Indicador ID: {$indicador->id}");
 
@@ -930,13 +896,15 @@ class IndicadorController extends Controller
         $user = auth()->user();
 
         if ($user->hasRole('Enlace')) {
-            $institucionesAsignadas = $user->instituciones->pluck('id');
+            $institucionesAsignadas = $this->institutionAccess->visibleInstitutionIds($user);
 
             if ($institucion !== 'todos' && !$institucionesAsignadas->contains($institucion)) {
                 return response()->json(['error' => 'No tienes acceso a esta institución.'], 403);
             }
 
             $indicadores = Indicador::query()
+                ->forPlan($this->activePlan->id())
+                ->with('institucion')
                 ->when($institucion !== 'todos', function ($query) use ($institucion) {
                     $query->where('id_institucion', $institucion);
                 })
@@ -945,8 +913,10 @@ class IndicadorController extends Controller
                 })
                 ->whereIn('id_institucion', $institucionesAsignadas)
                 ->get();
-        } else {
+        } elseif ($user->isAdministrator()) {
             $indicadores = Indicador::query()
+                ->forPlan($this->activePlan->id())
+                ->with('institucion')
                 ->when($institucion !== 'todos', function ($query) use ($institucion) {
                     $query->where('id_institucion', $institucion);
                 })
@@ -954,8 +924,54 @@ class IndicadorController extends Controller
                     $query->where('programa_derivado', $programa);
                 })
                 ->get();
+        } else {
+            abort(403);
         }
-        return View::make('panel-indicadores.tabla_indicadores', compact('indicadores', 'programa'));
+        $institucionesDirectas = $this->institutionAccess->directInstitutionIds($user);
+
+        return View::make('panel-indicadores.tabla_indicadores', compact('indicadores', 'programa', 'institucionesDirectas'));
+    }
+
+    public function opcionesFiltro(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = auth()->user();
+
+        abort_unless($user->isAdministrator() || $user->hasRole('Enlace'), 403);
+
+        $filters = $request->validate([
+            'institucion' => ['nullable', 'string', 'max:30'],
+            'programa' => ['nullable', 'string', 'max:255'],
+        ]);
+        $institution = $filters['institucion'] ?? 'todos';
+        $program = $filters['programa'] ?? null;
+        $query = Indicador::query()->forPlan($this->activePlan->id());
+
+        $this->institutionAccess->scopeIndicators($query, $user);
+
+        $programs = (clone $query)
+            ->when($institution !== 'todos', fn ($builder) => $builder->where('id_institucion', $institution))
+            ->whereNotNull('programa_derivado')
+            ->where('programa_derivado', '!=', '')
+            ->distinct()
+            ->orderBy('programa_derivado')
+            ->pluck('programa_derivado');
+
+        $institutionIds = (clone $query)
+            ->when($program, fn ($builder) => $builder->where('programa_derivado', $program))
+            ->whereNotNull('id_institucion')
+            ->distinct()
+            ->pluck('id_institucion');
+        $institutions = Institucion::query()
+            ->whereIn('id', $institutionIds)
+            ->where('id', '!=', 1)
+            ->orderBy('nombre')
+            ->get(['id', 'nombre']);
+
+        return response()->json([
+            'instituciones' => $institutions,
+            'programas' => $programs,
+        ]);
     }
 
     /**
@@ -966,6 +982,7 @@ class IndicadorController extends Controller
     public function toggleValidacion(Request $request, $id)
     {
         $indicador = Indicador::forPlan($this->activePlan->id())->findOrFail($id);
+        $this->authorize('validate', $indicador);
 
         $valorAnterior = (bool) $indicador->getRawOriginal('indicador_validado');
         $estadoValidacion = $request->has('estado')
@@ -1006,6 +1023,7 @@ class IndicadorController extends Controller
     public function toggleValidacionAnual(Request $request, $id, $year)
     {
         $indicador = Indicador::forPlan($this->activePlan->id())->findOrFail($id);
+        $this->authorize('validate', $indicador);
         $datoAnual = $indicador->datosAnuales()->where('anio', $year)->firstOrFail();
         $valorAnterior = (bool) $datoAnual->getRawOriginal('validado');
         $estadoValidacion = $request->has('estado')
@@ -1076,6 +1094,8 @@ class IndicadorController extends Controller
 
 
         $indicador = Indicador::forPlan($this->activePlan->id())->findOrFail($id);
+        $annualDataExists = $indicador->datosAnuales()->where('anio', $year)->exists();
+        $this->authorize($annualDataExists ? 'updateAnnualData' : 'addAnnualData', $indicador);
 
         $rules = [
             'valor_dato' => 'nullable|numeric',
@@ -2490,7 +2510,7 @@ class IndicadorController extends Controller
         }
 
         if ($user->hasRole('Enlace')) {
-            $allowed = $user->instituciones()->whereKey($institutionId)->exists();
+            $allowed = $this->institutionAccess->directInstitutionIds($user)->contains($institutionId);
         } elseif ($user->hasRole(['Enlace dependencia', 'Visualizador'])) {
             $allowed = (int) $user->id_institucion === $institutionId;
         } else {

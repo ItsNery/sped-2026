@@ -19,10 +19,13 @@
             'No clasificado' => '#A7AFB2',
         ];
         $totalSemaforo = max(array_sum($semaforizacionCounts), 1);
-        $programasPrioritarios = $programasData
-            ->flatMap(fn ($grupo) => $grupo['programas'])
-            ->sortBy(fn ($programa) => $programa['avance'] ?? -1)
-            ->take(8);
+        $estadoClases = [
+            'Excedido' => 'exec-status--excedido',
+            'Aceptable' => 'exec-status--aceptable',
+            'Moderado' => 'exec-status--moderado',
+            'Insuficiente' => 'exec-status--insuficiente',
+            'No clasificado' => 'exec-status--no-clasificado',
+        ];
     @endphp
 
     <div class="exec-dashboard">
@@ -232,7 +235,7 @@
                 </div>
                 <div class="exec-legend">
                     @foreach ($semaforizacionCounts as $estado => $cantidad)
-                        <div><i style="background: {{ $semaforoColores[$estado] }}"></i><a class="exec-legend__link" href="{{ route('dashboard.drill-down', ['plan_id' => $plan->id, 'solo_validados' => $soloValidados ? 1 : 0, 'semaforo' => [$estado]]) }}">{{ $estado }}</a><strong>{{ $cantidad }}</strong></div>
+                        <div><i style="background: {{ $semaforoColores[$estado] }}"></i><a class="exec-legend__link" href="{{ route('dashboard.drill-down', array_merge(request()->query(), ['semaforo' => [$estado]])) }}">{{ $estado }}</a><strong>{{ $cantidad }}</strong></div>
                     @endforeach
                 </div>
                 <div class="exec-method-note">
@@ -252,7 +255,7 @@
                     <div><span class="exec-quality__marker exec-quality__marker--red"></span><span>Sin dato anual</span><strong>{{ $quality['sin_datos'] }}</strong></div>
                     <div><span class="exec-quality__marker exec-quality__marker--sand"></span><span>Pendientes de validación</span><strong>{{ $quality['pendientes_validacion'] }}</strong></div>
                     <div><span class="exec-quality__marker exec-quality__marker--gray"></span><span>Sin meta válida</span><strong>{{ $quality['sin_meta'] }}</strong></div>
-                    <div><span class="exec-quality__marker exec-quality__marker--green"></span><span>Sin tendencia definida</span><strong>{{ $quality['sin_tendencia'] }}</strong></div>
+                    <div><span class="exec-quality__marker exec-quality__marker--gray"></span><span>Sin tendencia definida</span><strong>{{ $quality['sin_tendencia'] }}</strong></div>
                 </div>
                 <div class="exec-quality-footer">Último corte de datos: <strong>{{ $fechaCorte ? $fechaCorte->format('d/m/Y') : 'Sin fecha registrada' }}</strong></div>
             </section>
@@ -272,7 +275,12 @@
                 <div><span class="exec-quality__marker exec-quality__marker--sand"></span><span>Estables</span><strong>{{ $trend['comparaciones']['estables'] }}</strong></div>
                 <div><span class="exec-quality__marker exec-quality__marker--gray"></span><span>Sin comparación</span><strong>{{ $trend['comparaciones']['sin_comparacion'] }}</strong></div>
             </div>
-            <div id="exec-trend-chart" class="exec-trend-chart" role="img" aria-label="Evolución histórica del avance promedio"></div>
+            <div class="exec-chart-wrap">
+                <div id="exec-trend-chart" class="exec-trend-chart" role="img" aria-label="Evolución histórica del avance promedio"></div>
+                <div id="exec-chart-empty" class="exec-chart-empty" style="display: none;">
+                    <span>No hay datos de avance para el periodo filtrado.</span>
+                </div>
+            </div>
             <div class="exec-trend-tables">
                 <div>
                     <h3>Mayores mejoras</h3>
@@ -304,7 +312,7 @@
             </div>
             <div class="exec-axis-list">
                 @foreach ($ejesData as $eje)
-                    <a class="exec-axis exec-axis__link" href="{{ route('dashboard.drill-down', ['plan_id' => $plan->id, 'solo_validados' => $soloValidados ? 1 : 0, 'eje_id' => [$eje['id']]]) }}">
+                    <a class="exec-axis exec-axis__link" href="{{ route('dashboard.drill-down', array_merge(request()->query(), ['eje_id' => [$eje['id']]])) }}">
                         <div class="exec-axis__identity"><span style="background: {{ $eje['color'] }}">{{ $eje['numero'] }}</span><strong>{{ $eje['nombre'] }}</strong></div>
                         <div class="exec-axis__bar"><i style="width: {{ min(100, max(0, $eje['avance'] ?? 0)) }}%; background: {{ $eje['semaforo_color'] }}"></i></div>
                         <strong class="exec-axis__value" style="color: {{ $eje['semaforo_color'] }}">{{ number_format($eje['avance'] ?? 0, 1) }}%</strong>
@@ -324,7 +332,7 @@
                 </div>
                 <div class="exec-institution-list">
                     @forelse ($institucionesData as $institucion)
-                        <a class="exec-institution exec-institution__link" href="{{ route('dashboard.drill-down', ['plan_id' => $plan->id, 'solo_validados' => $soloValidados ? 1 : 0, 'institucion_id' => [$institucion['id']]]) }}">
+                        <a class="exec-institution exec-institution__link" href="{{ route('dashboard.drill-down', array_merge(request()->query(), ['institucion_id' => [$institucion['id']]])) }}">
                             <div class="exec-institution__name"><strong>{{ Str::limit($institucion['nombre'], 38) }}</strong><span>{{ $institucion['criticos'] }} señales</span></div>
                             <div class="exec-institution__bar"><i style="width: {{ min(100, max(0, $institucion['cobertura'])) }}%"></i></div>
                             <div class="exec-institution__meta"><span>{{ number_format($institucion['avance'] ?? 0, 1) }}% avance</span><span>{{ number_format($institucion['cobertura'], 0) }}% cobertura</span></div>
@@ -354,35 +362,114 @@
                 </div>
             </section>
         </div>
+
+        <section class="exec-section" aria-labelledby="indicators-title">
+            <div class="exec-section__heading">
+                <div>
+                    <span class="exec-eyebrow">Exploración del universo</span>
+                    <h2 id="indicators-title">Indicadores filtrados</h2>
+                </div>
+                <span class="exec-section__meta">{{ $indicadoresResumen->count() }} indicadores</span>
+            </div>
+            <div class="exec-priority-table-wrap">
+                <table class="exec-table" id="exec-indicators-table" style="width:100%">
+                    <caption class="visually-hidden">Indicadores del universo filtrado</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Indicador</th>
+                            <th scope="col">Institución</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col">Avance</th>
+                            <th scope="col">Último dato</th>
+                            <th scope="col"><span class="visually-hidden">Acción</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($indicadoresResumen as $item)
+                            <tr>
+                                <td data-label="Indicador">
+                                    <a href="{{ route('panel-indicadores.show', ['indicador' => $item['id'], 'plan_id' => $plan->id]) }}" class="exec-table__indicator">
+                                        {{ Str::limit($item['nombre'], 72) }}
+                                    </a>
+                                </td>
+                                <td data-label="Institución">{{ Str::limit($item['institucion'], 34) }}</td>
+                                <td data-label="Estado"><span class="exec-status {{ $estadoClases[$item['semaforizacion']] }}">{{ $item['semaforizacion'] }}</span></td>
+                                <td data-label="Avance" class="exec-table__number">
+                                    {{ $item['avance'] !== null ? number_format($item['avance'], 1) . '%' : 'N/D' }}
+                                </td>
+                                <td data-label="Último dato">{{ $item['fecha_dato'] }}{{ $item['anio'] ? ' · ' . $item['anio'] : '' }}</td>
+                                <td data-label="Acción" class="text-end"><a href="{{ route('panel-indicadores.show', ['indicador' => $item['id'], 'plan_id' => $plan->id]) }}" class="exec-table__action">Revisar <span aria-hidden="true">→</span></a></td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No hay indicadores en el universo seleccionado.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </div>
 
     @push('scripts')
         <script src="{{ asset('js/echarts.min.js') }}"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                var element = document.getElementById('exec-trend-chart');
-                if (!element || typeof echarts === 'undefined') return;
+                var series = @json($trend['series'] ?? []);
+                var chartElement = document.getElementById('exec-trend-chart');
+                var emptyElement = document.getElementById('exec-chart-empty');
 
-                var chart = echarts.init(element);
-                var series = @json($trend['series']);
-                chart.setOption({
-                    animation: false,
-                    tooltip: { trigger: 'axis', valueFormatter: function (value) { return value + '%'; } },
-                    grid: { left: 12, right: 20, top: 20, bottom: 28, containLabel: true },
-                    xAxis: { type: 'category', data: series.map(function (item) { return item.anio; }) },
-                    yAxis: { type: 'value', name: '%', min: 0 },
-                    series: [{
-                        name: 'Avance promedio',
-                        type: 'line',
-                        smooth: true,
-                        symbolSize: 7,
-                        data: series.map(function (item) { return item.avance; }),
-                        lineStyle: { width: 3, color: '#0c312d' },
-                        itemStyle: { color: '#9d2449' },
-                        areaStyle: { color: 'rgba(12, 49, 45, 0.08)' }
-                    }]
-                });
-                window.addEventListener('resize', function () { chart.resize(); });
+                if (series.length === 0) {
+                    if (chartElement) chartElement.style.display = 'none';
+                    if (emptyElement) emptyElement.style.display = 'flex';
+                } else if (chartElement && typeof echarts !== 'undefined') {
+                    var chart = echarts.init(chartElement);
+                    chart.setOption({
+                        animation: false,
+                        tooltip: { trigger: 'axis', valueFormatter: function (value) { return value + '%'; } },
+                        grid: { left: 12, right: 20, top: 20, bottom: 28, containLabel: true },
+                        xAxis: { type: 'category', data: series.map(function (item) { return item.anio; }) },
+                        yAxis: { type: 'value', name: '%', min: 0 },
+                        series: [{
+                            name: 'Avance promedio',
+                            type: 'line',
+                            smooth: true,
+                            symbolSize: 7,
+                            data: series.map(function (item) { return item.avance; }),
+                            lineStyle: { width: 3, color: '#0c312d' },
+                            itemStyle: { color: '#9d2449' },
+                            areaStyle: { color: 'rgba(12, 49, 45, 0.08)' }
+                        }]
+                    });
+                    window.addEventListener('resize', function () { chart.resize(); });
+                }
+
+                // Tabla de indicadores con paginación y exportación
+                if (document.getElementById('exec-indicators-table') && typeof $ !== 'undefined' && $.fn.DataTable) {
+                    const language = {
+                        search: 'Buscar:',
+                        lengthMenu: 'Mostrar _MENU_ entradas',
+                        info: 'Mostrando _START_ a _END_ de _TOTAL_ entradas',
+                        paginate: { previous: 'Anterior', next: 'Siguiente' }
+                    };
+                    const buttons = [
+                        { extend: 'excelHtml5', text: '<i class="fas fa-file-excel"></i> Excel', className: 'admin-index-export-button admin-index-export-button--excel' },
+                        { extend: 'csvHtml5', text: '<i class="fas fa-file-csv"></i> CSV', className: 'admin-index-export-button admin-index-export-button--csv' },
+                        { extend: 'pdfHtml5', text: '<i class="fas fa-file-pdf"></i> PDF', className: 'admin-index-export-button admin-index-export-button--pdf' },
+                        { extend: 'copy', text: '<i class="fas fa-copy"></i> Copiar', className: 'admin-index-export-button admin-index-export-button--copy' }
+                    ];
+
+                    $('#exec-indicators-table').DataTable({
+                        pagingType: 'simple_numbers',
+                        pageLength: 10,
+                        lengthMenu: [10, 25, 50, 100],
+                        order: [],
+                        stateSave: false,
+                        dom: 'Bfrtip',
+                        buttons: buttons,
+                        language: language
+                    });
+                }
             });
         </script>
     @endpush

@@ -29,9 +29,9 @@ class LoginAttemptController extends Controller
                 })
                 ->editColumn('status', function ($row) {
                     $badges = [
-                        'success' => '<span class="badge bg-success">Exitoso</span>',
-                        'failure' => '<span class="badge bg-danger">Fallido</span>',
-                        'locked' => '<span class="badge bg-warning text-dark">Bloqueado</span>',
+                        'success' => '<span class="indicator-detail-status indicator-detail-status--validated"><i class="fa-solid fa-check" aria-hidden="true"></i> Exitoso</span>',
+                        'failure' => '<span class="indicator-detail-status indicator-detail-status--unavailable"><i class="fa-solid fa-times" aria-hidden="true"></i> Fallido</span>',
+                        'locked' => '<span class="indicator-detail-status indicator-detail-status--pending"><i class="fa-solid fa-lock" aria-hidden="true"></i> Bloqueado</span>',
                     ];
                     return $badges[$row->status] ?? $row->status;
                 })
