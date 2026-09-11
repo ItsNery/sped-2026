@@ -70,65 +70,38 @@
 
 <body class="@yield('body-class')">
     @auth
-        <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
-            <div class="container">
-                <a class="navbar-brand" href="{{ url('/') }}" rel="noopener" target="_self" title="Inicio">
-                    <img src="{{ asset('img/logo_sped.png') }}" alt="" class="w-10p">
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarSupportedContent1" aria-controls="navbarSupportedContent1" aria-expanded="false"
-                    aria-label="{{ __('Toggle navigation') }}">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+        <div class="floating-user-menu">
+            <button type="button" class="floating-user-menu__button" id="floatingUserButton" aria-expanded="false"
+                aria-controls="floatingUserDropdown" aria-label="Abrir menú de usuario">
+                <span class="fas fa-user" aria-hidden="true"></span>
+            </button>
 
-                <div class="collapse navbar-collapse" id="navbarSupportedContent1">
-                    <!-- Left Side Of Navbar -->
-                    <ul class="navbar-nav mr-auto">
-                    </ul>
-                    <!-- Right Side Of Navbar -->
-                    <ul class="navbar-nav ml-auto">
-                        <!-- Authentication Links -->
-                        @guest
-                            @if (Route::has('login'))
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
-                                </li>
-                            @endif
-
-                            @if (Route::has('register'))
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
-                                </li>
-                            @endif
-                        @else
-                            <li class="nav-item dropdown">
-                                <a id="navbarDropdown" class="nav-link dropdown-toggle m-w-150" href="#"
-                                    role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
-                                    v-pre>
-                                    {{ Auth::user()->name }}
-                                </a>
-
-                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                                    <a class="dropdown-item" href="{{ route('dashboard') }}" target="_self" title="Panel"
-                                        rel="noopener">
-                                        {{ __('Panel') }}
-                                    </a>
-                                    <a class="dropdown-item" href="{{ route('logout') }}"
-                                        onclick="event.preventDefault();
-                                                        document.getElementById('logout-form').submit();"
-                                        title="Cerrar Sesión" rel="noopener">
-                                        {{ __('Cerrar Sesión') }}
-                                    </a>
-                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                        @csrf
-                                    </form>
-                                </div>
-                            </li>
-                        @endguest
-                    </ul>
+            <div class="floating-user-menu__dropdown" id="floatingUserDropdown" aria-hidden="true">
+                <div class="floating-user-menu__user">
+                    <span class="fas fa-user-circle" aria-hidden="true"></span>
+                    <div>
+                        <strong>{{ Auth::user()->name }}</strong>
+                        <small>Usuario</small>
+                    </div>
                 </div>
+
+                <div class="floating-user-menu__divider"></div>
+
+                <a class="floating-user-menu__item" href="{{ route('dashboard') }}" title="Panel">
+                    <span class="fas fa-tachometer-alt" aria-hidden="true"></span>
+                    <span>Panel</span>
+                </a>
+
+                <form id="logout-form" action="{{ route('logout') }}" method="POST">
+                    @csrf
+
+                    <button type="submit" class="floating-user-menu__item floating-user-menu__logout">
+                        <span class="fas fa-sign-out-alt" aria-hidden="true"></span>
+                        <span>Cerrar sesión</span>
+                    </button>
+                </form>
             </div>
-        </nav>
+        </div>
     @endauth
     <main>
         @include('layouts.header')
@@ -171,114 +144,11 @@
     </main>
     @yield('jss-final')
     <script>
-        window.addEventListener("load", function() {
-            let modal = document.getElementById("customSearchModal");
-
-            let lastFocusedElement = null;
-            let searchTimeout = null;
-            let searchRequest = null;
-            const searchInput = document.getElementById('indicatorSearchInput');
-            const searchStatus = document.getElementById('indicatorSearchStatus');
-            const searchResults = document.getElementById('indicatorSearchResults');
-
-            function renderIndicatorResults(items) {
-                searchResults.innerHTML = '';
-
-                if (!items.length) {
-                    searchStatus.textContent = 'No encontramos indicadores con ese criterio.';
-                    return;
-                }
-
-                searchStatus.textContent = items.length === 10
-                    ? 'Mostrando los primeros 10 resultados.'
-                    : items.length + (items.length === 1 ? ' indicador encontrado.' : ' indicadores encontrados.');
-
-                items.forEach(function(item) {
-                    const link = document.createElement('a');
-                    link.className = 'indicator-search-result';
-                    link.href = item.url;
-
-                    const name = document.createElement('strong');
-                    name.textContent = item.nombre;
-                    link.appendChild(name);
-
-                    const context = document.createElement('span');
-                    context.textContent = [item.contexto, item.institucion].filter(Boolean).join(' · ');
-                    link.appendChild(context);
-
-                    searchResults.appendChild(link);
-                });
-            }
-
-            function searchIndicators(value) {
-                const query = value.trim();
-                searchResults.innerHTML = '';
-
-                if (query.length < 2) {
-                    searchStatus.textContent = 'Escribe al menos dos caracteres para buscar.';
-                    return;
-                }
-
-                if (searchRequest) searchRequest.abort();
-                searchStatus.textContent = 'Buscando indicadores...';
-                searchRequest = new AbortController();
-
-                fetch('{{ route('public.buscar-indicadores') }}?q=' + encodeURIComponent(query), {
-                    headers: { 'Accept': 'application/json' },
-                    signal: searchRequest.signal
-                })
-                    .then(function(response) {
-                        if (!response.ok) throw new Error('Search request failed');
-                        return response.json();
-                    })
-                    .then(function(payload) { renderIndicatorResults(payload.data || []); })
-                    .catch(function(error) {
-                        if (error.name !== 'AbortError') searchStatus.textContent = 'No fue posible realizar la búsqueda.';
-                    });
-            }
-
-            window.openSearchModal = function(event) {
-                event?.preventDefault();
-                lastFocusedElement = document.activeElement;
-                modal.classList.add("show");
-                modal.setAttribute('aria-hidden', 'false');
-                searchInput.value = '';
-                searchResults.innerHTML = '';
-                searchStatus.textContent = 'Escribe al menos dos caracteres para buscar.';
-                searchInput.focus();
-            };
-
-            window.closeSearchModal = function() {
-                modal.classList.remove("show");
-                modal.setAttribute('aria-hidden', 'true');
-                if (searchRequest) searchRequest.abort();
-                lastFocusedElement?.focus();
-            };
-
-            searchInput.addEventListener('input', function() {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(function() { searchIndicators(searchInput.value); }, 250);
-            });
-
-            document.getElementById('indicatorSearchForm').addEventListener('submit', function(event) {
-                event.preventDefault();
-                clearTimeout(searchTimeout);
-                searchIndicators(searchInput.value);
-            });
-
-            document.addEventListener('keydown', function(event) {
-                if (event.key === 'Escape' && modal.classList.contains('show')) {
-                    closeSearchModal();
-                }
-            });
-
-            window.onclick = function(event) {
-                if (event.target === modal) {
-                    closeSearchModal();
-                }
-            };
-        });
+        window.AppRoutes = {
+            buscarIndicadores: "{{ route('public.buscar-indicadores') }}"
+        };
     </script>
+    <script src="{{ asset('js/scripts-plantilla.js') }}"></script>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-PZQY1MBD1G"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -287,10 +157,8 @@
             dataLayer.push(arguments);
         }
         gtag('js', new Date());
-
         gtag('config', 'G-PZQY1MBD1G');
     </script>
-
 </body>
 
 </html>
