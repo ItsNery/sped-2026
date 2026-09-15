@@ -23,6 +23,7 @@ use App\Http\Controllers\LoginAttemptController;
 use App\Http\Controllers\DashboardGeneralController;
 use App\Http\Controllers\DashboardExportController;
 use App\Http\Controllers\DashboardDrillDownController;
+use App\Http\Controllers\ProgramaDerivadoReporteController;
 // use App\Http\Controllers\PublicProgramasController;
 
 /*
@@ -158,6 +159,12 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::get('/panel-avance-general', [DashboardGeneralController::class, 'adminIndex'])
         ->middleware('permission:ver-panel-avance-general')
         ->name('admin.avance-general');
+    Route::get('/panel-reportes-programas', [ProgramaDerivadoReporteController::class, 'index'])
+        ->name('panel-reportes-programas.index');
+    Route::get('/panel-reportes-programas/{tipo}/{programa}', [ProgramaDerivadoReporteController::class, 'show'])
+        ->whereIn('tipo', ['sectoriales', 'especiales', 'regionales', 'institucionales'])
+        ->whereNumber('programa')
+        ->name('panel-reportes-programas.show');
     Route::get('/usuarios/{id}/indicadores', [DashboardController::class, 'mostrarIndicadores'])
         ->name('usuarios.indicadores');
 

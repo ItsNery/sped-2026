@@ -23,12 +23,9 @@ class InstitucionController extends Controller
      */
     public function index()
     {
-        $instituciones = Institucion::with('sectorizadora')->orderBy('nombre')->get();
-        $institucionesSectorizadoras = Institucion::whereNull('institucion_sectorizadora_id')
-            ->orderBy('nombre')
-            ->get(['id', 'nombre']);
+        $instituciones = Institucion::orderBy('nombre')->get();
 
-        return view('panel-instituciones.index', compact('instituciones', 'institucionesSectorizadoras'));
+        return view('panel-instituciones.index', compact('instituciones'));
     }
 
     /**
@@ -88,7 +85,7 @@ class InstitucionController extends Controller
      */
     public function update(Request $request, Institucion $institucion)
     {
-        $validated = $request->validate($this->rules($institucion));
+        $validated = $request->validate($this->rules());
 
         $institucion->update($validated);
 
@@ -108,13 +105,12 @@ class InstitucionController extends Controller
         // Usamos exists() que es más rápido que contar todos los registros
         $tieneDependencias = $institucion->indicadores()->exists() ||
             $institucion->usuario()->exists() ||
-            $institucion->usuarios()->exists() ||
-            $institucion->sectorizadas()->exists();
+            $institucion->usuarios()->exists();
 
         if ($tieneDependencias) {
             // 2. Si tiene relaciones, regresamos con un error
             return redirect()->route('panel-cat-instituciones.index')
-                ->with('error', 'No se puede eliminar la institución porque tiene indicadores, usuarios o instituciones sectorizadas asociadas.');
+                ->with('error', 'No se puede eliminar la institución porque tiene indicadores o usuarios asociados.');
         }
 
         // 3. Si está limpio, procedemos a borrar
@@ -124,34 +120,11 @@ class InstitucionController extends Controller
             ->with('success', 'Institución eliminada exitosamente.');
     }
 
-    private function rules(?Institucion $institucion = null): array
+    private function rules(): array
     {
         return [
             'nombre' => ['required', 'string', 'max:255'],
             'titular' => ['required', 'string', 'max:255'],
-            'institucion_sectorizadora_id' => [
-                'nullable',
-                'integer',
-                'exists:instituciones,id',
-                function (string $attribute, mixed $value, \Closure $fail) use ($institucion) {
-                    if ($value === null) {
-                        return;
-                    }
-
-                    if ($institucion && (int) $value === (int) $institucion->id) {
-                        $fail('Una institución no puede sectorizarse a sí misma.');
-                        return;
-                    }
-
-                    if (Institucion::whereKey($value)->whereNotNull('institucion_sectorizadora_id')->exists()) {
-                        $fail('La institución sectorizadora seleccionada ya depende de otra institución.');
-                    }
-
-                    if ($institucion?->sectorizadas()->exists()) {
-                        $fail('Una institución que ya tiene sectorizadas no puede depender de otra institución.');
-                    }
-                },
-            ],
         ];
     }
 }

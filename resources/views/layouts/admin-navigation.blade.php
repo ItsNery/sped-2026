@@ -90,6 +90,12 @@
                         <i class="fas fa-shield-halved" aria-hidden="true"></i><span>Accesos</span>
                     </a>
                 </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link {{ request()->routeIs('panel-reportes-programas*') ? 'active' : '' }}"
+                        href="{{ route('panel-reportes-programas.index') }}" title="Reportes por programa">
+                        <i class="fas fa-file-lines" aria-hidden="true"></i><span>Reportes</span>
+                    </a>
+                </li>
             @endif
 
             <li class="sidebar-divider" role="separator"></li>

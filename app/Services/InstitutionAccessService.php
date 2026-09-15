@@ -26,17 +26,7 @@ class InstitutionAccessService
             return Institucion::query()->pluck('id')->map(fn ($id) => (int) $id);
         }
 
-        $directIds = $this->directInstitutionIds($user);
-        if ($directIds->isEmpty()) {
-            return $directIds;
-        }
-
-        $sectorizedIds = Institucion::query()
-            ->whereIn('institucion_sectorizadora_id', $directIds)
-            ->pluck('id')
-            ->map(fn ($id) => (int) $id);
-
-        return $directIds->merge($sectorizedIds)->unique()->values();
+        return $this->directInstitutionIds($user);
     }
 
     public function canViewInstitution(User $user, ?int $institutionId): bool

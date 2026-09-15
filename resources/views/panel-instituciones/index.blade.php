@@ -6,7 +6,7 @@
                 <span class="exec-eyebrow">Catálogo institucional</span>
                 <h2 class="exec-header__title">Gestión de instituciones</h2>
             </div>
-            <span class="exec-header__plan">Sectorización y dependencias</span>
+            <span class="exec-header__plan">Dependencias responsables</span>
         </div>
     </x-slot>
     @if ($message = Session::get('success'))
@@ -48,7 +48,6 @@
                         <tr>
                             <th scope="col">Nombre</th>
                             <th scope="col">Titular</th>
-                            <th scope="col">Dependencia sectorizadora</th>
                             <th scope="col" class="text-center">Acciones</th>
                         </tr>
                     </thead>
@@ -57,7 +56,6 @@
                             <tr>
                                 <td>{{ $institucion->nombre }}</td>
                                 <td>{{ $institucion->titular }}</td>
-                                <td>{{ $institucion->sectorizadora?->nombre ?? 'Sin sectorización' }}</td>
                                 <td class="text-center">
                                     <div class="admin-index-table-actions" role="group" aria-label="Acciones de la institución">
                                         <button class="admin-index-table-action admin-index-table-action--edit btn-edit-institucion"
@@ -108,16 +106,6 @@
                             <label for="titular">Titular <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="titular" name="titular" required>
                         </div>
-                        <div class="form-group mb-3">
-                            <label for="institucion_sectorizadora_id">Dependencia sectorizadora</label>
-                            <select class="form-select" id="institucion_sectorizadora_id" name="institucion_sectorizadora_id">
-                                <option value="">Sin sectorización</option>
-                                @foreach ($institucionesSectorizadoras as $sectorizadora)
-                                    <option value="{{ $sectorizadora->id }}">{{ $sectorizadora->nombre }}</option>
-                                @endforeach
-                            </select>
-                            <small class="form-text text-muted">Solo se permite un nivel de sectorización.</small>
-                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="indicator-detail-button indicator-detail-button--neutral"
@@ -161,7 +149,6 @@
                 const modalTitle = document.getElementById('modalInstitucionLabel');
                 const inputNombre = document.getElementById('nombre');
                 const inputTitular = document.getElementById('titular');
-                const sectorizadoraSelect = document.getElementById('institucion_sectorizadora_id');
 
                 const btnAdd = document.getElementById('btnAddInstitucion');
                 if (btnAdd) {
@@ -171,7 +158,6 @@
                         methodField.value = 'POST';
                         inputNombre.value = '';
                         inputTitular.value = '';
-                        sectorizadoraSelect.value = '';
                     });
                 }
 
@@ -188,7 +174,6 @@
 
                         inputNombre.value = data.nombre;
                         inputTitular.value = data.titular;
-                        sectorizadoraSelect.value = data.institucion_sectorizadora_id || '';
                     }
                 });
 
