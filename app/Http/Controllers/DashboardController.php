@@ -396,6 +396,12 @@ class DashboardController extends Controller
      */
     public function mostrarIndicadores(Request $request, $id)
     {
+        $user = auth()->user();
+        abort_unless(
+            $user->isAdministrator() || $user->can('ver-panel-avance-general'),
+            403
+        );
+
         $usuario = User::with('instituciones.indicadores')->findOrFail($id);
 
         $filtro = $request->query('filtro');

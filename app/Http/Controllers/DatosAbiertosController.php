@@ -7,6 +7,7 @@ use App\Models\MunicipioConvenio;
 use App\Models\IndicadorMunicipal;
 use App\Models\ResultadoIndicadorMunicipal;
 use App\Models\IndicadorMunicipalODS;
+use App\Services\SpreadsheetValueSanitizer;
 use Illuminate\Http\Request;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -21,6 +22,11 @@ use Illuminate\Support\Facades\Cache;
 
 class DatosAbiertosController extends Controller
 {
+    public function __construct()
+    {
+        SpreadsheetValueSanitizer::bindStrings();
+    }
+
     public function municipiosIndicadores()
     {
         // 1. Obtener SOLO los MunicipioConvenio cuyo municipio relacionado TENGA indicadores
@@ -379,10 +385,11 @@ class DatosAbiertosController extends Controller
                     $filaParaCsv[] = $dato->$datoCol ?? '';
                     $filaParaCsv[] = $dato->$resultadoCol ?? '';
                 }
-                fputcsv($file, $filaParaCsv);
+                fputcsv($file, SpreadsheetValueSanitizer::sanitizeCsvRow($filaParaCsv));
             }
             fclose($file);
         };
         return Response::stream($callback, 200, $headersHttp);
     }
+
 }

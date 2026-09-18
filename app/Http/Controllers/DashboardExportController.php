@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Services\SpreadsheetValueSanitizer;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -39,6 +40,7 @@ class DashboardExportController extends Controller
     {
         $this->ensureAccess();
         $data = $this->dashboardData($request);
+        SpreadsheetValueSanitizer::bindStrings();
         $spreadsheet = new Spreadsheet();
         $spreadsheet->getProperties()
             ->setCreator('SPED')

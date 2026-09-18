@@ -5,7 +5,6 @@ use App\Http\Controllers\RolController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\IndicadorController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\DatosAnualesIndicadorController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\IndicadorMunicipalController;
 use App\Http\Controllers\CatalogoController;
@@ -191,7 +190,6 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::resource('panel-indicadores', IndicadorController::class)->parameters([
         'panel-indicadores' => 'indicador'
     ]);
-    Route::resource('panel-indicadores.datos-anuales', DatosAnualesIndicadorController::class)->shallow();
     Route::get('/subir-indicadores-masivo', function () {
         return view('panel-indicadores.prueba');
     })->middleware('permission:subida-masiva-indicador');

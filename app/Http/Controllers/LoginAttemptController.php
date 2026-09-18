@@ -11,12 +11,13 @@ class LoginAttemptController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        // Reuse permission for logs if needed, or define a new one later
-        // $this->middleware('permission:ver-solicitudes-acceso'); 
     }
 
     public function index(Request $request)
     {
+        $user = $request->user();
+        abort_unless($user->isAdministrator() || $user->can('ver-logs'), 403);
+
         if ($request->ajax()) {
             $query = LoginAttempt::with('user')->orderBy('created_at', 'desc');
 

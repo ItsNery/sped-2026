@@ -36,17 +36,19 @@ use App\Services\AuditLogger;
 use App\Services\ActivePlanResolver;
 use App\Services\InstitutionAccessService;
 
+use App\Services\SpreadsheetValueSanitizer;
 class IndicadorController extends Controller
 {
     public function __construct(
         private AuditLogger $auditLogger,
         private ActivePlanResolver $activePlan,
         private InstitutionAccessService $institutionAccess
-    )
-    {
-    /**
-     * Aplica el middleware de permisos a las acciones del controlador.
-     */
+    ) {
+        SpreadsheetValueSanitizer::bindStrings();
+
+        /**
+         * Aplica el middleware de permisos a las acciones del controlador.
+         */
         $this->middleware('permission:ver-indicador|crear-indicador|editar-indicador|borrar-indicador', ['only' => ['index']]);
         $this->middleware('permission:crear-indicador', ['only' => ['create', 'store']]);
         $this->middleware('permission:editar-indicador', ['only' => ['edit', 'update']]);
@@ -1595,7 +1597,7 @@ class IndicadorController extends Controller
             fputcsv($file, $columnas);
 
             foreach ($datosParaCsv as $fila) {
-                fputcsv($file, $fila);
+                fputcsv($file, SpreadsheetValueSanitizer::sanitizeCsvRow($fila));
             }
             fclose($file);
         };
