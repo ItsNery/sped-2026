@@ -30,7 +30,7 @@ class IndicadorMunicipalController extends Controller
         $this->middleware('permission:editar-indicador-municipal', ['only' => ['edit', 'update']]);
         $this->middleware('permission:borrar-indicador-municipal', ['only' => ['destroy']]);
         $this->middleware('permission:subir-resultados-indicador-municipal', ['only' => ['storeNuevosResultados']]);
-        $this->middleware('permission:editar-resultados-indicador-municipal', ['only' => ['guardarResultados']]);
+        $this->middleware('permission:editar-resultados-indicador-municipal', ['only' => ['actualizarResultadosIndMun', 'guardarResultados']]);
         $this->middleware('permission:validar-indicador-municipal', ['only' => ['toggleValidacion']]);
     }
     /**
@@ -219,9 +219,7 @@ class IndicadorMunicipalController extends Controller
         $periodicidades = PeriodicidadIndicadorMunicipal::all();
         $añosDisponibles = $indicador->resultados->pluck('año')->unique()->sort()->toArray();
         $datosResultadosIndicador = ResultadoIndicadorMunicipal::where('id_indicador', $id)->get();
-        if (auth()->user()->id_municipio !== $indicador->id_municipio) {
-            abort(403, 'No tienes permiso para ver este indicador.');
-        }
+        $this->ensureMunicipalityOwnership($indicador);
         return view('panel-indicadores-municipales.mostrar', compact('indicador', 'añosDisponibles', 'datosResultadosIndicador', 'periodicidades'));
     }
 
@@ -237,6 +235,7 @@ class IndicadorMunicipalController extends Controller
         $periodicidades = PeriodicidadIndicadorMunicipal::all();
         $odes = Odses::all();
         $indicador = IndicadorMunicipal::with(['resultados'])->findOrFail($id);
+        $this->ensureMunicipalityOwnership($indicador);
         if ($indicador->validado == 1
             && !auth()->user()->hasRole('Administrador Municipal')
             && !auth()->user()->isSuperAdministrator()) {
@@ -255,6 +254,7 @@ class IndicadorMunicipalController extends Controller
     public function update(Request $request, $id)
     {
         $indicador = IndicadorMunicipal::findOrFail($id);
+        $this->ensureMunicipalityOwnership($indicador);
 
         // Validación de los datos del formulario
         $validatedData = $request->validate([
@@ -296,6 +296,7 @@ class IndicadorMunicipalController extends Controller
     public function destroy($id)
     {
         $indicador = IndicadorMunicipal::findOrFail($id);
+        $this->ensureMunicipalityOwnership($indicador);
         $indicador->resultados()->delete();
         $indicador->ods()->detach();
         $indicador->delete();
@@ -318,7 +319,8 @@ class IndicadorMunicipalController extends Controller
         ]);
 
         foreach ($validatedData['resultados'] as $id => $data) {
-            $resultado = ResultadoIndicadorMunicipal::findOrFail($id);
+            $resultado = ResultadoIndicadorMunicipal::with('indicador')->findOrFail($id);
+            $this->ensureMunicipalityOwnership($resultado->indicador);
             $resultado->update([
                 'dato' => $data['dato'] ?? null,
                 'resultado' => $data['resultado'] ?? null,
@@ -359,7 +361,7 @@ class IndicadorMunicipalController extends Controller
      */
     public function guardarResultados(Request $request)
     {
-        $request->validate([
+        $validatedData = $request->validate([
             'id_indicador' => 'required|exists:indicadores_municipales,id',
             'ano' => 'required|integer|digits:4',
             'periodicidad_id' => 'required|exists:periodicidad_indicadores_municipales,id',
@@ -369,14 +371,15 @@ class IndicadorMunicipalController extends Controller
             'nuevos_registros.*.dato' => 'nullable|numeric',
             'nuevos_registros.*.resultado' => 'nullable|string',
         ]);
-        $idIndicador = $request->id_indicador;
-        $nuevosRegistros = $request->input('nuevos_registros');
+        $indicador = IndicadorMunicipal::findOrFail($validatedData['id_indicador']);
+        $this->ensureMunicipalityOwnership($indicador);
+        $nuevosRegistros = $validatedData['nuevos_registros'];
 
         foreach ($nuevosRegistros as $registro) {
             ResultadoIndicadorMunicipal::create([
-                'id_indicador' => $idIndicador,
+                'id_indicador' => $indicador->id,
                 'año' => $registro['año'],
-                'periodicidad_id' => $request->periodicidad_id,
+                'periodicidad_id' => $validatedData['periodicidad_id'],
                 'periodo' => $registro['periodo'],
                 'dato' => $registro['dato'] ?? null,
                 'resultado' => $registro['resultado'] ?? null,
@@ -394,6 +397,7 @@ class IndicadorMunicipalController extends Controller
     public function toggleValidacion($id)
     {
         $indicador = IndicadorMunicipal::findOrFail($id);
+        $this->ensureMunicipalityOwnership($indicador);
 
         $indicador->validado = !$indicador->validado;
         $indicador->save();
@@ -552,5 +556,14 @@ class IndicadorMunicipalController extends Controller
         $mime = mime_content_type($assetPath) ?: 'application/octet-stream';
 
         return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($assetPath));
+    }
+
+    private function ensureMunicipalityOwnership(IndicadorMunicipal $indicador): void
+    {
+        abort_unless(
+            (int) auth()->user()->id_municipio === (int) $indicador->id_municipio,
+            403,
+            'No tienes permiso para acceder a este indicador.'
+        );
     }
 }

@@ -4,9 +4,11 @@ namespace Tests\Feature;
 
 use App\Models\CatPlanEstatalDesarrollo;
 use App\Models\CatProgramaDerivadoSectorial;
+use App\Models\CatEje;
 use App\Models\DatoAnual;
 use App\Models\Indicador;
 use App\Models\Institucion;
+use App\Models\InstitutionReportStatus;
 use App\Models\User;
 use App\Services\InstitutionAccessService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -57,6 +59,8 @@ class ProgramaDerivadoReporteTest extends TestCase
             ->assertSee('Programa sectorial de prueba')
             ->assertSee('12.00')
             ->assertSee('indicador-bloque')
+            ->assertSee('Semáforo')
+            ->assertSee('Último dato')
             ->assertDontSee('99.00');
     }
 
@@ -86,6 +90,53 @@ class ProgramaDerivadoReporteTest extends TestCase
             app(InstitutionAccessService::class)->visibleInstitutionIds($user)->all()
         );
         $this->assertFalse(app(InstitutionAccessService::class)->canViewInstitution($user, $secondInstitution->id));
+    }
+
+    public function test_institution_user_report_includes_indicators_owned_by_another_user(): void
+    {
+        $plan = CatPlanEstatalDesarrollo::create([
+            'nombre' => 'PED de reporte institucional',
+            'gobernador' => 'Gobernador de prueba',
+        ]);
+        config()->set('sped.active_plan_id', $plan->id);
+        $institucion = Institucion::create([
+            'nombre' => 'Institución con nuevo usuario',
+            'titular' => 'Titular de prueba',
+        ]);
+        $propietarioAnterior = User::factory()->create(['id_institucion' => $institucion->id]);
+        $dummy = User::factory()->create([
+            'id_institucion' => $institucion->id,
+        ]);
+        $dummy->assignRole(Role::findOrCreate('Enlace dependencia', 'web'));
+        $eje = CatEje::create([
+            'nombre' => 'Eje de reporte institucional',
+            'numero' => 1,
+            'color' => '#000000',
+            'plan_id' => $plan->id,
+        ]);
+        $eje->indicadores()->create(array_merge($this->indicatorAttributes($institucion), [
+            'nombre' => 'Indicador asignado a otra persona',
+            'id_usuario' => $propietarioAnterior->id,
+            'programa_derivado' => 'Plan Estatal de Desarrollo',
+            'indicador_validado' => true,
+        ]));
+
+        $this->actingAs($dummy)
+            ->postJson(route('finalizar.captura'))
+            ->assertOk();
+
+        $this->assertDatabaseHas('institution_report_statuses', [
+            'institucion_id' => $institucion->id,
+            'plan_id' => $plan->id,
+            'finalizado_por_user_id' => $dummy->id,
+        ]);
+
+        $this->actingAs($dummy)
+            ->get(route('generarReporte', $dummy->id))
+            ->assertOk()
+            ->assertSee('Indicador asignado a otra persona');
+
+        $this->assertSame($dummy->id, InstitutionReportStatus::firstOrFail()->reporte_generado_por_user_id);
     }
 
     /**

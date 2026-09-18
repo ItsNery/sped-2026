@@ -6,6 +6,7 @@ use App\Models\Indicador;
 use App\Models\User;
 use App\Models\Odses;
 use App\Models\Institucion;
+use App\Models\InstitutionReportStatus;
 use Illuminate\Http\Request;
 // use App\Models\DatoAnualIndicador;
 use App\Models\CatEje;
@@ -35,8 +36,8 @@ use Illuminate\Validation\Rule;
 use App\Services\AuditLogger;
 use App\Services\ActivePlanResolver;
 use App\Services\InstitutionAccessService;
-
 use App\Services\SpreadsheetValueSanitizer;
+
 class IndicadorController extends Controller
 {
     public function __construct(
@@ -76,7 +77,7 @@ class IndicadorController extends Controller
                 ->orderBy('programa_derivado')
                 ->pluck('programa_derivado')
                 ->toArray();
-            $instituciones = Institucion::whereHas('indicadores', fn ($query) => $query->forPlan($activePlanId))
+            $instituciones = Institucion::whereHas('indicadores', fn($query) => $query->forPlan($activePlanId))
                 ->where('id', '!=', 1)
                 ->get();
             return view('panel-indicadores.index', compact('indicadores', 'instituciones', 'tiposPrograma'));
@@ -99,7 +100,7 @@ class IndicadorController extends Controller
                 ->pluck('programa_derivado')
                 ->toArray();
             $instituciones = Institucion::whereIn('id', $institucionesAsignadas)
-                ->whereHas('indicadores', fn ($query) => $query->forPlan($activePlanId))
+                ->whereHas('indicadores', fn($query) => $query->forPlan($activePlanId))
                 ->orderBy('nombre')
                 ->get();
 
@@ -118,10 +119,19 @@ class IndicadorController extends Controller
 
             $todosValidados = $indicadores->isEmpty() ? false : ($indicadores->where('indicador_validado', 1)->count() === $indicadores->count());
 
-            $mostrarBotonFinalizar = $todosValidados && $user->finalizado != 1;
-            $mostrarBotonGenerarReporte = $todosValidados && $user->finalizado == 1 && $user->reporte_generado != 1;
+            $reporteInstitucional = $user->hasRole('Enlace dependencia') && $user->id_institucion
+                ? InstitutionReportStatus::query()
+                ->where('institucion_id', $user->id_institucion)
+                ->where('plan_id', $activePlanId)
+                ->first()
+                : null;
+            $finalizado = $reporteInstitucional?->finalizado_at !== null;
+            $reporteGenerado = $reporteInstitucional?->reporte_generado_at !== null;
+            $puedeGenerarReporte = $user->hasRole('Enlace dependencia') && $user->id_institucion;
+            $mostrarBotonFinalizar = $puedeGenerarReporte && $todosValidados && !$finalizado;
+            $mostrarBotonGenerarReporte = $puedeGenerarReporte && $todosValidados && $finalizado;
 
-            return view('panel-indicadores.index', compact('indicadores', 'mostrarBotonFinalizar', 'user', 'mostrarBotonGenerarReporte', 'institucionesDirectas'));
+            return view('panel-indicadores.index', compact('indicadores', 'mostrarBotonFinalizar', 'user', 'mostrarBotonGenerarReporte', 'reporteGenerado', 'institucionesDirectas'));
         }
 
         $indicadores = Indicador::forPlan($activePlanId)
@@ -785,18 +795,14 @@ class IndicadorController extends Controller
                     $nombreArchivoEvidenciaParaGuardar = $nombreArchivoEvidenciaActual;
 
                     if (!empty($datoAnualData['eliminar_evidencia'])) {
-                        if ($nombreArchivoEvidenciaActual && file_exists(public_path('assets-administrador/docs/' . $nombreArchivoEvidenciaActual))) {
-                            unlink(public_path('assets-administrador/docs/' . $nombreArchivoEvidenciaActual));
-                        }
+                        $this->deleteEvidence($nombreArchivoEvidenciaActual);
                         $nombreArchivoEvidenciaParaGuardar = null;
                     }
 
                     $archivoEvidenciaSubido = $archivosEvidenciaEnRequest[$index]['evidencia_file'] ?? null;
                     if ($archivoEvidenciaSubido && $archivoEvidenciaSubido->isValid()) {
                         if ($nombreArchivoEvidenciaActual && ($nombreArchivoEvidenciaParaGuardar === null || $nombreArchivoEvidenciaActual !== $nombreArchivoEvidenciaParaGuardar)) {
-                            if (file_exists(public_path('assets-administrador/docs/' . $nombreArchivoEvidenciaActual))) {
-                                unlink(public_path('assets-administrador/docs/' . $nombreArchivoEvidenciaActual));
-                            }
+                            $this->deleteEvidence($nombreArchivoEvidenciaActual);
                         }
                         $extension = $archivoEvidenciaSubido->getClientOriginalExtension();
                         $nombreArchivoEvidenciaParaGuardar = "Evidencia_{$anio}_{$indicador->id}_" . time() . "_" . $index . "." . $extension;
@@ -823,9 +829,7 @@ class IndicadorController extends Controller
             if ($request->exists('datos_anuales')) {
                 $datosAnualesAEliminar = $indicador->datosAnuales()->whereNotIn('id', $idsDatosAnualesEnviadosYProcesados)->get();
                 foreach ($datosAnualesAEliminar as $dae) {
-                    if ($dae->evidencia && file_exists(public_path('assets-administrador/docs/' . $dae->evidencia))) {
-                        unlink(public_path('assets-administrador/docs/' . $dae->evidencia));
-                    }
+                    $this->deleteEvidence($dae->evidencia);
                     $dae->delete();
                 }
             }
@@ -859,13 +863,7 @@ class IndicadorController extends Controller
         DB::beginTransaction();
         try {
             foreach ($indicador->datosAnuales as $datoAnual) {
-                if ($datoAnual->evidencia) {
-                    $rutaArchivo = public_path('assets-administrador/docs/' . $datoAnual->evidencia);
-                    if (file_exists($rutaArchivo)) {
-                        unlink($rutaArchivo);
-                        Log::info("IndicadorController@destroy: Archivo de evidencia '{$datoAnual->evidencia}' eliminado para DatoAnual ID {$datoAnual->id} (Indicador ID {$indicador->id}).");
-                    }
-                }
+                $this->deleteEvidence($datoAnual->evidencia);
             }
 
             $indicador->datosAnuales()->delete();
@@ -952,7 +950,7 @@ class IndicadorController extends Controller
         $this->institutionAccess->scopeIndicators($query, $user);
 
         $programs = (clone $query)
-            ->when($institution !== 'todos', fn ($builder) => $builder->where('id_institucion', $institution))
+            ->when($institution !== 'todos', fn($builder) => $builder->where('id_institucion', $institution))
             ->whereNotNull('programa_derivado')
             ->where('programa_derivado', '!=', '')
             ->distinct()
@@ -960,7 +958,7 @@ class IndicadorController extends Controller
             ->pluck('programa_derivado');
 
         $institutionIds = (clone $query)
-            ->when($program, fn ($builder) => $builder->where('programa_derivado', $program))
+            ->when($program, fn($builder) => $builder->where('programa_derivado', $program))
             ->whereNotNull('id_institucion')
             ->distinct()
             ->pluck('id_institucion');
@@ -1150,9 +1148,7 @@ class IndicadorController extends Controller
             if (!empty($validatedData['eliminar_evidencia_anual'])) {
                 if ($nombreArchivoEvidenciaActual) {
                     Log::debug("IndicadorController@updateAnualData: [Ind.{$id}, Año {$year}] Eliminando evidencia actual '{$nombreArchivoEvidenciaActual}' por checkbox.");
-                    if (file_exists(public_path('assets-administrador/docs/' . $nombreArchivoEvidenciaActual))) {
-                        unlink(public_path('assets-administrador/docs/' . $nombreArchivoEvidenciaActual));
-                    }
+                    $this->deleteEvidence($nombreArchivoEvidenciaActual);
                 }
                 $nombreArchivoEvidenciaParaGuardar = null;
             }
@@ -1162,10 +1158,8 @@ class IndicadorController extends Controller
                 Log::debug("IndicadorController@updateAnualData: [Ind.{$id}, Año {$year}] Nuevo archivo de evidencia subido: " . $archivoEvidenciaSubido->getClientOriginalName());
 
                 if ($nombreArchivoEvidenciaActual && ($nombreArchivoEvidenciaParaGuardar === null || $nombreArchivoEvidenciaActual !== $nombreArchivoEvidenciaParaGuardar)) {
-                    if (file_exists(public_path('assets-administrador/docs/' . $nombreArchivoEvidenciaActual))) {
-                        unlink(public_path('assets-administrador/docs/' . $nombreArchivoEvidenciaActual));
-                        Log::debug("IndicadorController@updateAnualData: [Ind.{$id}, Año {$year}] Evidencia antigua '{$nombreArchivoEvidenciaActual}' eliminada para reemplazo.");
-                    }
+                    $this->deleteEvidence($nombreArchivoEvidenciaActual);
+                    Log::debug("IndicadorController@updateAnualData: [Ind.{$id}, Año {$year}] Evidencia antigua '{$nombreArchivoEvidenciaActual}' eliminada para reemplazo.");
                 }
                 $extension = $archivoEvidenciaSubido->getClientOriginalExtension();
                 $nombreArchivoEvidenciaParaGuardar = "Evidencia_{$year}_{$indicador->id}_" . time() . "." . $extension;
@@ -1216,13 +1210,34 @@ class IndicadorController extends Controller
      */
     public function finalizarCaptura(Request $request)
     {
-        $user = User::find($request->userId);
-        if ($user) {
-            $user->finalizado = 1;
-            $user->save();
+        /** @var User $user */
+        $user = $request->user();
+
+        if ($user->hasRole('Enlace dependencia') && $user->id_institucion) {
+            $todosValidados = Indicador::forPlan($this->activePlan->id())
+                ->where('id_institucion', $user->id_institucion)
+                ->exists();
+            $indicadoresPendientes = Indicador::forPlan($this->activePlan->id())
+                ->where('id_institucion', $user->id_institucion)
+                ->where(function ($query) {
+                    $query->whereNull('indicador_validado')
+                        ->orWhere('indicador_validado', false);
+                })
+                ->exists();
+
+            abort_if(!$todosValidados || $indicadoresPendientes, 422, 'Todos los indicadores institucionales deben estar validados.');
+
+            InstitutionReportStatus::updateOrCreate(
+                ['institucion_id' => $user->id_institucion, 'plan_id' => $this->activePlan->id()],
+                ['finalizado_at' => now(), 'finalizado_por_user_id' => $user->id]
+            );
+
             return response()->json(['success' => true]);
         }
-        return response()->json(['success' => false], 500);
+
+        $user->update(['finalizado' => true]);
+
+        return response()->json(['success' => true]);
     }
 
     /**
@@ -1239,16 +1254,42 @@ class IndicadorController extends Controller
             abort(403, 'Usuario no autenticado.');
         }
 
-        $user->load([
-            'institucion',
-            'indicadores.datosAnuales',
-            'indicadores.institucion'
-        ]);
+        abort_unless((int) $id === $user->id, 403);
 
-        $user->update([
-            'reporte_generado' => true,
-            'reporte_generado_at' => now(),
-        ]);
+        $user->load('institucion');
+
+        $indicadores = $user->hasRole('Enlace dependencia') && $user->id_institucion
+            ? Indicador::forPlan($this->activePlan->id())
+            ->where('id_institucion', $user->id_institucion)
+            ->with(['datosAnuales', 'institucion'])
+            ->orderBy('id')
+            ->get()
+            : $user->indicadores()
+            ->forPlan($this->activePlan->id())
+            ->with(['datosAnuales', 'institucion'])
+            ->orderBy('id')
+            ->get();
+
+        $user->setRelation('indicadores', $indicadores);
+
+        if ($user->hasRole('Enlace dependencia') && $user->id_institucion) {
+            $reporteInstitucional = InstitutionReportStatus::query()
+                ->where('institucion_id', $user->id_institucion)
+                ->where('plan_id', $this->activePlan->id())
+                ->first();
+
+            abort_unless($reporteInstitucional?->finalizado_at, 403, 'La captura institucional debe finalizarse antes de generar el reporte.');
+
+            $reporteInstitucional->update([
+                'reporte_generado_at' => now(),
+                'reporte_generado_por_user_id' => $user->id,
+            ]);
+        } else {
+            $user->update([
+                'reporte_generado' => true,
+                'reporte_generado_at' => now(),
+            ]);
+        }
 
         return view('panel-indicadores.generar-documento', compact('user'));
     }
@@ -2354,7 +2395,7 @@ class IndicadorController extends Controller
     {
         $allRows = $spreadsheet->getActiveSheet()->toArray();
         $rows = array_values(array_filter($allRows, function ($row) {
-            return count(array_filter($row, fn ($cell) => trim((string) $cell) !== '')) > 0;
+            return count(array_filter($row, fn($cell) => trim((string) $cell) !== '')) > 0;
         }));
 
         if (!$rows) {
@@ -2404,7 +2445,7 @@ class IndicadorController extends Controller
         $normalized = mb_strtolower(trim($name));
 
         return CatPlanEstatalDesarrollo::all()->first(
-            fn ($plan) => mb_strtolower(trim($plan->nombre)) === $normalized
+            fn($plan) => mb_strtolower(trim($plan->nombre)) === $normalized
         );
     }
 
@@ -2416,7 +2457,7 @@ class IndicadorController extends Controller
         if ($isEje) {
             $name = $ejeName ?: $programName;
             $eje = CatEje::where('plan_id', $plan->id)->get()->first(
-                fn ($item) => mb_strtolower(trim($item->nombre)) === mb_strtolower(trim($name))
+                fn($item) => mb_strtolower(trim($item->nombre)) === mb_strtolower(trim($name))
             );
 
             if (!$eje) {
@@ -2432,12 +2473,14 @@ class IndicadorController extends Controller
         }
 
         $modelClass = null;
-        foreach ([
-            'sectorial' => CatProgramaDerivadoSectorial::class,
-            'especial' => CatProgramaDerivadoEspecial::class,
-            'regional' => CatProgramaDerivadoRegional::class,
-            'institucional' => CatProgramaDerivadoInstitucional::class,
-        ] as $keyword => $class) {
+        foreach (
+            [
+                'sectorial' => CatProgramaDerivadoSectorial::class,
+                'especial' => CatProgramaDerivadoEspecial::class,
+                'regional' => CatProgramaDerivadoRegional::class,
+                'institucional' => CatProgramaDerivadoInstitucional::class,
+            ] as $keyword => $class
+        ) {
             if (str_contains($normalizedType, $keyword)) {
                 $modelClass = $class;
                 break;
@@ -2449,7 +2492,7 @@ class IndicadorController extends Controller
         }
 
         $program = $modelClass::where('plan_estatal', $plan->id)->get()->first(
-            fn ($item) => mb_strtolower(trim($item->nombre)) === mb_strtolower(trim($programName))
+            fn($item) => mb_strtolower(trim($item->nombre)) === mb_strtolower(trim($programName))
         );
 
         if (!$program) {
@@ -2484,7 +2527,7 @@ class IndicadorController extends Controller
 
         $query = Indicador::forPlan($planId)->where('nombre', $name);
         if ($alignment['type'] === CatProgramaDerivadoInstitucional::class) {
-            $query->whereHas('programasInstitucionales', fn ($program) => $program->whereKey($alignment['id']));
+            $query->whereHas('programasInstitucionales', fn($program) => $program->whereKey($alignment['id']));
         } else {
             $query->where('indicadorable_type', $alignment['type'])
                 ->where('indicadorable_id', $alignment['id']);
@@ -2558,7 +2601,7 @@ class IndicadorController extends Controller
         }
 
         $ids = array_values(array_unique(array_filter(array_map('trim', preg_split('/[,;]+/', $value)))));
-        if (array_filter($ids, fn ($id) => !ctype_digit($id))) {
+        if (array_filter($ids, fn($id) => !ctype_digit($id))) {
             throw new \RuntimeException('La columna ODS solo puede contener IDs numéricos separados por comas.');
         }
 
@@ -2605,6 +2648,19 @@ class IndicadorController extends Controller
                 return CatProgramaDerivadoSectorial::class;
             default:
                 return null;
+        }
+    }
+
+    private function deleteEvidence(?string $filename): void
+    {
+        if (!$filename || basename($filename) !== $filename) {
+            return;
+        }
+
+        $path = public_path('assets-administrador/docs/' . $filename);
+
+        if (is_file($path)) {
+            unlink($path);
         }
     }
 }

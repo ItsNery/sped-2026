@@ -59,8 +59,6 @@ class ProgramaDerivadoReporteController extends Controller
             ->orderBy('nombre')
             ->get();
 
-        $years = range(2016, now()->year);
-
-        return view('panel-reportes-programas.reporte', compact('indicadores', 'programaDerivado', 'tipo', 'years'));
+        return view('panel-reportes-programas.reporte', compact('indicadores', 'programaDerivado', 'tipo'));
     }
 }

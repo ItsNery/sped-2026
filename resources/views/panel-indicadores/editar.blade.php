@@ -388,17 +388,19 @@
                                 </div>
                             </div>
                             {{-- Comentado por que no habrá código tematica --}}
-                            {{-- <div class="col-md-2 mb-2">
-                            <div class="custom-section-title"><i class="fa-solid fa-barcode"></i>
-                                Cod. Temática:
-                            </div>
-                            <input type="text" class="form-control @error('cod_tematica') is-invalid @enderror"
-                                id="cod_tematica" name="cod_tematica"
-                                value="{{ old('cod_tematica', $indicador->cod_tematica) }}">
-                        @error('cod_tematica')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div> --}}
+                            {{-- 
+                            <div class="col-md-2 mb-2">
+                                <div class="custom-section-title"><i class="fa-solid fa-barcode"></i>
+                                    Cod. Temática:
+                                </div>
+                                <input type="text" class="form-control @error('cod_tematica') is-invalid @enderror"
+                                    id="cod_tematica" name="cod_tematica"
+                                    value="{{ old('cod_tematica', $indicador->cod_tematica) }}">
+                                @error('cod_tematica')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div> 
+                            --}}
                             <div class="col-lg-4 col-md-6 mb-2">
                                 <div class="custom-section-title"><i class="fa-solid fa-bookmark"></i>
                                     Temática: <span class="text-danger">*</span>
@@ -572,7 +574,8 @@
                             </div>
 
                             {{-- Se comenta por que no hay ods por ahora --}}
-                            {{-- <div class="col-md-3 mb-2">
+                            {{-- 
+                            <div class="col-md-3 mb-2">
                                 <div class="custom-section-title"><i class="fa-solid fa-building-un"></i>
                                     Ods: *
                                 </div>
@@ -587,9 +590,11 @@
                                 @error('odses')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                            </div> --}}
+                            </div> 
+                            --}}
                             {{-- Se eliminará el campo de resultados --}}
-                            {{-- <div class="col-md-6 mb-2">
+                            {{-- 
+                            <div class="col-md-6 mb-2">
                                 <div class="custom-section-title"><i class="fa-solid fa-quote-right"></i>
                                     Principales Resultados:
                                 </div>
@@ -598,7 +603,8 @@
                                 @error('resultados')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                            </div> --}}
+                            </div> 
+                            --}}
 
                             <div class="col-md-12 mt-4">
                                 <div class="custom-section-title">
@@ -608,7 +614,6 @@
                                 <div id="datos-anuales-container" class="accordion mb-3">
                                     @if (isset($indicador) && $indicador->datosAnuales->isNotEmpty())
                                         @foreach ($indicador->datosAnuales->sortBy('anio') as $datoAnual)
-                                            {{-- Usamos $loop->index o una variable manual para el índice --}}
                                             @php $currentIndex = $loop->index; @endphp
                                             <div class="accordion-item dato-anual-block"
                                                 id="dato-anual-item-{{ $currentIndex }}">

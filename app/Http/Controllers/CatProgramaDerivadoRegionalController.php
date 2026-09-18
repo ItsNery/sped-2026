@@ -42,7 +42,7 @@ class CatProgramaDerivadoRegionalController extends Controller
     {
         $request->validate([
             'nombre' => 'required|string|max:255',
-            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'descripcion' => 'nullable|string',
             'color' => 'required|string|max:7',
             'icono' => ['required', 'string', 'max:50', 'regex:/^fa-[a-z0-9-]+$/'],
@@ -100,7 +100,7 @@ class CatProgramaDerivadoRegionalController extends Controller
     {
        $request->validate([
             'nombre' => 'required|string|max:255',
-            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'descripcion' => 'nullable|string',
             'color' => 'required|string|max:7',
             'icono' => ['required', 'string', 'max:50', 'regex:/^fa-[a-z0-9-]+$/'],

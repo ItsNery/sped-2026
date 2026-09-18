@@ -35,20 +35,20 @@ class DashboardDrillDownController extends Controller
             ->queryForPlan($plan->id, $filters, $filters['solo_validados'])
             ->get();
         $indicadores = $this->dashboardFilters->filterComputed($indicadores, $filters, $filters['solo_validados']);
-        $rows = $indicadores->map(fn ($indicador) => $this->row($indicador, $filters['solo_validados']));
+        $rows = $indicadores->map(fn($indicador) => $this->row($indicador, $filters['solo_validados']));
 
         if ($request->boolean('criticas')) {
-            $rows = $rows->filter(fn ($row) => $row['prioridad'] !== null && $row['prioridad'] <= 3);
+            $rows = $rows->filter(fn($row) => $row['prioridad'] !== null && $row['prioridad'] <= 3);
         } elseif ($request->boolean('alertas')) {
-            $rows = $rows->filter(fn ($row) => $row['prioridad'] !== null);
+            $rows = $rows->filter(fn($row) => $row['prioridad'] !== null);
         }
 
-        $rows = $rows->sortBy(fn ($row) => match ($request->input('sort')) {
-                'nombre' => strtolower($row['nombre']),
-                'avance' => $row['avance'] ?? PHP_FLOAT_MAX,
-                'institucion' => strtolower($row['institucion']),
-                default => $row['prioridad'] . '-' . str_pad((string) ($row['avance'] ?? 999999), 12, '0', STR_PAD_LEFT),
-            });
+        $rows = $rows->sortBy(fn($row) => match ($request->input('sort')) {
+            'nombre' => strtolower($row['nombre']),
+            'avance' => $row['avance'] ?? PHP_FLOAT_MAX,
+            'institucion' => strtolower($row['institucion']),
+            default => $row['prioridad'] . '-' . str_pad((string) ($row['avance'] ?? 999999), 12, '0', STR_PAD_LEFT),
+        });
 
         if ($request->input('direction') === 'desc') {
             $rows = $rows->reverse()->values();
@@ -88,7 +88,7 @@ class DashboardDrillDownController extends Controller
         $estado = in_array($resultado['semaforizacion'], ['Excedido', 'Aceptable', 'Moderado', 'Insuficiente'], true)
             ? $resultado['semaforizacion']
             : 'No clasificado';
-        $datos = $indicador->datosAnuales->filter(fn ($dato) => $dato->valor_dato !== null && trim((string) $dato->valor_dato) !== '');
+        $datos = $indicador->datosAnuales->filter(fn($dato) => $dato->valor_dato !== null && trim((string) $dato->valor_dato) !== '');
         $datosDisponibles = $soloValidados ? $datos->where('validado', true) : $datos;
         $ultimoDato = $datosDisponibles->sortByDesc('anio')->first();
         $proximaActualizacion = null;

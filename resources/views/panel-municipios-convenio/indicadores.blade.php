@@ -24,7 +24,7 @@
             </div>
 
             <section class="municipality-indicators-index__summary" aria-label="Resumen del municipio">
-                <img src="{{ $municipioConvenio->icono }}"
+                <img src="{{ asset($municipioConvenio->icono) }}"
                     alt="Ícono del municipio de {{ $municipioConvenio->municipio->nombre }}"
                     class="municipality-indicators-index__icon">
                 <div class="municipality-indicators-index__summary-content">

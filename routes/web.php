@@ -175,12 +175,14 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::resource('panel-accesos', LoginAttemptController::class)->only(['index']);
 
     // --- Catálogos y Entidades Base ---
-    Route::resource('panel-cat-planes', CatPlanEstatalDesarrolloController::class);
-    Route::resource('panel-cat-ejes', CatEjeController::class);
-    Route::resource('panel-cat-prog-der-esp', CatProgramaDerivadoEspecialController::class);
-    Route::resource('panel-cat-prog-der-sect', CatProgramaDerivadoSectorialController::class);
-    Route::resource('panel-cat-prog-der-reg', CatProgramaDerivadoRegionalController::class);
-    Route::resource('panel-cat-prog-der-instit', CatProgramaDerivadoInstitucionalController::class);
+    Route::middleware('permission:administrar-catalogos-ped')->group(function () {
+        Route::resource('panel-cat-planes', CatPlanEstatalDesarrolloController::class);
+        Route::resource('panel-cat-ejes', CatEjeController::class);
+        Route::resource('panel-cat-prog-der-esp', CatProgramaDerivadoEspecialController::class);
+        Route::resource('panel-cat-prog-der-sect', CatProgramaDerivadoSectorialController::class);
+        Route::resource('panel-cat-prog-der-reg', CatProgramaDerivadoRegionalController::class);
+        Route::resource('panel-cat-prog-der-instit', CatProgramaDerivadoInstitucionalController::class);
+    });
     Route::resource('panel-cat-instituciones', InstitucionController::class)->parameters([
         'panel-cat-instituciones' => 'institucion'
     ]);

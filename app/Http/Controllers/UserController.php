@@ -129,6 +129,11 @@ class UserController extends Controller
             return back()->withErrors($validator)->withInput();
         }
         $validatedData = $validator->validated();
+
+        if ($validatedData['roles'] === 'SuperAdministrador') {
+            abort_unless(auth()->user()->isSuperAdministrator(), 403, 'Solo un SuperAdministrador puede asignar ese rol.');
+        }
+
         Log::debug('UserController@store: Datos validados.', $validatedData);
 
 
@@ -234,7 +239,7 @@ class UserController extends Controller
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email,' . $id,
             'password' => 'confirmed',
-            'roles' => 'nullable|string',
+            'roles' => 'nullable|string|exists:roles,name',
             'instituciones' => 'required_if:roles,Enlace|array|min:1',
         ];
 
@@ -271,6 +276,10 @@ class UserController extends Controller
             $input['reporte_generado_at'] = null;
         }
         $user = User::findOrFail($id);
+
+        if ($request->input('roles') === 'SuperAdministrador') {
+            abort_unless(auth()->user()->isSuperAdministrator(), 403, 'Solo un SuperAdministrador puede asignar ese rol.');
+        }
 
         if ($user->isSystemAccount()) {
             abort_unless(auth()->user()->isSuperAdministrator(), 403, 'La cuenta del sistema solo puede ser gestionada por SuperAdministrador.');

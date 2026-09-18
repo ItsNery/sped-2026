@@ -25,9 +25,6 @@
                 </td>
                 <td>
                     {{ $indicador->institucion?->nombre ?? 'Sin institución' }}
-                    @if (isset($institucionesDirectas) && !$institucionesDirectas->contains((int) $indicador->id_institucion))
-                        <span class="badge text-bg-light border">Sectorizada</span>
-                    @endif
                 </td>
                 <td>
                     {{ $indicador->programa_derivado }}
@@ -43,7 +40,6 @@
                 </td>
                 <td>
                     <div class="admin-index-table-actions" role="group" aria-label="Acciones del indicador">
-                        <!-- botón editar -->
                         @if ($indicador->indicador_validado == 1)
                             <span class="admin-index-table-action admin-index-table-action--validated">Validado</span>
                         @else
@@ -84,14 +80,7 @@
                     @endif
                 </td> --}}
                 <td>
-                    {{-- Primero, verifica si la colección datosAnuales no está vacía --}}
                     @if ($indicador->datosAnuales && $indicador->datosAnuales->isNotEmpty())
-                        {{--
-                                                    Luego, verifica si ALGUNO de los registros DatoAnual en la colección
-                                                    tiene la propiedad 'modificado' establecida en true (o 1).
-                                                    Usamos el método 'contains' de la colección con un callback,
-                                                    o el método 'where' para filtrar y luego 'isNotEmpty'.
-                                                    --}}
                         @if ($indicador->datosAnuales->where('modificado', true)->isNotEmpty())
                             <span class="badge bg-warning text-dark">Indicador modificado</span>
                         @else

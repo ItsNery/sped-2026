@@ -413,9 +413,7 @@ header .mobile-menu ul li.nav-item-login a.nav-link:hover {
 /* Estilo para el ícono dentro del botón "Entrar", si quieres ajustarlo */
 header .mobile-menu ul li.nav-item-login a.nav-link i {
     margin-right: 0.5rem;
-    /* Espacio entre el ícono y el texto "Entrar" */
     /* font-size: 1em; */
-    /* Ajustar tamaño del ícono si es necesario */
 }
 
 header .mobile-menu ul li a {
@@ -605,7 +603,6 @@ header .encabezado-movil {
 @media (min-width: 300px) {
     header .encabezado {
         display: none;
-        /* Oculta menú escritorio */
     }
 
     header .encabezado-movil {
@@ -688,533 +685,6 @@ header .encabezado-movil {
         background-color: rgba(255, 255, 255, 0.3);
     }
 }
-
-
-/*Empieza css del menu y sus secciones*/
-/* .nav {
-    text-align: center;
-    align-items: center;
-}
-
-.nav1 {
-    background-color: #0c312d;
-    height: 75px;
-    color: #fff;
-    padding: 10px;
-}
-
-.nav2 {
-    background-color: #9e8f80;
-    height: 75px;
-    color: #fff;
-    padding: 10px;
-}
-
-.nav3 {
-    background-color: #a94a42;
-    height: 75px;
-    color: #fff;
-    padding: 10px;
-}
-
-.nav4 {
-    background-color: #ce7a1c;
-    height: 75px;
-    color: #fff;
-    padding: 10px;
-}
-
-.nav5 {
-    background-color: #e4ccb6;
-    height: 75px;
-    color: #fff;
-    padding: 10px;
-}
-
-.nav1:hover {
-    background: linear-gradient(to left, #0c312d, #609b84);
-    cursor: pointer;
-}
-
-.nav2:hover {
-    background: linear-gradient(to left, #9e8f80, #b8ad99);
-    cursor: pointer;
-}
-
-.nav3:hover {
-    background: linear-gradient(to left, #a94a42, #b72d33);
-    cursor: pointer;
-}
-
-.nav4:hover {
-    background: linear-gradient(to left, #ce7a1c, #ad7c11);
-    cursor: pointer;
-} */
-
-/* Estilos para el menú principal */
-/* .dropdown {
-    width: 20%;
-}
-
-.dropdown .dropbtn {
-    position: relative;
-    font-size: 1.0625rem;
-    font-weight: bold;
-    height: 100%;
-    width: 100%;
-    border: none;
-    outline: none;
-    color: #fff;
-    background-color: transparent;
-    margin: 0;
-    text-align: center;
-    align-items: center;
-    padding-right: 20px;
-}
-
-.dropdown .dropbtn:nth-last-child(-2n + 2):after {
-    position: absolute;
-    font-family: "Font Awesome 6 Free";
-    content: "\f078";
-    font-weight: 900;
-    width: 12px;
-    height: 12px;
-    font-size: 0.9rem;
-    color: white;
-    top: 50%;
-    right: 0;
-    transform: translateY(-75%);
-}
-
-.subdropbtn:after {
-    position: absolute;
-    font-family: "Font Awesome 6 Free";
-    content: "\f105";
-    font-weight: 900;
-    width: 12px;
-    height: 12px;
-    font-size: 0.9rem;
-    color: rgb(41, 39, 39);
-    top: 50%;
-    right: 0;
-    transform: translateY(-75%);
-}
-
-.dropdown:hover .dropbtn {
-    background-color: transparent;
-    position: relative;
-}
-
-.dropdown-content {
-    display: none;
-    position: relative;
-    background-color: var(--bg-body);
-    text-decoration: none;
-    min-width: 300px;
-    box-shadow: 0px 4px 8px 0px rgba(0, 0, 0, 0.5);
-    z-index: 2;
-    border-radius: 10px;
-}
-
-.dropdown-content a {
-    float: none;
-    color: var(--text-color);
-    padding: 12px 24px;
-    text-decoration: none;
-    display: block;
-    text-align: left;
-}
-
-.dropdown-content a:hover {
-    background-color: #55555b;
-    color: white;
-    text-decoration: none;
-}
-
-.dropdown:hover .dropdown-content {
-    display: block;
-}
-
-.hamburger {
-    display: none;
-    background-color: #0c312d;
-    color: white;
-    font-size: 30px;
-    border: none;
-    cursor: pointer;
-    padding: 10px;
-    width: 100%;
-    text-align: left;
-}
-
-@media screen and (max-width: 576px) {
-    .hamburger {
-        display: inline;
-    }
-
-    .nav.menu {
-        display: none;
-        flex-direction: column;
-    }
-
-    .nav.menu.active {
-        display: flex;
-    }
-
-    .nav1,
-    .nav2,
-    .nav3,
-    .nav4,
-    .nav5 {
-        width: 100%;
-    }
-
-    .dropdown {
-        width: 100%;
-    }
-
-    .submenu-content {
-        left: 0 !important;
-        top: 100% !important;
-        min-width: 100%;
-    }
-}
-
-.submenu {
-    position: relative;
-    display: block;
-}
-
-.submenu-content {
-    display: none;
-    position: absolute;
-    left: 100%;
-    top: 0;
-    background-color: var(--bg-body);
-    min-width: 100%;
-    box-shadow: 0px 4px 8px 0px rgba(0, 0, 0, 0.5);
-    border-radius: 10px;
-    z-index: 1999;
-}
-
-nav {
-    background-color: #024959;
-}
-
-.logo_sped {
-    img {
-        width: 50%;
-    }
-}
-
-.gobierno_logos {
-    display: flex;
-    align-items: center;
-}
-
-.gobierno_logos img {
-    margin-left: auto;
-    margin-right: 1rem;
-    max-height: 80px;
-    width: auto;
-}
-
-@media screen and (max-width: 768px) {
-    .index-header img {
-        margin: 0.1rem auto;
-    }
-    
-    .index-header,
-    .gobierno_logos {
-        display: block;
-    }
-
-    .gobierno_logos img {
-        width: 100%;
-        max-width: 80%;
-        margin: .5rem auto;
-    }
-
-    .gobierno_logos img:last-child {
-        display: none;
-    }
-}
-
-.submenu.plan1:hover .subdropbtn {
-    background-color: #55555b;
-    color: white;
-}
-
-.submenu.plan2:hover .subdropbtn {
-    background-color: var(--color-1);
-    color: white;
-}
-
-.submenu.plan2 .guinda-hover:hover {
-    background-color: var(--color-1);
-    color: white;
-}
-
-.submenu .guinda-hover:hover {
-    background-color: var(--color-1);
-    color: white;
-}
-
-.nav4 .guinda-hover:hover {
-    background-color: var(--color-1);
-    color: white;
-}
-
-.submenu.plan1 .no-vigente-indicator {
-    position: relative;
-    left: 17%;
-    transform: translateY(-50%);
-    font-size: 1.7rem !important;
-    color: rgb(241, 38, 38);
-    box-shadow: 0px 4px 8px 0px rgba(0, 0, 0, 0.5);
-}
-
-.submenu.plan2 .vigente-indicator {
-    position: relative;
-    left: 1%;
-    transform: translateY(-50%);
-    font-size: 1.7rem !important;
-    color: rgb(20, 174, 20);
-    box-shadow: 0px 4px 8px 0px rgba(0, 0, 0, 0.5);
-}
-
-.submenu.plan1 .no-vigente-indicator,
-.submenu.plan2 .vigente-indicator {
-    display: none;
-}
-
-.submenu.plan1:hover .no-vigente-indicator,
-.submenu.plan2:hover .vigente-indicator {
-    display: inline-block;
-
-}
-
-.submenu.plan1:hover .textplan,
-.submenu.plan2:hover .textplan {
-    filter: blur(1.1px);
-} */
-
-/* Otros estilos... */
-
-/* .submenu:hover .submenu-content {
-    display: block;
-}
-
-.subdropbtn {
-    font-size: 17px;
-    font-weight: bold;
-    border: none;
-    outline: none;
-    color: var(--text-color);
-    background-color: transparent;
-    width: 100%;
-    text-align: left;
-    padding: 12px 24px;
-}
-
-.submenu-content a {
-    color: var(--text-color);
-    padding: 12px 24px;
-    text-decoration: none;
-    display: block;
-    text-align: left;
-}
-
-.submenu-content a:hover {
-    background-color: #55555b;
-    color: white;
-    text-decoration: none;
-}
-
-.subdropbtn:hover {
-    background-color: #55555b;
-    color: white;
-} */
-
-/*Finaliza el css del menu y sus secciones*/
-
-/*Empieza css del slider de indicadores*/
-@-webkit-keyframes slider {
-    to {
-        -moz-transform: translateX(-100%);
-        -webkit-transform: translateX(-100%);
-        transform: translateX(-100%);
-    }
-}
-
-@keyframes slider {
-    to {
-        transform: translateX(-100%);
-    }
-}
-
-@keyframes scroll {
-    to {
-        -moz-transform: translateX(-100%);
-        -webkit-transform: translateX(-100%);
-        transform: translateX(-100%);
-    }
-}
-
-.slider {
-    background: white;
-    box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.125);
-    height: 100px;
-    overflow: hidden;
-    position: relative;
-    width: 100%;
-}
-
-.slider::before,
-.slider::after {
-    background: linear-gradient(to right, white 0%, rgba(255, 255, 255, 0) 100%);
-    height: 100px;
-    position: absolute;
-    width: 200px;
-    z-index: 2;
-}
-
-.slider::after {
-    right: 0;
-    top: 0;
-    -webkit-transform: rotateZ(180deg);
-    transform: rotateZ(180deg);
-}
-
-.slider::before {
-    left: 0;
-    top: 0;
-}
-
-.slider .slide-track {
-    -moz-animation: slider 180s infinite linear;
-    -webkit-animation: slider 180s infinite linear;
-    animation: slider 180s infinite linear;
-    display: inline-flex;
-    /* width: calc(325px * 29); */
-    width: calc(325px * 10);
-}
-
-.slider .slide {
-    height: 100px;
-    width: 325px;
-}
-
-.slider .slide h2 {
-    text-align: center;
-    padding-top: 3px;
-    margin-left: auto;
-    margin-right: auto;
-    color: var(--color4-2024);
-    font-weight: bold;
-    font-size: 1.15rem;
-    margin-bottom: 0;
-}
-
-.slider .slide h3 {
-    text-align: center;
-    padding-top: 10px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 0;
-    color: var(--bg-content);
-    font-weight: bold;
-    font-size: 0.790rem;
-}
-
-.slider .slide h4 {
-    text-align: center;
-    /* margin-left: -10%; */
-    margin-right: auto;
-    color: var(--bg-content);
-    font-weight: bold;
-    font-size: 0.75rem;
-}
-
-.slider .slide img {
-    padding-top: 20px;
-    padding-left: 15px;
-    width: 290%;
-}
-
-.slider_indicadores {
-    .slide-track {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
-
-        a {
-            .slide {
-                background-color: var(--color1-2024);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-
-                .row {
-                    .imagen {
-                        img {
-                            width: 290%;
-                        }
-                    }
-
-                    .informacion {
-                        margin-left: 8.33333333%;
-                    }
-                }
-            }
-        }
-    }
-}
-
-@media (max-width: 768px) {
-    .slider_indicadores {
-        .slide-track {
-            a {
-                .slide {
-                    .row {
-                        .imagen {
-                            img {
-                                display: none;
-                            }
-                        }
-
-                        .informacion {
-                            margin-left: 0;
-
-                            h3 {
-                                margin-top: 0;
-                                padding-top: 0;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-.indicador {
-    font-size: 0.75rem;
-    border-collapse: separate;
-    border-spacing: 5px 5px;
-}
-
-.indicador thead {
-    font-size: 0.875rem;
-}
-
-.indicador tbody {
-    font-size: 0.75rem;
-    font-weight: 100;
-}
-
-/*Termina el css del slider de indicadores*/
 
 .contenido {
     align-items: center;
@@ -1426,38 +896,6 @@ nav {
     cursor: pointer;
 }
 
-/* .seccion-ultimos {
-    margin-top: 2rem;
-    margin-bottom: 2rem;
-    background-color: var(--color7-2024);
-    padding: 3rem 0 3rem 0;
-    .actualizaciones {
-        margin-top: 2rem;
-        margin-bottom: 2rem;
-
-        h2 {
-            text-align: left;
-            font-size: clamp(1.5rem, calc(2.5vw + 1rem), 2.5rem);
-            color: var(--color8-2024);
-            font-weight: bolder;
-            margin: 2rem 0 2rem 0;
-        }
-
-        .lista-indicadores {
-            li {
-                list-style: none;
-            
-                margin-top: 5px;
-                width: 100%;
-                padding-left: 20px;
-
-                h4 {
-                    font-size: 1rem;
-                }
-            }
-        }
-    }
-} */
 .seccion-ultimos {
     position: relative;
     z-index: 1;
@@ -1869,15 +1307,6 @@ nav {
     background-color: transparent;
     position: relative;
 }
-
-/*@media screen and (max-width: 600px) {*/
-/*.nav_ejes, .nav_ejes .col-md-2 {*/
-/* Estilos para asegurarse de que se muestren */
-/*display: block;*/
-/*width: 100%;*/
-/* Otros estilos que quieras aplicar */
-/*}*/
-/*}*/
 
 /*MENU DERIVADOS*/
 
@@ -5216,7 +4645,6 @@ nav {
     height: 150px;
     background-color: var(--color6-2024);
     border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
-    /* Forma orgánica */
     bottom: 5%;
     right: 5%;
     filter: blur(20px);
@@ -5228,7 +4656,6 @@ nav {
     background: #fff;
     border-radius: 8px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    /* Sombra suave y moderna */
     overflow: hidden;
     border: 1px solid #e0e0e0;
 }
@@ -5236,7 +4663,6 @@ nav {
 /* Encabezado Guinda */
 .gov-card-header {
     background-color: #0c312d;
-    /* Tu color institucional */
     color: #fff;
     padding: 12px 20px;
     font-family: 'Poppins', sans-serif;
@@ -5244,7 +4670,6 @@ nav {
     font-size: 0.95rem;
     letter-spacing: 0.5px;
     border-bottom: 3px solid #BC955C;
-    /* Línea dorada */
 }
 
 .gov-card-body {
@@ -5257,7 +4682,6 @@ nav {
 .video-wrapper {
     padding: 20px;
     background: #000;
-    /* Fondo negro cinematográfico */
 }
 
 /* Barra de Metadatos */
@@ -5281,7 +4705,6 @@ nav {
 .meta-item i {
     font-size: 1.5rem;
     color: #BC955C;
-    /* Iconos dorados */
 }
 
 .meta-item div {
@@ -5340,7 +4763,6 @@ nav {
             #0c312d 10px,
             #fff 10px,
             #fff 20px);
-    /* Patrón de seguridad tipo documento oficial */
 }
 
 .py-50px {
@@ -6939,7 +6361,7 @@ nav {
 }
 
 .inicio-esquema__container {
-    max-width: 1440px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 0 1.5rem;
 }
