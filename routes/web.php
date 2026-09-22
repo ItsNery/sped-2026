@@ -52,6 +52,7 @@ Route::get('/informacion-general/api', [HomeController::class, 'apiDocs'])->name
 Route::get('/normatividad', function () {
     return view('normatividad');
 });
+Route::view('/reportes-anuales', 'reportes-anuales')->name('reportes-anuales');
 Route::get('/agenda', [HomeController::class, 'indicadoresAgenda']);
 Route::get('/capacitacion-2025', [HomeController::class, 'capacitacion2025'])->name('capacitacion-2025');
 

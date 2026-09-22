@@ -29,13 +29,14 @@
             </li>
 
             <li
-                class="nav-item dropdown {{ request()->is('normatividad', 'datos-abiertos*', 'informacion-general/*') ? 'active' : '' }}">
+                class="nav-item dropdown {{ request()->is('normatividad', 'reportes-anuales', 'datos-abiertos*', 'informacion-general/*') ? 'active' : '' }}">
                 <a class="nav-link dropdown-toggle" href="#" id="mobileInicioDropdownTrigger" role="button"
                     data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside"> Datos generales
                 </a>
                 <div class="dropdown-menu" aria-labelledby="mobileInicioDropdownTrigger">
                     <a class="dropdown-item" href="{{ url('/informacion-general/api') }}">API</a>
                     <a class="dropdown-item" href="{{ url('/normatividad') }}">Normatividad</a>
+                    <a class="dropdown-item" href="{{ route('reportes-anuales') }}">Reportes anuales</a>
 
                     <div class="dropdown segundo-dropdown">
                         <a class="dropdown-item dropdown-toggle" href="#" id="mobileDatosAbiertosSubmenuTrigger"

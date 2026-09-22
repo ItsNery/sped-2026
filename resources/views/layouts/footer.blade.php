@@ -83,6 +83,11 @@
                             Normatividad
                         </a>
                         <br>
+                        <a class="text-white mb-2" href="{{ route('reportes-anuales') }}">
+                            <i class="fa fa-angle-right mr-2"></i>
+                            Reportes anuales
+                        </a>
+                        <br>
                         <a class="text-white mb-2" href="#" data-bs-toggle="collapse"
                             data-bs-target="#datosAbiertosSubMenu" aria-expanded="false"
                             aria-controls="datosAbiertosSubMenu" rel="noopener">

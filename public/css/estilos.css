@@ -8703,6 +8703,154 @@ header .encabezado-movil {
     margin-right: 0.35rem;
 }
 
+/* ======================================================================
+   REPORTES ANUALES - Bloque BEM reportes-anuales
+   ====================================================================== */
+.reportes-anuales {
+    overflow: hidden;
+    background: var(--whiteColor);
+}
+
+.reportes-anuales__hero {
+    display: flex;
+    min-height: 430px;
+    padding: 5rem 0;
+    align-items: center;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.72)), url('../img/puebla_hero_bg.png');
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    color: #fff;
+}
+
+.reportes-anuales__hero-container,
+.reportes-anuales__container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.reportes-anuales__hero-content {
+    max-width: 800px;
+}
+
+.reportes-anuales__hero-tag {
+    display: inline-block;
+    margin-bottom: 1rem;
+    padding: 0.3rem 1.1rem;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 5px;
+    color: var(--arena);
+    font-family: 'Gilroy-SemiBold', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.reportes-anuales__hero-title {
+    margin-bottom: 1.25rem;
+    color: var(--color-eje2);
+    font-family: 'Gilroy-Bold', 'Corra-Montserra-Bold', sans-serif;
+    font-size: 3rem;
+    line-height: 1.2;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.reportes-anuales__hero-desc {
+    max-width: 700px;
+    margin: 0;
+    color: #dfebe9;
+    font-family: 'Gilroy-Medium', 'Corra-Montserra-Medium', sans-serif;
+    font-size: 1.15rem;
+    line-height: 1.6;
+    text-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+}
+
+.reportes-anuales__main {
+    padding: 4rem 0;
+    background: var(--bg-content);
+}
+
+.reportes-anuales__intro {
+    max-width: 760px;
+    margin: 0 0 1.5rem;
+    color: var(--color-5);
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+
+.reportes-anuales__list {
+    display: grid;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.reportes-anuales__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    border-radius: 12px;
+    background: var(--whiteColor);
+    box-shadow: 0 2px 14px rgba(44, 62, 80, 0.07);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.reportes-anuales__item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 9px 22px rgba(44, 62, 80, 0.13);
+}
+
+.reportes-anuales__info {
+    min-width: 0;
+}
+
+.reportes-anuales__title {
+    margin: 0 0 0.45rem;
+    color: var(--color-texto-principal-ultimos);
+    font-family: 'Gilroy-Bold', sans-serif;
+    font-size: 1.05rem;
+    line-height: 1.35;
+}
+
+.reportes-anuales__format {
+    color: var(--color-5);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+}
+
+.reportes-anuales__format i {
+    margin-right: 0.35rem;
+    color: var(--color1-2024);
+}
+
+.reportes-anuales__download {
+    flex: 0 0 auto;
+    padding: 0.65rem 1.15rem;
+    border-radius: 999px;
+    background: #c79b66;
+    color: var(--color-4);
+    font-family: 'Gilroy-Bold', sans-serif;
+    font-size: 0.82rem;
+    text-decoration: none;
+    transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.reportes-anuales__download:hover {
+    background: #b08554;
+    color: #fff;
+    transform: translateY(-2px);
+    text-decoration: none;
+}
+
+.reportes-anuales__download i {
+    margin-right: 0.35rem;
+}
+
 .api-docs {
     overflow: hidden;
 }
@@ -9094,6 +9242,40 @@ header .encabezado-movil {
     }
 
     .normatividad__download {
+        align-self: stretch;
+        text-align: center;
+    }
+
+    .reportes-anuales__hero {
+        min-height: 360px;
+        padding: 4rem 0;
+    }
+
+    .reportes-anuales__hero-title {
+        font-size: 2.25rem;
+    }
+
+    .reportes-anuales__hero-desc {
+        font-size: 1rem;
+    }
+
+    .reportes-anuales__main {
+        padding: 2.5rem 0;
+    }
+
+    .reportes-anuales__container {
+        padding-right: 1rem;
+        padding-left: 1rem;
+    }
+
+    .reportes-anuales__item {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1.15rem;
+    }
+
+    .reportes-anuales__download {
         align-self: stretch;
         text-align: center;
     }
