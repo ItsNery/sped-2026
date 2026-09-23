@@ -22,7 +22,7 @@
     <div class="container mx-0 my-0">
         <div class="left">
             <div class="header">
-                <img src="{{ asset('img/cadena-sped-blanco.png') }}" />
+                <img src="{{ asset('img/Logotipo-SPED-negativo.png') }}" />
                 <h2 class="animation a1">Bienvenido</h2>
                 <h4 class="animation a2">Sistema de Información para el <br>Seguimiento a la Planeación y Evaluación
                     <br>del Desarrollo en el Estado de Puebla
@@ -45,10 +45,10 @@
                     </div>
                 @enderror
                 <div class="password-field animation a4">
-                    <input type="password" id="password" name="password" class="form-field"
-                        placeholder="Contraseña" autocomplete="current-password" required>
-                    <button type="button" id="toggle-password" class="password-toggle"
-                        aria-label="Mostrar contraseña" aria-pressed="false">
+                    <input type="password" id="password" name="password" class="form-field" placeholder="Contraseña"
+                        autocomplete="current-password" required>
+                    <button type="button" id="toggle-password" class="password-toggle" aria-label="Mostrar contraseña"
+                        aria-pressed="false">
                         <i class="fa-solid fa-eye" aria-hidden="true"></i>
                     </button>
                 </div>
@@ -78,7 +78,7 @@
         const passwordInput = document.getElementById('password');
         const passwordToggle = document.getElementById('toggle-password');
 
-        passwordToggle.addEventListener('click', function () {
+        passwordToggle.addEventListener('click', function() {
             const isVisible = passwordInput.type === 'text';
             passwordInput.type = isVisible ? 'password' : 'text';
             passwordToggle.setAttribute('aria-pressed', String(!isVisible));
