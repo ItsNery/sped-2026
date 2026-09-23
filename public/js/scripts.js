@@ -43,83 +43,63 @@ function toggleMenu() {
 // });
 
 document.addEventListener("DOMContentLoaded", function () {
-    // --- Lógica para el Header Fijo (Sticky) ---
-    const navbar = document.getElementById("navbar");
-    // Si ".encabezado-movil" es la barra específica dentro de #navbar que quieres que reaccione,
-    // o si es #navbar el que recibe las clases de sticky, ajusta según sea necesario.
-    // Aquí asumimos que las clases de sticky se aplican a #navbar.
+    const siteHeader = document.querySelector(".site-header");
+    const mainNav = document.getElementById("main-nav");
+    const hamburgerMenu = document.getElementById("hamburger-menu");
 
-    if (navbar) { // Solo ejecutar si el navbar existe
-        window.addEventListener(
-            "scroll",
-            () => {
-                const currentScroll =
-                    window.pageYOffset || document.documentElement.scrollTop;
+    if (siteHeader && mainNav && "IntersectionObserver" in window) {
+        const sentinel = document.createElement("div");
+        sentinel.setAttribute("aria-hidden", "true");
+        siteHeader.parentNode.insertBefore(sentinel, siteHeader);
 
-                if (currentScroll > 50) { // Umbral para activar el sticky
-                    navbar.classList.add("fixed-top");
-                    // Aquí puedes usar tus clases personalizadas como "navbar-scrolled-custom"
-                    // o las clases de Bootstrap directamente si prefieres.
-                    navbar.classList.add("navbar-scrolled-custom");
-                    // Ejemplo con clases de Bootstrap:
-                } else {
-                    navbar.classList.remove("fixed-top");
-                    navbar.classList.remove("navbar-scrolled-custom");
-                    navbar.classList.remove("bg-light");
-                    navbar.classList.remove("shadow-sm");
+        new IntersectionObserver(
+            ([entry]) => mainNav.classList.toggle("is-sticky", !entry.isIntersecting),
+            { threshold: 0, rootMargin: "-1px 0px 0px 0px" }
+        ).observe(sentinel);
+    }
+
+    if (hamburgerMenu && mainNav) {
+        const closeMobileMenu = () => {
+            mainNav.classList.remove("active");
+            hamburgerMenu.classList.remove("open");
+            hamburgerMenu.setAttribute("aria-expanded", "false");
+        };
+
+        hamburgerMenu.addEventListener("click", () => {
+            const isOpen = mainNav.classList.toggle("active");
+            hamburgerMenu.classList.toggle("open", isOpen);
+            hamburgerMenu.setAttribute("aria-expanded", String(isOpen));
+        });
+
+        document.querySelectorAll("#main-nav [data-menu-toggle]").forEach((toggle) => {
+            toggle.addEventListener("click", (event) => {
+                event.preventDefault();
+
+                if (window.innerWidth <= 1199) {
+                    const parent = toggle.parentElement;
+
+                    Array.from(parent.parentElement.children).forEach((sibling) => {
+                        if (sibling !== parent) {
+                            sibling.classList.remove("active");
+                        }
+                    });
+
+                    parent.classList.toggle("active");
                 }
-            },
-            false
-        );
-    }
-
-    // --- Lógica para el Menú Móvil (Toggle) ---
-    const menuButton = document.getElementById("menuButton");
-    const menuOverlay = document.getElementById("menuOverlay");
-    const mobileMenu = document.getElementById("mobileMenu");
-    const closeMenuButton = document.getElementById("closeMenuButton"); // Botón de cierre dentro del menú
-
-    function openMobileMenu() {
-        if (mobileMenu) mobileMenu.classList.add("active");
-        if (menuOverlay) menuOverlay.classList.add("active");
-        if (menuButton) menuButton.setAttribute("aria-expanded", "true");
-        // Opcional: Mover el foco para accesibilidad
-        // if (closeMenuButton) closeMenuButton.focus();
-    }
-
-    function closeMobileMenu() {
-        if (mobileMenu) mobileMenu.classList.remove("active");
-        if (menuOverlay) menuOverlay.classList.remove("active");
-        if (menuButton) menuButton.setAttribute("aria-expanded", "false");
-        // Opcional: Devolver el foco
-        // if (menuButton) menuButton.focus();
-    }
-
-    if (menuButton && mobileMenu && menuOverlay && closeMenuButton) {
-        menuButton.addEventListener("click", function () {
-            const isMenuActive = mobileMenu.classList.contains("active");
-            if (isMenuActive) {
-                closeMobileMenu();
-            } else {
-                openMobileMenu();
-            }
+            });
         });
 
-        menuOverlay.addEventListener("click", closeMobileMenu);
-        closeMenuButton.addEventListener("click", closeMobileMenu);
-
-        document.addEventListener("keydown", function (event) {
-            if (
-                event.key === "Escape" &&
-                mobileMenu.classList.contains("active")
-            ) {
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
                 closeMobileMenu();
             }
         });
-    } else {
-        console.warn(
-            "Advertencia: No se encontraron uno o más elementos del menú móvil principal (botón, overlay, contenedor o botón de cierre). La funcionalidad del menú móvil podría estar afectada."
-        );
+
+        window.addEventListener("resize", () => {
+            if (window.innerWidth > 1199) {
+                closeMobileMenu();
+            }
+        });
     }
 
     const scrollTopButton = document.querySelector(".scroll-top");

@@ -103,36 +103,40 @@
             </div>
         </div>
     @endauth
-    <main>
+    <div id="wrapperBody">
         @include('layouts.header')
-        <a class="visually-hidden-focusable" href="#contenido-principal">Saltar al contenido principal</a>
-        <div id="customSearchModal" class="custom-modal-search" role="dialog" aria-modal="true"
-            aria-labelledby="customSearchModalTitle" aria-hidden="true" tabindex="-1">
-            <div class="custom-modal-content">
-                <div class="custom-modal-header">
-                    <h5 id="customSearchModalTitle" class="custom-modal-title">Buscar indicadores</h5>
-                    <button type="button" class="btn-close custom-close" aria-label="Cerrar búsqueda"
-                        onclick="closeSearchModal()"></button>
-                </div>
-                <div class="custom-modal-body">
-                    <form id="indicatorSearchForm" class="indicator-search-form" role="search">
-                        <label class="visually-hidden" for="indicatorSearchInput">Buscar indicador</label>
-                        <div class="indicator-search-form__input-wrap">
-                            <i class="fas fa-search" aria-hidden="true"></i>
-                            <input id="indicatorSearchInput" type="search" name="q"
-                                placeholder="Nombre, temática, eje o institución..." autocomplete="off">
-                        </div>
-                    </form>
-                    <div id="indicatorSearchStatus" class="indicator-search-status" aria-live="polite">
-                        Escribe al menos dos caracteres para buscar.
+        <div class="header-scroll"></div>
+        <main>
+            <a class="visually-hidden-focusable" href="#contenido-principal">Saltar al contenido principal</a>
+            <div id="customSearchModal" class="custom-modal-search" role="dialog" aria-modal="true"
+                aria-labelledby="customSearchModalTitle" aria-hidden="true" tabindex="-1">
+                <div class="custom-modal-content">
+                    <div class="custom-modal-header">
+                        <h5 id="customSearchModalTitle" class="custom-modal-title">Buscar indicadores</h5>
+                        <button type="button" class="btn-close custom-close" aria-label="Cerrar búsqueda"
+                            onclick="closeSearchModal()"></button>
                     </div>
-                    <div id="indicatorSearchResults" class="indicator-search-results"></div>
+                    <div class="custom-modal-body">
+                        <form id="indicatorSearchForm" class="indicator-search-form" role="search">
+                            <label class="visually-hidden" for="indicatorSearchInput">Buscar indicador</label>
+                            <div class="indicator-search-form__input-wrap">
+                                <i class="fas fa-search" aria-hidden="true"></i>
+                                <input id="indicatorSearchInput" type="search" name="q"
+                                    placeholder="Nombre, temática, eje o institución..." autocomplete="off">
+                            </div>
+                        </form>
+                        <div id="indicatorSearchStatus" class="indicator-search-status" aria-live="polite">
+                            Escribe al menos dos caracteres para buscar.
+                        </div>
+                        <div id="indicatorSearchResults" class="indicator-search-results"></div>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div id="contenido-principal" tabindex="-1">
-            @yield('content')
-        </div>
+            <div id="contenido-principal" tabindex="-1">
+                @yield('content')
+            </div>
+        </main>
+        @include('layouts.footer')
         <a class="btn-option scroll-top" href="#contenido-principal" aria-label="Volver al inicio de la página">
             <svg class="scroll-top__progress" viewBox="0 0 44 44" aria-hidden="true">
                 <circle class="scroll-top__track" cx="22" cy="22" r="18"></circle>
@@ -140,8 +144,7 @@
             </svg>
             <span class="fas fa-angle-up scroll-top__icon" aria-hidden="true"></span>
         </a>
-        @include('layouts.footer')
-    </main>
+    </div>
     @yield('jss-final')
     <script>
         window.AppRoutes = {

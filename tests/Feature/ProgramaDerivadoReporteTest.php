@@ -50,18 +50,44 @@ class ProgramaDerivadoReporteTest extends TestCase
             'valor_dato' => 99,
             'validado' => false,
         ]);
+        $indicadorSoloReferencias = $programa->indicadores()->create(array_merge(
+            $this->indicatorAttributes($institucion),
+            ['nombre' => 'Indicador con solo línea base y meta'],
+        ));
+        DatoAnual::create([
+            'id_indicador' => $indicadorSoloReferencias->id,
+            'anio' => 2023,
+            'valor_dato' => 10,
+            'validado' => true,
+        ]);
+        DatoAnual::create([
+            'id_indicador' => $indicadorSoloReferencias->id,
+            'anio' => 2030,
+            'valor_dato' => 20,
+            'validado' => true,
+        ]);
         $administrador = User::factory()->create();
         $administrador->assignRole(Role::findOrCreate('Administrador', 'web'));
 
-        $this->actingAs($administrador)
+        $response = $this->actingAs($administrador)
             ->get(route('panel-reportes-programas.show', ['tipo' => 'sectoriales', 'programa' => $programa]))
             ->assertOk()
             ->assertSee('Programa sectorial de prueba')
             ->assertSee('12.00')
+            ->assertSee('Datos anuales validados')
             ->assertSee('indicador-bloque')
             ->assertSee('Semáforo')
             ->assertSee('Último dato')
             ->assertDontSee('99.00');
+
+        $contenido = $response->getContent();
+
+        $this->assertSame(1, substr_count($contenido, 'class="datos-anuales-adicionales"'));
+        $this->assertStringContainsString('class="dato-anual-par__anio"', $contenido);
+        $this->assertStringContainsString('>2024</span>', $contenido);
+        $this->assertStringNotContainsString('>2023</span>', $contenido);
+        $this->assertStringNotContainsString('>2025</span>', $contenido);
+        $this->assertStringNotContainsString('>2030</span>', $contenido);
     }
 
     public function test_non_administrators_cannot_access_program_reports(): void

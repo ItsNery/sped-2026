@@ -3,7 +3,7 @@
         <div class="row ligas">
             <div class="col-md-3 escudo">
                 <div class="container">
-                    <img class="w-100 px-3" src="{{ asset('img/Logos_GobPue.png') }}"
+                    <img class="w-100 px-3" src="{{ asset('img/Logotipo-Oficial-Negativo.png') }}"
                         alt="Logo en color guinda y gris de la Secretaría de Planeación y Finanzas"
                         title="Secretaría de Planeación y Finanzas">
                 </div>
@@ -162,17 +162,20 @@
                         Programas Derivados
                     </a>
                     <div class="collapse" id="progDeriSubMenu">
-                        <a class="text-white ml-4 mb-2" href="{{ url('/ped-programas/sectoriales') }}" rel="noopener">
+                        <a class="text-white ml-4 mb-2" href="{{ url('/ped-programas/sectoriales') }}"
+                            rel="noopener">
                             <i class="fa fa-angle-right mx-2"></i>
                             Programas Sectoriales
                         </a>
                         <br>
-                        <a class="text-white ml-4 mb-2" href="{{ url('/ped-programas/especiales') }}" rel="noopener">
+                        <a class="text-white ml-4 mb-2" href="{{ url('/ped-programas/especiales') }}"
+                            rel="noopener">
                             <i class="fa fa-angle-right mx-2"></i>
                             Programas Especiales
                         </a>
                         <br>
-                        <a class="text-white ml-4 mb-2" href="{{ url('/ped-programas/institucionales') }}" rel="noopener">
+                        <a class="text-white ml-4 mb-2" href="{{ url('/ped-programas/institucionales') }}"
+                            rel="noopener">
                             <i class="fa fa-angle-right mx-2"></i>
                             Programas Institucionales
                         </a>
@@ -188,7 +191,8 @@
                     <a class="text-white mb-2" href="#customSearchModal" onclick="openSearchModal(event);">
                         <i class="fas fa-search mr-2" aria-hidden="true"></i> Buscar
                     </a>
-                    <a class="text-white mb-2" href="{{ route('login') }}" title="Iniciar sesión" rel="noopener" target="_self">
+                    <a class="text-white mb-2" href="{{ route('login') }}" title="Iniciar sesión" rel="noopener"
+                        target="_self">
                         <i class="fas fa-right-to-bracket mr-2" aria-hidden="true"></i> Entrar
                     </a>
                 </div>
@@ -197,8 +201,8 @@
     </div>
     <div class="container copy">
         @php
-        use Carbon\Carbon;
-        $currentYear = Carbon::now()->locale('es')->isoFormat('YYYY');
+            use Carbon\Carbon;
+            $currentYear = Carbon::now()->locale('es')->isoFormat('YYYY');
         @endphp
         <p>
             &copy; Secretaría de Planeación, Finanzas y Administración -

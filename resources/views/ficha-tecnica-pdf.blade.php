@@ -12,7 +12,7 @@
 
 <body class="ficha-pdf__document">
     <main class="ficha-pdf__sheet">
-        <img class="ficha-pdf__logos" src="{{ $pdfAsset('img/Cadena_SPED.png') }}" alt="Gobierno de Puebla"
+        <img class="ficha-pdf__logos" src="{{ $pdfAsset('img/Cintillos-SPED-35.png') }}" alt="Gobierno de Puebla"
             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
         <div class="ficha-pdf__logos-fallback">
             Gobierno del Estado de Puebla<br>
@@ -46,7 +46,7 @@
                     <div class="ficha-pdf__item">
                         <div class="ficha-pdf__label">Vinculado a Programas Institucionales</div>
                         <div class="ficha-pdf__value">
-                            {{ $indicador->programasInstitucionales->map(fn ($programa) => $programa->siglas ?: $programa->nombre)->join(', ') }}
+                            {{ $indicador->programasInstitucionales->map(fn($programa) => $programa->siglas ?: $programa->nombre)->join(', ') }}
                         </div>
                     </div>
                 @endif
@@ -85,15 +85,21 @@
                 </div>
                 @php
                     $ultimoDatoPdf = $chartConfig['ultimoDato'] ?? null;
-                    $ultimoDatoNumericoPdf = $ultimoDatoPdf !== null
-                        ? filter_var($ultimoDatoPdf, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION | FILTER_FLAG_ALLOW_THOUSAND)
-                        : null;
+                    $ultimoDatoNumericoPdf =
+                        $ultimoDatoPdf !== null
+                            ? filter_var(
+                                $ultimoDatoPdf,
+                                FILTER_SANITIZE_NUMBER_FLOAT,
+                                FILTER_FLAG_ALLOW_FRACTION | FILTER_FLAG_ALLOW_THOUSAND,
+                            )
+                            : null;
                 @endphp
                 <div class="ficha-pdf__status">
                     <div class="ficha-pdf__status-item">
                         <div class="ficha-pdf__label">Último dato {{ $chartConfig['anioUltimoDato'] ?? '' }}</div>
                         <div class="ficha-pdf__status-value">
-                            {{ $esDatoLineaBase || !is_numeric($ultimoDatoNumericoPdf) ? 'N/D' : number_format((float) str_replace(',', '', $ultimoDatoNumericoPdf), 2, '.', ',') }}</div>
+                            {{ $esDatoLineaBase || !is_numeric($ultimoDatoNumericoPdf) ? 'N/D' : number_format((float) str_replace(',', '', $ultimoDatoNumericoPdf), 2, '.', ',') }}
+                        </div>
                     </div>
                     <div class="ficha-pdf__status-item">
                         <div class="ficha-pdf__label">Semaforización</div><span class="ficha-pdf__badge"
@@ -123,7 +129,7 @@
 
             @php
                 $ultimoDatoConResultadosPdf = $indicador->datos_anuales_validados
-                    ->filter(fn ($dato) => trim((string) $dato->valor_dato) !== '')
+                    ->filter(fn($dato) => trim((string) $dato->valor_dato) !== '')
                     ->sortByDesc('anio')
                     ->first();
                 $resultadosUltimoAnioPdf = trim((string) ($ultimoDatoConResultadosPdf?->resultados ?? ''));
@@ -153,11 +159,15 @@
         <img src="{{ $pdfAsset('img/pleca-nueva.png') }}" alt="">
     </div>
 
-    <script>{!! $pdfEcharts !!}</script>
+    <script>
+        {!! $pdfEcharts !!}
+    </script>
     <script>
         window.fichaConfig = @json($chartConfig);
     </script>
-    <script>{!! $pdfFichaJs !!}</script>
+    <script>
+        {!! $pdfFichaJs !!}
+    </script>
 </body>
 
 </html>

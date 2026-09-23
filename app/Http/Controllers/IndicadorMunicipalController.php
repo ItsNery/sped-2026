@@ -491,12 +491,33 @@ class IndicadorMunicipalController extends Controller
         ]);
     }
 
+    /**
+     * @return array{
+     *     indicador: IndicadorMunicipal,
+     *     municipio: ?MunicipioConvenio,
+     *     nombreMunicipio: string,
+     *     ultimoDato: ?ResultadoIndicadorMunicipal,
+     *     ultimoResultado: ?ResultadoIndicadorMunicipal,
+     *     anioMeta: int,
+     *     anioInicioGrafica: int,
+     *     anioFinGrafica: int
+     * }
+     */
     private function datosFichaPublica(IndicadorMunicipal $indicador): array
     {
-        // Acceder a los resultados relacionados con el indicador
-        $resultados = $indicador->resultados;
+        $indicador->loadMissing([
+            'resultados',
+            'ods',
+            'periodicidad',
+            'tipo',
+            'nivel',
+            'dimension',
+            'municipio',
+        ]);
 
+        $resultados = $indicador->resultados;
         $anioActual = now()->year;
+        $anioMeta = 2027;
         $aniosIniciales = array_filter([
             $indicador->linea_base ? (int) $indicador->linea_base : null,
             $resultados->min('año'),
@@ -507,7 +528,11 @@ class IndicadorMunicipalController extends Controller
         // Iterar sobre los años y agregar atributos dinámicos
         foreach ($años as $año) {
             // Buscar el resultado correspondiente a ese año
-            $resultadoAño = $resultados->where('año', $año)->sortByDesc('periodo')->first();
+            $resultadoAño = $resultados
+                ->where('año', $año)
+                ->filter(fn (ResultadoIndicadorMunicipal $resultado): bool => $resultado->dato !== null)
+                ->sortByDesc('periodo')
+                ->first();
 
             // Si existe un resultado para ese año, agregar el dato del periodo más grande
             if ($resultadoAño) {
@@ -521,28 +546,40 @@ class IndicadorMunicipalController extends Controller
             }
         }
 
-        // Buscar el año más reciente
-        $anioMasReciente = $resultados->sortByDesc('año')->first();
-        if ($anioMasReciente) {
-            $resultadoMasReciente = $resultados->where('año', $anioMasReciente->año)
-                ->sortByDesc('periodo')
-                ->first();
+        $ordenarResultados = fn (ResultadoIndicadorMunicipal $resultado): string => sprintf(
+            '%04d%04d',
+            (int) $resultado->año,
+            (int) $resultado->periodo,
+        );
 
-            // Si el resultado del periodo más reciente está vacío, buscar el siguiente periodo más grande
-            if (empty($resultadoMasReciente->resultado)) {
-                $resultadoMasReciente = $resultados->where('año', $anioMasReciente->año)
-                    ->sortByDesc('periodo')
-                    ->skip(1)  // Obtener el siguiente periodo
-                    ->first();
-            }
+        $ultimoDato = $resultados
+            ->filter(fn (ResultadoIndicadorMunicipal $resultado): bool => $resultado->dato !== null)
+            ->sortByDesc($ordenarResultados)
+            ->first();
+        $ultimoResultado = $resultados
+            ->filter(fn (ResultadoIndicadorMunicipal $resultado): bool => trim((string) $resultado->resultado) !== '')
+            ->sortByDesc($ordenarResultados)
+            ->first();
+        $municipio = MunicipioConvenio::query()
+            ->with('municipio')
+            ->where('id_municipio', $indicador->id_municipio)
+            ->first();
+        $nombreMunicipio = $municipio?->municipio?->nombre
+            ?? $indicador->municipio?->nombre
+            ?? 'Municipio no disponible';
+        $anioInicioGrafica = $anioInicio;
+        $anioFinGrafica = max($anioActual, $anioMeta);
 
-            // Asignamos el resultado más reciente (si existe)
-            $indicador->resultado_mas_reciente = $resultadoMasReciente ? $resultadoMasReciente->resultado : null;
-        }
-
-        $municipio = MunicipioConvenio::where('id_municipio', $indicador->id_municipio)->first();
-
-        return compact('indicador', 'municipio');
+        return compact(
+            'indicador',
+            'municipio',
+            'nombreMunicipio',
+            'ultimoDato',
+            'ultimoResultado',
+            'anioMeta',
+            'anioInicioGrafica',
+            'anioFinGrafica',
+        );
     }
 
     private function inlinePublicAsset(string $path): string

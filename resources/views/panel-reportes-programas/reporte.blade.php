@@ -60,11 +60,30 @@
             text-transform: uppercase;
         }
 
-        .reporte-programa .semaforo-excedido { background: #dbeafe; color: #1e429f; }
-        .reporte-programa .semaforo-aceptable { background: #d1fae5; color: #065f46; }
-        .reporte-programa .semaforo-moderado { background: #fef3c7; color: #92400e; }
-        .reporte-programa .semaforo-insuficiente { background: #fee2e2; color: #991b1b; }
-        .reporte-programa .semaforo-no-clasificado { background: #e5e7eb; color: #374151; }
+        .reporte-programa .semaforo-excedido {
+            background: #dbeafe;
+            color: #1e429f;
+        }
+
+        .reporte-programa .semaforo-aceptable {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .reporte-programa .semaforo-moderado {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .reporte-programa .semaforo-insuficiente {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .reporte-programa .semaforo-no-clasificado {
+            background: #e5e7eb;
+            color: #374151;
+        }
 
         .reporte-programa .info-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -95,6 +114,60 @@
             line-height: 1.2;
         }
 
+        .reporte-programa .datos-anuales-adicionales {
+            margin-top: .32rem;
+            padding-top: .28rem;
+            border-top: 1px solid #edf0f2;
+        }
+
+        .reporte-programa .datos-anuales-adicionales__titulo {
+            display: block;
+            margin-bottom: .10rem;
+            color: #6b7280;
+            font-size: 5.4pt;
+            font-weight: 700;
+            letter-spacing: .32px;
+            line-height: 1.1;
+            text-transform: uppercase;
+        }
+
+        .reporte-programa .datos-anuales-adicionales__tabla {
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        .reporte-programa .datos-anuales-adicionales__tabla td {
+            width: 16.666%;
+            padding: .07rem .16rem !important;
+            border-left: 1px solid #edf0f2;
+            vertical-align: middle;
+        }
+
+        .reporte-programa .datos-anuales-adicionales__tabla td:first-child {
+            border-left: 0;
+        }
+
+        .reporte-programa .dato-anual-par {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: .16rem;
+            line-height: 1.15;
+        }
+
+        .reporte-programa .dato-anual-par__anio {
+            color: #6b7280;
+            font-size: 6pt;
+            font-weight: 700;
+        }
+
+        .reporte-programa .dato-anual-par__valor {
+            color: #1f2937;
+            font-size: 6.5pt;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
         .reporte-programa .reporte-indicadores {
             border-collapse: separate;
             border-spacing: 0;
@@ -107,7 +180,10 @@
         }
 
         @media print {
-            @page { margin: 10mm 10mm 18mm; size: letter portrait; }
+            @page {
+                margin: 10mm 10mm 18mm;
+                size: letter portrait;
+            }
 
             .reporte-programa .reporte-indicadores thead {
                 display: table-header-group;
@@ -123,9 +199,18 @@
                 width: auto;
             }
 
-            .reporte-programa .reporte-encabezado h5 { font-size: 8pt; }
-            .reporte-programa .reporte-encabezado h6 { font-size: 7pt; margin: 0 !important; }
-            .reporte-programa .reporte-encabezado .header-line { margin-top: 1mm !important; }
+            .reporte-programa .reporte-encabezado h5 {
+                font-size: 8pt;
+            }
+
+            .reporte-programa .reporte-encabezado h6 {
+                font-size: 7pt;
+                margin: 0 !important;
+            }
+
+            .reporte-programa .reporte-encabezado .header-line {
+                margin-top: 1mm !important;
+            }
 
             .reporte-programa .indicador-bloque {
                 break-inside: avoid-page !important;
@@ -143,6 +228,11 @@
 
             .reporte-programa .info-grid {
                 gap: 2mm 4mm;
+            }
+
+            .reporte-programa .datos-anuales-adicionales {
+                margin-top: 1mm;
+                padding-top: 1mm;
             }
         }
     </style>
@@ -178,8 +268,9 @@
                 <tr>
                     <th scope="col">
                         <div class="header-section reporte-encabezado text-center mb-4">
-                            <img src="{{ asset('img/Cadena_SPED.png') }}" alt="SPED" class="logo-header mb-3">
-                            <h5 class="text-uppercase text-dark font-weight-bold m-0" style="color: var(--colorGobierno);">
+                            <img src="{{ asset('img/Cintillos-SPED-35.png') }}" alt="SPED" class="logo-header mb-3">
+                            <h5 class="text-uppercase text-dark font-weight-bold m-0"
+                                style="color: var(--colorGobierno);">
                                 Seguimiento a Indicadores
                             </h5>
                             <h6 class="text-muted mt-1">{{ $programaDerivado->nombre }}</h6>
@@ -201,55 +292,104 @@
                     $ultimoAnio = $indicador->anio_reciente_validado;
                 @endphp
                 <tbody class="reporte-indicador-grupo">
-                <tr>
-                    <td>
-                <div class="indicador-bloque">
-                    <div class="indicador-header">
-                        <div class="indicador-titulo">
-                            <span class="badge-numero">{{ $index + 1 }}</span>
-                            <span class="nombre-indicador">{{ $indicador->nombre }}</span>
-                        </div>
-                        <div class="indicador-resumen">
-                            <span class="indicador-chip {{ $semaforoClass }}">
-                                <small>Semáforo</small>{{ $semaforo }}
-                            </span>
-                            <span class="indicador-chip semaforo-no-clasificado">
-                                <small>Último dato</small>
-                                {{ $ultimoAnio ? $ultimoAnio . ': ' . $indicador->getValorDatoAnual($ultimoAnio, 'N/D', true) : 'N/D' }}
-                            </span>
-                        </div>
-                    </div>
+                    <tr>
+                        <td>
+                            <div class="indicador-bloque">
+                                <div class="indicador-header">
+                                    <div class="indicador-titulo">
+                                        <span class="badge-numero">{{ $index + 1 }}</span>
+                                        <span class="nombre-indicador">{{ $indicador->nombre }}</span>
+                                    </div>
+                                    <div class="indicador-resumen">
+                                        <span class="indicador-chip {{ $semaforoClass }}">
+                                            <small>Semáforo</small>{{ $semaforo }}
+                                        </span>
+                                        <span class="indicador-chip semaforo-no-clasificado">
+                                            <small>Último dato</small>
+                                            {{ $ultimoAnio ? $ultimoAnio . ': ' . $indicador->getValorDatoAnual($ultimoAnio, 'N/D', true) : 'N/D' }}
+                                        </span>
+                                    </div>
+                                </div>
 
-                    <div class="info-grid">
-                        <div class="info-item info-item--institucion">
-                            <span class="label">Institución responsable:</span>
-                            <span class="value">{{ $indicador->institucion?->nombre ?? 'Sin institución' }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Unidad de Medida:</span>
-                            <span class="value">{{ $indicador->unidad_medida }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Tendencia:</span>
-                            <span class="value">{{ $indicador->tendencia }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Línea Base {{ $indicador->linea_base }}:</span>
-                            <span class="value">{{ $indicador->dato_linea_base }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Meta {{ $indicador->meta_anio }}:</span>
-                            <span class="value font-weight-bold">{{ $indicador->meta }}</span>
-                        </div>
-                    </div>
-                </div>
-                    </td>
-                </tr>
+                                <div class="info-grid">
+                                    <div class="info-item info-item--institucion">
+                                        <span class="label">Institución responsable:</span>
+                                        <span
+                                            class="value">{{ $indicador->institucion?->nombre ?? 'Sin institución' }}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Unidad de Medida:</span>
+                                        <span class="value">{{ $indicador->unidad_medida }}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Tendencia:</span>
+                                        <span class="value">{{ $indicador->tendencia }}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Línea Base {{ $indicador->linea_base }}:</span>
+                                        <span class="value">{{ $indicador->dato_linea_base }}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Meta {{ $indicador->meta_anio }}:</span>
+                                        <span class="value font-weight-bold">{{ $indicador->meta }}</span>
+                                    </div>
+                                </div>
+
+                                @php
+                                    $aniosDeReferencia = [
+                                        $indicador->linea_base !== null ? (int) $indicador->linea_base : null,
+                                        $indicador->meta_anio !== null ? (int) $indicador->meta_anio : null,
+                                    ];
+                                    $datosAnualesAdicionales = $indicador->datos_anuales_validados
+                                        ->filter(
+                                            fn($dato) => $dato->valor_dato !== null &&
+                                                trim((string) $dato->valor_dato) !== '' &&
+                                                !in_array((int) $dato->anio, $aniosDeReferencia, true),
+                                        )
+                                        ->values();
+                                @endphp
+
+                                @if ($datosAnualesAdicionales->isNotEmpty())
+                                    <div class="datos-anuales-adicionales">
+                                        <span class="datos-anuales-adicionales__titulo">
+                                            Datos anuales
+                                        </span>
+                                        <table class="datos-anuales-adicionales__tabla"
+                                            aria-label="Datos anuales validados">
+                                            <tbody>
+                                                @foreach ($datosAnualesAdicionales->chunk(6) as $filaDatos)
+                                                    <tr>
+                                                        @foreach ($filaDatos as $datoAnual)
+                                                            <td>
+                                                                <div class="dato-anual-par">
+                                                                    <span class="dato-anual-par__anio">
+                                                                        {{ $datoAnual->anio }}
+                                                                    </span>
+                                                                    <span class="dato-anual-par__valor">
+                                                                        {{ $indicador->getValorDatoAnual($datoAnual->anio, 'N/D', true) }}
+                                                                    </span>
+                                                                </div>
+                                                            </td>
+                                                        @endforeach
+                                                        @for ($celda = $filaDatos->count(); $celda < 6; $celda++)
+                                                            <td aria-hidden="true"></td>
+                                                        @endfor
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
             @empty
                 <tbody>
                     <tr>
-                        <td><p class="text-center text-muted">Este programa no tiene indicadores asociados.</p></td>
+                        <td>
+                            <p class="text-center text-muted">Este programa no tiene indicadores asociados.</p>
+                        </td>
                     </tr>
                 </tbody>
             @endforelse

@@ -497,7 +497,7 @@
 }
 
 .municipales-ficha .ficha-section-title {
-    color: var(--color1-2024) !important;
+    color: #fff !important;
 }
 
 .municipales-ficha__fields {
@@ -534,45 +534,6 @@
     color: var(--color-5);
     font-size: 1rem;
     line-height: 1.7;
-}
-
-.municipales-ficha__history {
-    margin-top: 0.25rem;
-}
-
-.municipales-ficha__history .table-datos {
-    overflow-x: auto;
-}
-
-.municipales-ficha__history .table-historicos {
-    min-width: 0;
-    font-size: 0.78rem;
-}
-
-.municipales-ficha__history .table-historicos th {
-    background-color: var(--ficha-accent) !important;
-    color: #fff;
-    white-space: nowrap;
-}
-
-.municipales-ficha__history .table-historicos td {
-    color: var(--color-texto-principal-ultimos);
-    font-weight: 600;
-    white-space: nowrap;
-    font-family: Corra-Montserra-Regular, 'sans-serif';
-}
-
-.municipales-ficha__chart {
-    width: 100%;
-    min-height: 340px;
-}
-
-.municipales-ficha__source {
-    margin: 1rem 0 0;
-    color: var(--color-5);
-    font-size: 0.78rem;
-    text-align: right;
-    font-family: Corra-Montserra-Regular, 'sans-serif';
 }
 
 @media (max-width: 991.98px) {
@@ -686,9 +647,6 @@
         grid-column: auto;
     }
 
-    .municipales-ficha__source {
-        text-align: left;
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {

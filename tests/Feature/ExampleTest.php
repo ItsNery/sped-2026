@@ -26,6 +26,12 @@ class ExampleTest extends TestCase
 
         $response = $this->get('/');
 
-        $response->assertStatus(200);
+        $response
+            ->assertStatus(200)
+            ->assertSee('<nav id="main-nav"', false)
+            ->assertSee('class="site-header"', false)
+            ->assertSee('id="wrapperBody"', false)
+            ->assertDontSee('id="mobileMenu"', false)
+            ->assertSeeInOrder(['<header class="site-header">', '<main>'], false);
     }
 }

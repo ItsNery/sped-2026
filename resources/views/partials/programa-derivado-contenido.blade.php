@@ -1,16 +1,6 @@
 @php
     $descFinal = $descripcion ?? ($programaData->descripcion ?? '');
     $programaColor = $programa->color ?? '#0c312d';
-    $colorGaugeGeneral = '#adb5bd';
-    if (($avancePrograma ?? 0) >= 110) {
-        $colorGaugeGeneral = '#0d6efd';
-    } elseif (($avancePrograma ?? 0) >= 91) {
-        $colorGaugeGeneral = '#198754';
-    } elseif (($avancePrograma ?? 0) >= 71) {
-        $colorGaugeGeneral = '#ffc107';
-    } elseif (($avancePrograma ?? 0) > 0) {
-        $colorGaugeGeneral = '#dc3545';
-    }
 @endphp
 
 @include('partials.nav-unificada', [
@@ -42,12 +32,6 @@
         <div class="eje-dashboard__summary-stats">
             <div class="eje-dashboard__total">{{ $indicadores->count() }}</div>
             <div class="eje-dashboard__total-label">Indicadores en total</div>
-            <div class="eje-dashboard__gauge-wrap">
-                <div id="gauge-general" class="eje-dashboard__gauge"></div>
-                <div class="eje-dashboard__gauge-value" style="color: {{ $colorGaugeGeneral }};">
-                    {{ number_format($avancePrograma, 2) }}%
-                </div>
-            </div>
         </div>
     </div>
 
@@ -297,23 +281,6 @@
         } else {
             gaugeEls.forEach(renderGauge);
         }
-
-        var chartValGeneral = Number("{{ ($avancePrograma ?? 0) > 100 ? 100 : ($avancePrograma ?? 0) }}");
-        var chartGeneral = echarts.init(document.getElementById('gauge-general'));
-        chartGeneral.setOption({
-            series: [{
-                type: 'gauge',
-                startAngle: 180, endAngle: 0,
-                min: 0, max: 100,
-                 progress: { show: true, width: 15, roundCap: true, itemStyle: { color: @json($colorGaugeGeneral) } },
-                axisLine: { lineStyle: { width: 15, color: [[1, '#e7e7e7']] } },
-                axisTick: { show: false }, splitLine: { show: false },
-                axisLabel: { show: false }, pointer: { show: false },
-                detail: { show: false },
-                data: [{ value: chartValGeneral }]
-            }]
-        });
-        chartGeneral.resize();
 
         var popoverList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]')).map(function(el) {
             return new bootstrap.Popover(el, {
