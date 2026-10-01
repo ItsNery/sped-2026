@@ -210,6 +210,9 @@
             var datosMeta = @json($datosMeta);
             var unidadMedida = @json($unidadMedida);
             var fuenteGrafica = 'Corra Montserra';
+            var indiceReferenciaCompartida = datosLineaBase.findIndex(function(value, index) {
+                return value !== null && value !== undefined && datosMeta[index] !== null && datosMeta[index] !== undefined;
+            });
 
             function formatNumber(value) {
                 if (value === null || value === undefined || value === '' || !Number.isFinite(Number(value))) {
@@ -240,6 +243,21 @@
                 };
             }
 
+            function prepararReferencia(datos, tipo) {
+                return datos.map(function(value, index) {
+                    if (index !== indiceReferenciaCompartida || value === null || value === undefined) {
+                        return value;
+                    }
+
+                    var esLineaBase = tipo === 'lineaBase';
+                    return {
+                        value: value,
+                        symbolOffset: esLineaBase ? [-10, 0] : [10, 0],
+                        label: valueLabel(esLineaBase ? '#00E396' : '#FF0000', esLineaBase ? 'left' : 'right')
+                    };
+                });
+            }
+
             var chart = echarts.init(document.getElementById('grafica-historica'));
 
             chart.setOption({
@@ -254,8 +272,14 @@
                         return res;
                     }
                 },
-                legend: { data: [unidadMedida, @json('Línea Base ' . ($anioLineaBase ?? '')), @json('Meta ' . $anioMeta)], top: 'top' },
-                grid: { left: 54, right: 72, top: 54, bottom: 58, containLabel: true },
+                legend: {
+                    data: [unidadMedida, @json('Línea Base ' . ($anioLineaBase ?? '')), @json('Meta ' . $anioMeta)],
+                    bottom: 0,
+                    left: 'center',
+                    top: 'auto',
+                    orient: 'horizontal'
+                },
+                grid: { left: '3%', right: '4%', bottom: 64, containLabel: true },
                 xAxis: { type: 'category', data: categorias, name: 'Año' },
                 yAxis: { type: 'value', name: 'Rango de valores de medición' },
                 series: [
@@ -271,27 +295,33 @@
                             { offset: 1, color: 'rgba(36,98,87,0.04)' }
                         ]) },
                         showSymbol: true,
-                        symbolSize: 7,
+                        symbol: 'circle',
+                        symbolSize: 4,
                         connectNulls: true,
                         label: valueLabel('#246257', 'top')
                     },
                     {
                         name: @json('Línea Base ' . ($anioLineaBase ?? '')),
-                        type: 'scatter',
-                        data: datosLineaBase,
-                        symbolSize: 14,
-                        symbol: 'diamond',
-                        itemStyle: { color: '#198754' },
-                        label: valueLabel('#198754', 'top')
+                        type: 'line',
+                        data: prepararReferencia(datosLineaBase, 'lineaBase'),
+                        lineStyle: { type: 'dashed', width: 2 },
+                        showSymbol: true,
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        itemStyle: { color: '#00E396' },
+                        connectNulls: true
                     },
                     {
                         name: @json('Meta ' . $anioMeta),
-                        type: 'scatter',
-                        data: datosMeta,
-                        symbolSize: 18,
-                        symbol: 'diamond',
-                        itemStyle: { color: '#b94149' },
-                        label: valueLabel('#b94149', 'top')
+                        type: 'line',
+                        data: prepararReferencia(datosMeta, 'meta'),
+                        lineStyle: { type: 'dashed', width: 2 },
+                        showSymbol: true,
+                        symbol: 'circle',
+                        symbolSize: 7,
+                        itemStyle: { color: '#FF0000' },
+                        connectNulls: true,
+                        label: valueLabel('#FF0000', 'top')
                     }
                 ],
                 labelLayout: {

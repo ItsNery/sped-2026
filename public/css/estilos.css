@@ -350,6 +350,16 @@ table td {
     object-fit: contain;
 }
 
+.logos-group.right {
+    flex-shrink: 0;
+}
+
+.logos-group.right img {
+    display: block;
+    width: auto;
+    height: 70px;
+}
+
 .hamburger-menu {
     z-index: 1100;
     display: none;
@@ -557,6 +567,10 @@ table td {
     }
 
     .logos-group.left img {
+        height: 32px;
+    }
+
+    .logos-group.right img {
         height: 32px;
     }
 
@@ -7996,6 +8010,12 @@ header .encabezado-movil {
     color: #fff;
 }
 
+.ficha-action--generating {
+    cursor: wait;
+    opacity: 0.75;
+    pointer-events: none;
+}
+
 .ficha-action--secondary {
     border: 1px solid #d9c9c4;
     background: rgba(255, 255, 255, 0.8);
@@ -8640,10 +8660,16 @@ header .encabezado-movil {
    ========================================================================= */
 @page {
     size: A4;
+    margin: 5mm 5mm 16mm;
+}
+
+.ficha-pdf__body {
     margin: 0;
 }
 
 .ficha-pdf__document {
+    width: 100%;
+    border-collapse: collapse;
     color: #2d2630;
     font-family: 'Gilroy-Medium', Arial, sans-serif;
 }
@@ -8685,11 +8711,26 @@ header .encabezado-movil {
     margin: 0 auto;
 }
 
+.ficha-pdf__header {
+    display: table-header-group;
+    text-align: center;
+}
+
+.ficha-pdf__header td,
+.ficha-pdf__document > tbody > tr > td {
+    padding: 0;
+}
+
+.ficha-pdf__intro {
+    margin-bottom: 3mm;
+    text-align: center;
+}
+
 .ficha-pdf__logos {
     display: block;
     width: 100%;
     height: 18mm;
-    margin-bottom: 3mm;
+    margin: 0 auto 3mm;
     object-fit: contain;
 }
 
@@ -8724,6 +8765,7 @@ header .encabezado-movil {
     font-family: 'Gilroy-Bold', Arial, sans-serif;
     font-size: 12pt;
     line-height: 1;
+    margin: 0 0 1mm;
 }
 
 .ficha-pdf__title {
@@ -8731,7 +8773,7 @@ header .encabezado-movil {
     font-family: 'Gilroy-Bold', Arial, sans-serif;
     font-size: 18pt;
     line-height: 1.10;
-    margin: 0 0 2mm;
+    margin: 0;
 }
 
 .ficha-pdf__grid {
@@ -8878,10 +8920,11 @@ header .encabezado-movil {
 }
 
 @media screen {
-    .ficha-pdf__document {
+    .ficha-pdf__body {
         background: #fff;
         padding: 1rem;
     }
+
 }
 
 /* ==========================================================================

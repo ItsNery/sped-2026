@@ -9,7 +9,7 @@
     del Estado de Puebla')
 @section('og-description',
     'Dashboard de seguimiento al Plan Estatal de Desarrollo 2024-2030 del Estado de Puebla.
-     Consulta el avance de indicadores estratégicos, sectoriales, especiales e institucionales.')
+    Consulta el avance de indicadores estratégicos, sectoriales, especiales e institucionales.')
 @section('og:url', url()->current())
 @section('twitter-title',
     'Inicio - Sistema de Información para el Seguimiento a la Planeación y Evaluación del Desarrollo
@@ -27,7 +27,7 @@
     {{-- ============================================================
      1. HERO SECTION
      ============================================================ --}}
-    <section class="inicio-hero @if($heroVideo) inicio-hero--video @endif">
+    <section class="inicio-hero @if ($heroVideo) inicio-hero--video @endif">
         @if ($heroVideo)
             <video class="inicio-hero__video" autoplay muted loop playsinline preload="metadata"
                 poster="{{ asset('img/puebla_hero_bg.png') }}" aria-hidden="true">
@@ -43,7 +43,7 @@
                 <p class="inicio-hero__subtitle">
                     Plataforma oficial e integradora que organiza y difunde el seguimiento puntual al avance de los
                     Indicadores
-                     Estratégicos, Sectoriales, Especiales e Institucionales del Estado de Puebla, fortaleciendo
+                    Estratégicos, Sectoriales, Especiales e Institucionales del Estado de Puebla, fortaleciendo
                     la planeación democrática y la toma de decisiones públicas.
                 </p>
                 <a href="#vision-estrategica" target="_self" rel="noopener noreferrer" class="inicio-hero__cta">
@@ -87,7 +87,7 @@
                         <div class="mt-4">
                             <a href="https://ped2024-2030.puebla.gob.mx/" target="_blank" rel="noopener noreferrer"
                                 class="inicio-dashboard__cta">
-                                Consulta el Plan Estatal <i class="fas fa-external-link-alt ms-1"></i>
+                                Consulta el Plan Estatal de Desarollo<i class="fas fa-external-link-alt ms-1"></i>
                             </a>
                         </div>
                     </div>
@@ -136,8 +136,11 @@
                         </div>
 
                         <p class="inicio-dashboard__stats-desc">
-                            El avance promedio se calcula con indicadores que cuentan con datos validados y condiciones suficientes para compararse contra una meta. Los indicadores no evaluables se muestran por separado en el desglose.
-                            <a href="{{ url('/ped#metodologia') }}" class="inicio-dashboard__methodology-link">¿Cómo se calcula?</a>
+                            El avance promedio se calcula con indicadores que cuentan con datos validados y condiciones
+                            suficientes para compararse contra una meta. Los indicadores no evaluables se muestran por
+                            separado en el desglose.
+                            <a href="{{ url('/ped#metodologia') }}" class="inicio-dashboard__methodology-link">¿Cómo se
+                                calcula?</a>
                         </p>
 
                         <div class="inicio-dashboard__semaforo-bar mt-4">
@@ -149,15 +152,21 @@
                                     $distribucionGeneral['azul'] +
                                     $distribucionGeneral['sin_datos'];
                                 $pctRojo =
-                                    $totalRegistrados > 0 ? ($distribucionGeneral['rojo'] / $totalRegistrados) * 100 : 0;
+                                    $totalRegistrados > 0
+                                        ? ($distribucionGeneral['rojo'] / $totalRegistrados) * 100
+                                        : 0;
                                 $pctAmarillo =
                                     $totalRegistrados > 0
                                         ? ($distribucionGeneral['amarillo'] / $totalRegistrados) * 100
                                         : 0;
                                 $pctVerde =
-                                    $totalRegistrados > 0 ? ($distribucionGeneral['verde'] / $totalRegistrados) * 100 : 0;
+                                    $totalRegistrados > 0
+                                        ? ($distribucionGeneral['verde'] / $totalRegistrados) * 100
+                                        : 0;
                                 $pctAzul =
-                                    $totalRegistrados > 0 ? ($distribucionGeneral['azul'] / $totalRegistrados) * 100 : 0;
+                                    $totalRegistrados > 0
+                                        ? ($distribucionGeneral['azul'] / $totalRegistrados) * 100
+                                        : 0;
                                 $pctGris =
                                     $totalRegistrados > 0
                                         ? ($distribucionGeneral['sin_datos'] / $totalRegistrados) * 100
@@ -236,7 +245,8 @@
 
                 <div class="inicio-cumplimiento__header">
                     <h3>Cumplimiento por Eje del PED 2024-2030</h3>
-                    <span class="inicio-cumplimiento__header-sub">Distribución de indicadores por rango de cumplimiento</span>
+                    <span class="inicio-cumplimiento__header-sub">Distribución de indicadores por rango de
+                        cumplimiento</span>
                 </div>
 
                 <div class="inicio-cumplimiento__body">
@@ -245,19 +255,25 @@
                             <div class="inicio-ejes__row" id="eje-{{ $eje['numero'] }}"
                                 style="border-left-color: var(--color-eje{{ $eje['numero'] }});">
                                 <img src="{{ asset('img/iconos/eje-' . $eje['numero'] . '.png') }}"
-                                    class="inicio-ejes__icon"
-                                    alt="Icono del {{ $eje['nombre'] }}">
+                                    class="inicio-ejes__icon" alt="Icono del {{ $eje['nombre'] }}">
                                 <div class="inicio-ejes__info">
-                                    <div class="inicio-ejes__name">{{ $eje['nombre'] }}</div>
+                                    <a href="{{ url('/ped/eje-' . $eje['numero']) }}">
+                                        <div class="inicio-ejes__name">{{ $eje['nombre'] }}</div>
+                                    </a>
                                     <div class="inicio-ejes__meta">
                                         <span class="inicio-ejes__badge"
                                             style="background-color: var(--color-eje{{ $eje['numero'] }});">
                                             {{ $eje['total_indicadores'] }} indicadores
                                         </span>
                                         <span class="inicio-ejes__avance-text">
-                                             Avance promedio: <strong
-                                                 style="color: {{ $eje['semaforo_color'] }};">{{ number_format($eje['avance'], 2) }}%</strong>
-                                            <span class="ms-2">{{ $eje['indicadores_evaluables'] }}/{{ $eje['total_indicadores'] }} evaluables</span>
+                                            Avance promedio:
+                                            <strong style="color: {{ $eje['semaforo_color'] }};">
+                                                {{ number_format($eje['avance'], 2) }}%
+                                            </strong>
+                                            <span class="ms-2">
+                                                {{ $eje['indicadores_evaluables'] }} de {{ $eje['total_indicadores'] }}
+                                                evaludos
+                                            </span>
                                         </span>
                                     </div>
                                 </div>
@@ -299,7 +315,7 @@
                     <div class="inicio-cumplimiento__body">
                         @php
                             $programasAgrupados = $programasData->groupBy('tipo');
-                             $ordenDeseado = ['Sectoriales', 'Especiales', 'Institucionales'];
+                            $ordenDeseado = ['Sectoriales', 'Especiales', 'Institucionales'];
                             $programasOrdenados = $programasAgrupados->sortBy(function ($programas, $tipo) use (
                                 $ordenDeseado,
                             ) {
@@ -364,22 +380,24 @@
                                                 class="inicio-programa-card"
                                                 data-nombre="{{ strtolower($programa['nombre']) }}"
                                                 @if ($tipo === 'Institucionales') data-grupo="{{ Illuminate\Support\Str::slug($programa['grupo'] ?? '') }}" @endif
-                                                 style="border-left-color: {{ $programa['color'] ?? '#0c312d' }};">
+                                                style="border-left-color: {{ $programa['color'] ?? '#0c312d' }};">
                                                 <div class="inicio-programa-card__indicator"
-                                                     style="background-color: {{ $programa['color'] ?? '#0c312d' }};">
+                                                    style="background-color: {{ $programa['color'] ?? '#0c312d' }};">
                                                     <i class="fas {{ $programa['icono'] ?? 'fa-layer-group' }}"
                                                         aria-hidden="true"></i>
-                                                    <span class="visually-hidden">Icono de {{ $programa['nombre'] }}</span>
+                                                    <span class="visually-hidden">Icono de
+                                                        {{ $programa['nombre'] }}</span>
                                                 </div>
                                                 <div class="inicio-programa-card__body">
                                                     <div class="inicio-programa-card__name">{{ $programa['nombre'] }}
                                                     </div>
                                                     <div class="inicio-programa-card__avance"
                                                         style="color: {{ $programa['semaforo_color'] }};">
-                                                         {{ number_format($programa['avance'], 2) }}%
+                                                        {{ number_format($programa['avance'], 2) }}%
                                                     </div>
                                                     <div class="inicio-programa-card__count">
-                                                        {{ $programa['indicadores_evaluables'] }}/{{ $programa['total_indicadores'] }} evaluables
+                                                        {{ $programa['indicadores_evaluables'] }}/{{ $programa['total_indicadores'] }}
+                                                        evaluables
                                                     </div>
                                                 </div>
                                             </a>
@@ -398,7 +416,7 @@
     {{-- ============================================================
      5. VISIÓN ESTRATÉGICA
      ============================================================ --}}
-     
+
     <section class="inicio-vision" id="vision-estrategica">
         <div class="inicio-vision__container">
             <p class="inicio-section-subtitle">Plan Estatal de Desarrollo 2024-2030</p>
@@ -618,21 +636,21 @@
                 fuentesTrack.innerHTML += fuentesTrack.innerHTML;
             }
 
-             // 3. Smooth scroll para pills de ejes
-             document.querySelectorAll('.inicio-eje-pill').forEach(function(pill) {
-                 pill.addEventListener('click', function(e) {
-                     var href = this.getAttribute('href');
+            // 3. Smooth scroll para pills de ejes
+            document.querySelectorAll('.inicio-eje-pill').forEach(function(pill) {
+                pill.addEventListener('click', function(e) {
+                    var href = this.getAttribute('href');
 
-                     // Las rutas de detalle deben continuar con la navegación normal.
-                     if (!href || !href.startsWith('#')) {
-                         return;
-                     }
+                    // Las rutas de detalle deben continuar con la navegación normal.
+                    if (!href || !href.startsWith('#')) {
+                        return;
+                    }
 
-                     e.preventDefault();
-                     var target = document.querySelector(href);
-                     if (target) {
-                         target.scrollIntoView({
-                             behavior: 'smooth',
+                    e.preventDefault();
+                    var target = document.querySelector(href);
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
                             block: 'center'
                         });
                     }

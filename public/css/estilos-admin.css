@@ -1859,14 +1859,47 @@ body {
     }
 }
 
-.custom-section-title--toggle { cursor: pointer; gap: 0.45rem; }
-.custom-section-title--toggle span { flex: 1; }
-.custom-section-title--toggle small { margin-left: auto; color: #8b6333; font-size: 0.7rem; font-weight: 800; }
-.custom-section-title__chevron { margin-left: 0.2rem; color: #687773; font-size: 0.7rem; transition: transform 0.2s ease; }
-.custom-section-title--toggle[aria-expanded="true"] .custom-section-title__chevron { transform: rotate(180deg); }
-.admin-related-programs__list { margin: 0 0 0.75rem; padding: 0.7rem 1rem 0.7rem 2.5rem; border: 1px solid #e1e8e4; border-top: 0; border-radius: 0 0 0.45rem 0.45rem; background: #fbfcfb; color: #344542; font-size: 0.8rem; line-height: 1.4; }
-.admin-related-programs__list li { padding: 0.35rem 0.25rem; border-bottom: 1px solid #e8eeeb; }
-.admin-related-programs__list li:last-child { border-bottom: 0; }
+.custom-section-title--toggle {
+    cursor: pointer;
+    gap: 0.45rem;
+}
+.custom-section-title--toggle span {
+    flex: 1;
+}
+.custom-section-title--toggle small {
+    margin-left: auto;
+    color: #8b6333;
+    font-size: 0.7rem;
+    font-weight: 800;
+}
+.custom-section-title__chevron {
+    margin-left: 0.2rem;
+    color: #687773;
+    font-size: 0.7rem;
+    transition: transform 0.2s ease;
+}
+.custom-section-title--toggle[aria-expanded="true"]
+    .custom-section-title__chevron {
+    transform: rotate(180deg);
+}
+.admin-related-programs__list {
+    margin: 0 0 0.75rem;
+    padding: 0.7rem 1rem 0.7rem 2.5rem;
+    border: 1px solid #e1e8e4;
+    border-top: 0;
+    border-radius: 0 0 0.45rem 0.45rem;
+    background: #fbfcfb;
+    color: #344542;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+.admin-related-programs__list li {
+    padding: 0.35rem 0.25rem;
+    border-bottom: 1px solid #e8eeeb;
+}
+.admin-related-programs__list li:last-child {
+    border-bottom: 0;
+}
 
 /* Detalle administrativo de indicadores */
 .indicator-detail {
@@ -2306,7 +2339,11 @@ body {
     font-weight: 800;
     line-height: 1;
     text-decoration: none !important;
-    transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.15s ease;
     white-space: nowrap;
 }
 
@@ -2436,8 +2473,13 @@ button.admin-index-table-action:hover {
     font-weight: 800;
 }
 
-.admin-index .dt-paging .dt-paging-button:not(.active):not(.disabled) .page-link:hover,
-.admin-index .dataTables_paginate .paginate_button:not(.current):not(.disabled):hover {
+.admin-index
+    .dt-paging
+    .dt-paging-button:not(.active):not(.disabled)
+    .page-link:hover,
+.admin-index
+    .dataTables_paginate
+    .paginate_button:not(.current):not(.disabled):hover {
     border-color: var(--admin-index-accent) !important;
     background: #f8eef1 !important;
     color: var(--admin-index-accent) !important;
@@ -2564,7 +2606,11 @@ button.admin-index-table-action:hover {
     gap: 0.5rem;
 }
 
-.municipality-indicators-index .admin-index-table > tbody > tr > td:first-child {
+.municipality-indicators-index
+    .admin-index-table
+    > tbody
+    > tr
+    > td:first-child {
     min-width: 18rem;
     color: var(--admin-index-primary);
     font-weight: 700;
@@ -2731,10 +2777,12 @@ button.admin-index-table-action:hover {
 
 .exec-filters {
     display: grid;
-    grid-template-columns: minmax(190px, 1.35fr) minmax(145px, 0.85fr) repeat(
+    grid-template-columns:
+        minmax(190px, 1.35fr) minmax(145px, 0.85fr) repeat(
             2,
             minmax(76px, 0.42fr)
-        ) auto;
+        )
+        auto;
     align-items: end;
     gap: 0.55rem;
     min-width: 0;
@@ -3350,11 +3398,11 @@ button.admin-index-table-action:hover {
 }
 .exec-status--excedido {
     background: #e6f0fc;
-    color: #3E8CEE;
+    color: #3e8cee;
 }
 .exec-status--aceptable {
     background: #e6f5ee;
-    color: #43B383;
+    color: #43b383;
 }
 .exec-status--moderado {
     background: #fdf9e6;
@@ -3637,8 +3685,13 @@ button.admin-index-table-action:hover {
     font-weight: 800;
 }
 
-.exec-dashboard .dt-paging .dt-paging-button:not(.active):not(.disabled) .page-link:hover,
-.exec-dashboard .dataTables_paginate .paginate_button:not(.current):not(.disabled):hover {
+.exec-dashboard
+    .dt-paging
+    .dt-paging-button:not(.active):not(.disabled)
+    .page-link:hover,
+.exec-dashboard
+    .dataTables_paginate
+    .paginate_button:not(.current):not(.disabled):hover {
     border-color: var(--admin-index-accent) !important;
     background: #f8eef1 !important;
     color: var(--admin-index-accent) !important;

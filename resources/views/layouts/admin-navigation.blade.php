@@ -27,8 +27,12 @@
             <div class="sidebar-user__identity">
                 <div class="avatar-circle">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</div>
                 <div class="sidebar-user-info">
-                    <div class="sidebar-user-name">{{ Auth::user()->name }}</div>
-                    <div class="sidebar-user-role">{{ Auth::user()->getRoleNames()->join(', ') ?: 'Sin rol' }}</div>
+                    <div class="sidebar-user-name">
+                        {{ Auth::user()->name }}
+                    </div>
+                    <div class="sidebar-user-role">
+                        {{ Auth::user()->getRoleNames()->join(', ') ?: 'Sin rol' }}
+                    </div>
                 </div>
             </div>
         </div>

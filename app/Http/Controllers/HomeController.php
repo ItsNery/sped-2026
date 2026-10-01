@@ -72,6 +72,7 @@ class HomeController extends Controller
             ->format('a4')
             ->margins(5, 5, 16, 5)
             ->showBrowserHeaderAndFooter()
+            ->hideHeader()
             ->footerHtml($footer)
             ->timeout(120)
             ->protocolTimeout(120)

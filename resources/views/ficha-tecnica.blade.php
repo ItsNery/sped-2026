@@ -361,9 +361,10 @@
             </div>
             <div class="container ficha-actions pb-5 text-end ocultar_impresion">
                 <a href="{{ route('ficha-tecnica.download', $indicador) }}"
-                    class="btn ficha-action ficha-action--primary"
+                    id="fichaDownloadButton" class="btn ficha-action ficha-action--primary"
                     style="--ficha-accent: {{ $indicador->color ?? '#9d2449' }};">
-                    <i class="fas fa-download me-2"></i> Descargar ficha
+                    <i class="fas fa-download me-2" data-download-icon aria-hidden="true"></i><span data-download-label
+                        aria-live="polite">Descargar ficha</span>
                 </a>
                 {{-- <a href="{{ route('ficha-tecnica.preview', $indicador) }}" class="ficha-preview-link ms-3" target="_blank" rel="noopener">
                     Vista previa de impresión
@@ -431,5 +432,64 @@
             };
         </script>
         <script src="{{ asset('js/ficha-tecnica.js') }}"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const downloadButton = document.getElementById('fichaDownloadButton');
+
+                if (!downloadButton) {
+                    return;
+                }
+
+                const icon = downloadButton.querySelector('[data-download-icon]');
+                const label = downloadButton.querySelector('[data-download-label]');
+
+                const resetDownloadButton = function () {
+                    downloadButton.dataset.generating = 'false';
+                    downloadButton.removeAttribute('aria-disabled');
+                    downloadButton.classList.remove('ficha-action--generating');
+                    icon.className = 'fas fa-download me-2';
+                    label.textContent = 'Descargar ficha';
+                };
+
+                downloadButton.addEventListener('click', async function (event) {
+                    event.preventDefault();
+
+                    if (downloadButton.dataset.generating === 'true') {
+                        return;
+                    }
+
+                    downloadButton.dataset.generating = 'true';
+                    downloadButton.setAttribute('aria-disabled', 'true');
+                    downloadButton.classList.add('ficha-action--generating');
+                    icon.className = 'fas fa-spinner fa-spin me-2';
+                    label.textContent = 'Generando ficha...';
+
+                    try {
+                        const response = await fetch(downloadButton.href);
+
+                        if (!response.ok) {
+                            throw new Error('No se pudo generar el PDF.');
+                        }
+
+                        const file = await response.blob();
+                        const filename = response.headers.get('content-disposition')?.match(/filename="([^"]+)"/i)?.[1] ??
+                            'ficha-tecnica.pdf';
+                        const fileUrl = URL.createObjectURL(file);
+                        const link = document.createElement('a');
+                        link.href = fileUrl;
+                        link.download = filename;
+                        document.body.appendChild(link);
+                        link.click();
+                        link.remove();
+                        URL.revokeObjectURL(fileUrl);
+                        resetDownloadButton();
+                    } catch (error) {
+                        icon.className = 'fas fa-triangle-exclamation me-2';
+                        label.textContent = 'No fue posible generar la ficha';
+                        window.setTimeout(resetDownloadButton, 4000);
+                    }
+                });
+            });
+        </script>
     @endsection
 @endsection
