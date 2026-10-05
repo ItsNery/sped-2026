@@ -57,14 +57,14 @@ Este seeder usa `public/Relacion nuevis derivados indicadr.ods` como manifiesto 
 
 ## Indicadores Nuevos Institucionales
 
-Antes del seeder de relaciones debe ejecutarse el importador del archivo `public/Indicadores nuevos para carga en el SPED.xlsx`:
+Antes del seeder de relaciones debe ejecutarse el importador versionado del archivo `public/Indicadores nuevos para carga en el SPED.xlsx`:
 
 ```bash
-php scratch/importar_indicadores_nuevos.php
-php scratch/importar_indicadores_nuevos.php --execute
+php artisan sped:import-ped3-institutional
+php artisan sped:import-ped3-institutional --execute
 ```
 
-El primer comando es un dry-run. El segundo crea los indicadores nuevos, sus datos anuales disponibles y sus relaciones institucionales dentro de una transacción. Es idempotente para indicadores que ya existan.
+El primer comando es un dry-run y genera un reporte JSON. No realiza cambios. Corregir primero los programas, instituciones, ODS o valores reportados como inválidos. El segundo crea o actualiza los indicadores nuevos, sus datos anuales y sus relaciones institucionales dentro de una transacción. Es idempotente para indicadores que ya existan en el mismo programa institucional.
 
 Actualmente queda pendiente el indicador `Porcentaje de docentes evaluados con nivel de desempeño satisfactorio`, porque aparece en el manifiesto de relaciones pero no en el Excel. El seeder de relaciones lo reporta como pendiente y no bloquea las demás relaciones.
 

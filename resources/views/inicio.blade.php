@@ -425,8 +425,15 @@
 
             <div class="inicio-vision__grid">
                 <div class="inicio-vision__image-wrapper">
-                    <img src="{{ asset('img/esquemas/dorito.png') }}" alt="Esquema PED 2024-2030"
-                        class="inicio-vision__image">
+                    <button type="button" class="inicio-vision__image-preview" data-bs-toggle="modal"
+                        data-bs-target="#visionSchemeModal" aria-label="Ampliar el esquema del PED 2024-2030">
+                        <img src="{{ asset('img/esquemas/Esquema-Inicio-new.png') }}" alt="Esquema PED 2024-2030"
+                            class="inicio-vision__image">
+                    </button>
+                    <button type="button" class="inicio-vision__expand-button" data-bs-toggle="modal"
+                        data-bs-target="#visionSchemeModal">
+                        <i class="fas fa-expand-alt" aria-hidden="true"></i>Ampliar esquema
+                    </button>
                 </div>
                 <div class="inicio-vision__text">
                     <h2>Enfoque</h2>
@@ -463,6 +470,22 @@
             </div>
         </div>
     </section>
+
+    <div class="modal fade inicio-vision__modal" id="visionSchemeModal" tabindex="-1"
+        aria-labelledby="visionSchemeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h5" id="visionSchemeModalLabel">Esquema del PED 2024-2030</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <img src="{{ asset('img/esquemas/Esquema-Inicio-new.png') }}" alt="Esquema PED 2024-2030"
+                        class="inicio-vision__modal-image">
+                </div>
+            </div>
+        </div>
+    </div>
 
     {{-- ============================================================
      6. ESQUEMA INSTITUCIONAL

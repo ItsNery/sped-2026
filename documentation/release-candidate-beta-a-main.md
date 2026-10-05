@@ -34,6 +34,27 @@ La carpeta candidata será:
 - No borrar la carpeta productiva hasta confirmar que la candidata funciona.
 - Mantener un rollback de código y una copia verificable de los assets productivos.
 
+## Estado de la promoción actual
+
+La promoción vigente se trabaja en `release/beta-content-on-main`. Esta es la única rama que debe proponerse hacia `main`; no se debe intentar fusionar `beta` directamente.
+
+- `beta` y `main` tienen historiales no relacionados.
+- La candidata ya integra el contenido aprobado de `beta` sobre la historia de `main`.
+- La candidata debe actualizarse con el último `origin/main`, resolver sus conflictos y pasar las validaciones antes de abrir el Pull Request.
+- Un merge local no actualiza el remoto. Antes del Pull Request, confirmar que el commit de la candidata está publicado en `origin/release/beta-content-on-main`.
+
+Comprobar que la candidata incorpora `main` sin conflictos:
+
+```bash
+git fetch origin --prune
+git switch release/beta-content-on-main
+git merge-tree --write-tree origin/main HEAD
+git rev-list --left-right --count origin/main...HEAD
+git status --short
+```
+
+El resultado de `git merge-tree` no debe listar conflictos. El primer valor de `git rev-list` debe ser `0`, indicando que la candidata no está detrás de `main`.
+
 ### Comprobación obligatoria de historial
 
 Antes de intentar el merge, confirmar que las ramas comparten historial:
@@ -94,6 +115,8 @@ git switch -c release/beta-to-main-YYYYMMDD
 
 ### 3. Integrar beta sin publicar en main
 
+Esta sección aplica únicamente si se crea una candidata nueva. Para la candidata actual no ejecutar el merge siguiente: `beta` no comparte historia con `main`.
+
 ```bash
 git merge --no-ff --no-commit origin/beta
 ```
@@ -151,6 +174,15 @@ Si el proyecto tiene pruebas:
 ```bash
 php artisan test
 ```
+
+Además, validar el importador versionado de indicadores institucionales:
+
+```bash
+php artisan test --compact tests/Feature/Ped3InstitutionalIndicatorImportCommandTest.php
+php artisan sped:import-ped3-institutional
+```
+
+El último comando es un `dry-run`: no escribe en la base. Debe usarse para identificar programas o instituciones que falten antes de cualquier carga manual.
 
 Confirmar el alcance final:
 
@@ -342,6 +374,40 @@ php artisan view:cache
 
 No ejecutar `php artisan migrate --force` en la candidata hasta confirmar que su `.env` apunta a una base de pruebas. Si la candidata usa una copia de producción, las migraciones deben aprobarse y ejecutarse con respaldo propio.
 
+### Migraciones previstas en producción
+
+La copia local de producción debe revisarse antes de autorizar el cambio. El estado esperado antes de la promoción es que estén pendientes las migraciones de PED 3 y auditoría, incluyendo:
+
+- `create_cat_ejes`: crea `cat_ejes`.
+- `create_programa_institucional_indicador_table`: crea la tabla pivote, migra los indicadores institucionales existentes y elimina su relación polimórfica directa.
+- Enriquecimiento de `logs_cambios`, índices de datos públicos, iconos, slugs municipales, metas y estados de reporte institucional.
+- Permisos de auditoría y de catálogos PED.
+
+Estas migraciones no ejecutan `migrate:fresh`, `db:wipe`, truncados ni restauraciones de beta. Sí modifican registros existentes, por lo que el respaldo completo y verificable sigue siendo obligatorio.
+
+Antes de ejecutar migraciones en producción confirmar:
+
+```bash
+cd /var/www/html/sped
+php artisan migrate:status
+grep -E '^(SPED_SUPERADMIN_EMAIL|SPED_ACTIVE_PLAN_ID)=' .env
+```
+
+La configuración productiva debe contener exactamente:
+
+```ini
+SPED_SUPERADMIN_EMAIL=estadistica@puebla.gob.mx
+SPED_ACTIVE_PLAN_ID=3
+```
+
+Confirmar que el correo existe antes de migrar, sin imprimir datos sensibles:
+
+```bash
+php artisan tinker --execute='exit(App\Models\User::where("email", env("SPED_SUPERADMIN_EMAIL"))->exists() ? 0 : 1);'
+```
+
+Si el comando termina con código distinto de `0`, detener el despliegue. La migración de cuenta de sistema no debe quedar a merced de la selección automática de otro administrador.
+
 ## Fase 8: Probar sin afectar producción
 
 Probar en este orden:
@@ -485,6 +551,72 @@ Ejecutar migraciones solo si fueron revisadas y la base productiva ya tiene resp
 php artisan migrate --force
 ```
 
+### Carga controlada de datos PED 3
+
+Las migraciones solo preparan el esquema y trasladan relaciones existentes. No cargan el catálogo institucional completo ni los indicadores nuevos. Ejecutar las siguientes operaciones de manera separada, con el tráfico detenido o en una ventana controlada.
+
+1. Confirmar que todas las migraciones terminaron correctamente:
+
+```bash
+php artisan migrate:status
+```
+
+2. Crear o actualizar los seis ejes del PED 3. Este seeder también reasigna indicadores ya asociados directamente al plan cuando su nombre de programa coincide con un eje:
+
+```bash
+php artisan db:seed --class=EjesSeeder --force
+```
+
+3. Crear únicamente los programas institucionales de PED 3 ausentes. El seeder es idempotente por nombre normalizado y aborta si detecta duplicados:
+
+```bash
+php artisan db:seed --class=Ped3InstitutionalCatalogSeeder --force
+```
+
+4. Validar el archivo `public/Indicadores nuevos para carga en el SPED.xlsx` sin escribir. El comando valida encabezados, programas, instituciones, valores numéricos y ODS; si alguna fila falla no se ejecutará una carga parcial:
+
+```bash
+php artisan sped:import-ped3-institutional
+```
+
+Revisar el reporte JSON indicado por el comando en `storage/app/imports/`. Resolver todos los programas o instituciones faltantes en el catálogo productivo y repetir el `dry-run` hasta que no muestre errores.
+
+5. Respaldar de forma adicional las tablas que serán modificadas por la carga:
+
+```text
+cat_programas_derivados_institucionales
+indicadors
+datos_anuales
+indicador_ods
+programa_institucional_indicador
+```
+
+6. Ejecutar la importación una sola vez después de aprobar el reporte. La operación se ejecuta en una transacción y puede repetirse sin duplicar indicadores ni relaciones:
+
+```bash
+php artisan sped:import-ped3-institutional --execute
+```
+
+7. Resolver relaciones del manifiesto ODS solamente después de cargar los indicadores. El seeder no escribe si encuentra programas o indicadores ambiguos o faltantes:
+
+```bash
+php artisan db:seed --class=Ped3InstitutionalRelationsSeeder --force
+```
+
+8. No ejecutar `sped:cleanup-regional --execute` como parte de esta promoción. Es un comando independiente que elimina indicadores regionales y requiere una aprobación y respaldo específicos.
+
+9. Validar conteos, relaciones y datos tras la carga:
+
+```bash
+php artisan tinker --execute='echo json_encode([
+    "programas_institucionales_ped3" => App\Models\CatProgramaDerivadoInstitucional::where("plan_estatal", 3)->count(),
+    "indicadores_ped3" => App\Models\Indicador::forPlan(3)->count(),
+    "relaciones_institucionales" => DB::table("programa_institucional_indicador")->count(),
+]);'
+```
+
+Conservar los reportes JSON y los respaldos de esta fase junto con la evidencia de liberación.
+
 ## Fase 11: Validar después del cutover
 
 ```bash
@@ -578,6 +710,8 @@ Al aceptar el Pull Request, el push a `main` activará el workflow de producció
 - [ ] Se integró `beta` sin tocar `main`.
 - [ ] Se revisó el diff completo.
 - [ ] Se probaron migraciones y comandos de datos.
+- [ ] La candidata incorpora el último `main` y no tiene conflictos.
+- [ ] El commit aprobado de la candidata fue enviado al remoto.
 - [ ] Se subió solo la rama candidata.
 - [ ] Se creó `/var/www/html/sped-candidate`.
 - [ ] La candidata no usa la base productiva para pruebas destructivas.
@@ -589,9 +723,16 @@ Al aceptar el Pull Request, el push a `main` activará el workflow de producció
 - [ ] Se probó la descarga PDF.
 - [ ] Se respaldó la base productiva y se verificó el checksum.
 - [ ] Se respaldó `.env`, assets y Puppeteer.
+- [ ] `SPED_SUPERADMIN_EMAIL=estadistica@puebla.gob.mx` está definido y el usuario existe en producción.
 - [ ] Se renombró la carpeta anterior, no se eliminó.
 - [ ] Se activó la candidata en una ventana controlada.
 - [ ] Se conservaron los datos productivos.
+- [ ] Se ejecutó `EjesSeeder` después de las migraciones.
+- [ ] Se ejecutó `Ped3InstitutionalCatalogSeeder` antes de cargar indicadores.
+- [ ] El dry-run de `sped:import-ped3-institutional` terminó sin errores.
+- [ ] Se respaldaron las tablas de la carga PED 3 antes de usar `--execute`.
+- [ ] Se ejecutó `Ped3InstitutionalRelationsSeeder` después de la importación.
+- [ ] No se ejecutó `sped:cleanup-regional --execute` sin una aprobación específica.
 - [ ] Se probaron login, fichas, PDF y API.
 - [ ] Se mantuvo disponible `sped-previous-*` para rollback.
 - [ ] Solo después de todo lo anterior se hizo merge a `main`.
