@@ -1937,7 +1937,8 @@ class IndicadorController extends Controller
             return response()->json(['error' => $e->getMessage()], 422);
         }
 
-        $columnaInicialDatosAnualesExcel = 22;
+        $legacyMetaLayout = $this->normalizeImportHeader($headers[12] ?? '') === 'meta';
+        $columnaInicialDatosAnualesExcel = $legacyMetaLayout ? 22 : 23;
         $anioInicialDatosAnuales = 2015;
         $anioFinalDatosAnuales = 2030;
         $mapeoColumnasAnios = [];
@@ -1980,6 +1981,8 @@ class IndicadorController extends Controller
                     throw new \Exception("La Institución con ID '{$idInstitucion}' no existe.");
                 }
 
+                $meta = $this->importCell($row, $legacyMetaLayout ? 12 : 13);
+
                 $datosIndicador = [
                     'nombre'             => $nombreIndicador,
                     'programa_derivado'  => $alignment['programaDerivado'],
@@ -1993,16 +1996,20 @@ class IndicadorController extends Controller
                     'linea_base'         => $this->importCell($row, 9),
                     'dato_linea_base'    => $this->importCell($row, 10),
                     'unidad_medida'      => $this->importCell($row, 11),
-                    'meta_anio'          => $this->importMetaYear($planObj),
-                    'meta'               => $this->importCell($row, 12),
-                    'fuente'             => $this->importCell($row, 13) ?? ($indicador?->fuente ?? ''),
-                    'liga'               => $this->normalizeImportUrl($this->importCell($row, 14)),
-                    'descripcion'        => $this->importCell($row, 15) ?? ($indicador?->descripcion ?? ''),
-                    'periodicidad'       => $this->importCell($row, 16),
-                    'cobertura'          => $this->importCell($row, 17),
-                    'tendencia'          => $this->importCell($row, 18),
-                    'formula'            => $this->importCell($row, 19),
-                    'fecha_actualizacion' => $this->normalizeImportDate($this->importCell($row, 21))
+                    'meta_anio'          => $legacyMetaLayout
+                        ? $this->importMetaYear($planObj)
+                        : $this->importIntegerCell($row, 12, 'Año de meta'),
+                    // meta_2024 remains required by the legacy schema and mirrors the current meta value.
+                    'meta_2024'          => $meta,
+                    'meta'               => $meta,
+                    'fuente'             => $this->importCell($row, $legacyMetaLayout ? 13 : 14) ?? ($indicador?->fuente ?? ''),
+                    'liga'               => $this->normalizeImportUrl($this->importCell($row, $legacyMetaLayout ? 14 : 15)),
+                    'descripcion'        => $this->importCell($row, $legacyMetaLayout ? 15 : 16) ?? ($indicador?->descripcion ?? ''),
+                    'periodicidad'       => $this->importCell($row, $legacyMetaLayout ? 16 : 17),
+                    'cobertura'          => $this->importCell($row, $legacyMetaLayout ? 17 : 18),
+                    'tendencia'          => $this->importCell($row, $legacyMetaLayout ? 18 : 19),
+                    'formula'            => $this->importCell($row, $legacyMetaLayout ? 19 : 20),
+                    'fecha_actualizacion' => $this->normalizeImportDate($this->importCell($row, $legacyMetaLayout ? 21 : 22))
                         ?? ($indicador?->fecha_actualizacion ?? date('Y-m-d')),
                     'indicador_validado' => false,
                 ];
@@ -2067,7 +2074,7 @@ class IndicadorController extends Controller
                     }
                 }
 
-                $indicador->ods()->sync($this->parseImportOds($this->importCell($row, 20)));
+                $indicador->ods()->sync($this->parseImportOds($this->importCell($row, $legacyMetaLayout ? 20 : 21)));
 
                 DB::commit();
                 $indicadoresImportadosExitosamente++;
@@ -2199,7 +2206,8 @@ class IndicadorController extends Controller
             'Línea Base (Año)',
             'Dato Línea Base',
             'Unidad de Medida',
-            'Meta',
+            'Meta (Año)',
+            'Meta (Dato)',
             'Fuente',
             'Liga',
             'Descripción',
@@ -2311,7 +2319,8 @@ class IndicadorController extends Controller
             'Línea Base (Año)',
             'Dato Línea Base',
             'Unidad de Medida',
-            'Meta',
+            'Meta (Año)',
+            'Meta (Dato)',
             'Fuente',
             'Liga',
             'Descripción',
@@ -2334,6 +2343,10 @@ class IndicadorController extends Controller
     private function validateImportHeaders(array $headers): ?string
     {
         $expectedHeaders = $this->importHeaders();
+        $legacyMetaLayout = $this->normalizeImportHeader($headers[12] ?? '') === 'meta';
+        if ($legacyMetaLayout) {
+            $expectedHeaders = $this->legacyImportHeaders();
+        }
 
         if (count($headers) < count($expectedHeaders)) {
             return 'La plantilla no contiene todas las columnas obligatorias. Descarga la plantilla actualizada.';
@@ -2342,11 +2355,6 @@ class IndicadorController extends Controller
         foreach ($expectedHeaders as $index => $expectedHeader) {
             $actual = $this->normalizeImportHeader($headers[$index] ?? '');
             $allowed = [$this->normalizeImportHeader($expectedHeader)];
-
-            if ($index === 12) {
-                $allowed[] = 'meta 2024';
-                $allowed[] = 'meta 2030';
-            }
 
             if (!in_array($actual, $allowed, true)) {
                 return "La columna " . chr(65 + $index) . " debe ser '{$expectedHeader}'.";
@@ -2360,7 +2368,7 @@ class IndicadorController extends Controller
             }
         }
 
-        if (count($headers) > 38) {
+        if (count($headers) > count($expectedHeaders) + 16) {
             return 'La plantilla contiene columnas adicionales no soportadas.';
         }
 
@@ -2649,6 +2657,34 @@ class IndicadorController extends Controller
             default:
                 return null;
         }
+    }
+
+    private function legacyImportHeaders(): array
+    {
+        return [
+            'ID (Opcional)',
+            'Nombre Indicador',
+            'Plan Estatal (Exacto)',
+            'Tipo Programa (Eje, Sectorial, Especial...)',
+            'Nombre Programa Derivado (Exacto)',
+            'Eje / Programa',
+            'ID Usuario Responsable',
+            'ID Institución Responsable',
+            'Temática',
+            'Línea Base (Año)',
+            'Dato Línea Base',
+            'Unidad de Medida',
+            'Meta',
+            'Fuente',
+            'Liga',
+            'Descripción',
+            'Periodicidad',
+            'Cobertura',
+            'Tendencia',
+            'Fórmula',
+            'ODS (Sep. comas)',
+            'Fecha Actualización',
+        ];
     }
 
     private function deleteEvidence(?string $filename): void

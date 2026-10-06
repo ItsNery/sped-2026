@@ -35,7 +35,9 @@
                                     <th>D</th>
                                     <th>E</th>
                                     <th>F</th>
-                                    <th>G - S</th>
+                                    <th>G - H</th>
+                                    <th>I - W</th>
+                                    <th>X - AM</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -49,14 +51,17 @@
                                     <td class="table-primary"><strong>Nombre Prog. Derivado</strong><br><small>(No aplica
                                             para Eje)</small></td>
                                     <td><strong>Eje / Programa</strong><br><small>(Texto)</small></td>
-                                    <td>... Resto de datos<br><small>(Temática, Meta, etc.)</small></td>
+                                    <td><strong>IDs Responsable</strong><br><small>(Usuario e Institución)</small></td>
+                                    <td>... Datos del indicador<br><small>(Temática, línea base, meta, ODS y fecha)</small></td>
+                                    <td><strong>2015 - 2030</strong><br><small>(Valores anuales)</small></td>
                                 </tr>
                             </tbody>
                         </table>
                         <div class="alert alert-info py-2" style="font-size: 0.9rem;">
                             <i class="fa-solid fa-circle-info"></i> <strong>Nota Importante:</strong> Las columnas
                             <strong>C, D y E</strong> son obligatorias para programas derivados; para indicadores de
-                            eje, utiliza <strong>C, D y F</strong>.
+                            eje, utiliza <strong>C, D y F</strong>. La meta requiere su año y su dato en las columnas
+                            <strong>M y N</strong>.
                         </div>
                     </div>
 
