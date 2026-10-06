@@ -52,7 +52,7 @@
     </div>
     <div class="hoja">
         <div class="header-section text-center mb-4">
-            <img src="{{ asset('img/Cadena_SPED.png') }}" alt="Logo Gobierno" class="logo-header mb-3">
+            <img src="{{ asset('img/Cintillo-Reporte.png') }}" alt="Logo Gobierno" class="logo-header mb-3">
             <h5 class="text-uppercase text-dark font-weight-bold m-0" style="color: var(--colorGobierno);">
                 Reporte de Indicadores
             </h5>
@@ -85,8 +85,9 @@
                         </div>
                         <div class="info-item">
                             <span class="label">Meta {{ $indicador->meta_anio }}:</span>
-                            <span class="value font-weight-bold">{{ $indicador->meta_anio }}:
-                                {{ $indicador->meta }}</span>
+                            <span class="value font-weight-bold">
+                                {{ $indicador->meta }}
+                            </span>
                         </div>
                     </div>
 
