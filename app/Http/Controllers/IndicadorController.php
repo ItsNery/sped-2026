@@ -26,6 +26,7 @@ use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
@@ -2241,8 +2242,8 @@ class IndicadorController extends Controller
         $sheet->getStyle('A1:' . $lastCol . '1')->applyFromArray($headerStyle);
 
         // AutoSize Columns
-        foreach (range('A', $lastCol) as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
+        for ($column = 1; $column <= Coordinate::columnIndexFromString($lastCol); $column++) {
+            $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($column))->setAutoSize(true);
         }
 
         // Add Example Row (Optional hint)
