@@ -78,7 +78,7 @@ php artisan db:seed --class=Ped3InstitutionalCatalogSeeder --force
 
 `EjesSeeder` tambien reasigna indicadores que estaban ligados directamente al plan cuando su campo `programa` coincide con un eje. `Ped3InstitutionalCatalogSeeder` solamente agrega programas institucionales PED 3 que no existan por nombre normalizado.
 
-## 4. Conciliar Instituciones Antes de Cargar Indicadores
+## 4. Conciliar y Aplicar Excel de Instituciones e Indicadores
 
 Los indicadores institucionales se resuelven por nombre de institucion y el importador no crea instituciones. Ejecutar el reporte de diferencias:
 
@@ -92,7 +92,33 @@ El reporte queda en `storage/app/reconciliation/` y separa `indicadors` e `insti
 - Ausentes en Excel.
 - Mismo ID con campos distintos.
 
-Revisar las entradas de `instituciones` primero. El comando actual es deliberadamente de solo lectura: no aplica las altas o actualizaciones de `instituciones0210.xls`. No continuar con la carga institucional si faltan instituciones que el Excel de carga referencia; primero debe aprobarse y aplicarse una conciliacion especifica sobre la copia candidata.
+Revisar las entradas de `instituciones` primero. Los indicadores pueden referenciar usuarios por `id_usuario`; esos usuarios deben existir previamente en `bd_sped_candidate`. El aplicador no crea usuarios, roles ni permisos.
+
+Confirmar que Artisan usa la base candidata y que contiene los IDs requeridos antes de aplicar:
+
+```bash
+php artisan optimize:clear
+php artisan tinker --execute='dump(
+    DB::connection()->getDatabaseName(),
+    DB::table("users")->whereIn("id", [62, 63, 64, 65])->pluck("id")->sort()->values()->all()
+);'
+```
+
+Sustituir la lista de IDs por los que indique el reporte del aplicador. Si falta alguno, crear o sincronizar el usuario de forma aprobada antes de continuar; no importar usuarios directamente desde un Excel.
+
+El comando de aplicacion usa los mismos Excel y, por defecto, solo genera un informe:
+
+```bash
+php artisan sped:apply-candidate-excel
+```
+
+El JSON queda en `storage/app/reconciliation/` e incluye altas, actualizaciones, valores anterior/nuevo y registros ausentes que se conservaran. Si es correcto, aplicar dentro de una transaccion:
+
+```bash
+php artisan sped:apply-candidate-excel --execute
+```
+
+El comando aplica primero las instituciones y despues los indicadores por ID. Solo crea o actualiza: no elimina registros ausentes del Excel ni modifica `datos_anuales`.
 
 ## 5. Cargar Indicadores Institucionales PED 3
 
