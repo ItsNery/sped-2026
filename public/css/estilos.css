@@ -8862,6 +8862,7 @@ header .encabezado-movil {
 
 .ficha-pdf__heading {
     border-bottom: 1px solid #e8dfda;
+    background: rgba(12, 49, 45, 0.08);
     color: #0c312d;
     font-family: 'Gilroy-Bold', Arial, sans-serif;
     font-size: 10pt;

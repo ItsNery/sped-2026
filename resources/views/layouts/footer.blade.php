@@ -50,8 +50,8 @@
                 </h6>
                 <ul class="list-unstyled">
                     <li><i class="fa fa-angle-right me-2"></i>Av. Cúmulo de Virgo 1358</li>
-                    <li><i class="fa fa-angle-right me-2"></i> Reserva Territorial Atlixcáyotl, Puebla, Pue.</li>
-                    <li><i class="fa fa-angle-right me-2"></i>Tel: (222) 229-70-00, Ext. 5040</li>
+                    <li><i class="fa fa-angle-right me-2"></i>Reserva Territorial Atlixcáyotl, Puebla, Pue.</li>
+                    <li><i class="fa fa-angle-right me-2"></i>Tel: 222 144 2449, Ext. 5040</li>
                 </ul>
                 <iframe
                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d235.74991801338356!2d-98.23562714550607!3d19.019779470285457!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85cfc70067539479%3A0xf49b8ffba2f7d28e!2sSecretar%C3%ADa%20de%20Finanzas%20-%20Nueva%20Sede%20(en%20construcci%C3%B3n)!5e0!3m2!1sen!2smx!4v1779210197938!5m2!1sen!2smx"

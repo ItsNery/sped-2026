@@ -5,10 +5,14 @@ namespace Tests\Feature;
 use App\Models\Indicador;
 use App\Models\Institucion;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class FichaTechnicalPdfTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_pdf_repeats_the_logos_with_a_table_header(): void
     {
         $pdf = view('ficha-tecnica-pdf', [
@@ -29,6 +33,10 @@ class FichaTechnicalPdfTest extends TestCase
         $this->assertStringContainsString('Indicador de prueba', $pdf);
         $this->assertMatchesRegularExpression('/\.ficha-pdf__header\s*\{\s*display:\s*table-header-group;/', $pdf);
         $this->assertMatchesRegularExpression('/@page\s*\{[^}]*margin:\s*5mm 5mm 16mm;/', $pdf);
+        $this->assertMatchesRegularExpression(
+            '/\.ficha-pdf__heading\s*\{[^}]*background:\s*rgba\(12,\s*49,\s*45,\s*0\.08\);/',
+            $pdf,
+        );
         $this->assertSame(1, substr_count($pdf, 'class="ficha-pdf__subtitle"'));
     }
 
@@ -42,6 +50,48 @@ class FichaTechnicalPdfTest extends TestCase
         $this->assertStringContainsString("textContent = 'Generando ficha...';", $page);
         $this->assertStringContainsString('await fetch(downloadButton.href)', $page);
         $this->assertStringContainsString('resetDownloadButton();', $page);
+    }
+
+    public function test_download_reuses_cached_pdf_when_the_ficha_content_is_unchanged(): void
+    {
+        Storage::fake('local');
+        $institucion = Institucion::create([
+            'nombre' => 'Institución de prueba',
+            'titular' => 'Titular de prueba',
+        ]);
+        $indicador = Indicador::create([
+            'nombre' => 'Indicador cacheado',
+            'programa_derivado' => 'Programa Sectorial',
+            'programa' => 'Programa de prueba',
+            'cod_tematica' => 'T1',
+            'tematica' => 'Temática de prueba',
+            'id_institucion' => $institucion->id,
+            'linea_base' => 2024,
+            'dato_linea_base' => 10,
+            'meta_anio' => 2030,
+            'meta' => 20,
+            'meta_2024' => 20,
+            'unidad_medida' => 'Porcentaje',
+            'fuente' => 'Fuente de prueba',
+            'descripcion' => 'Descripción de prueba',
+            'periodicidad' => 'Anual',
+            'cobertura' => 'Estatal',
+            'tendencia' => 'Mayor es mejor',
+            'fecha_actualizacion' => '2026-01-01',
+            'formula' => 'Dato / meta',
+        ]);
+        $preview = $this->get(route('ficha-tecnica.preview', $indicador))->assertOk();
+        $cachePath = "fichas-tecnicas/{$indicador->id}.pdf";
+        $fingerprintPath = "fichas-tecnicas/{$indicador->id}.sha256";
+        $pdfCacheado = 'PDF desde cache';
+
+        Storage::disk('local')->put($cachePath, $pdfCacheado);
+        Storage::disk('local')->put($fingerprintPath, hash('sha256', $preview->getContent()));
+
+        $this->get(route('ficha-tecnica.download', $indicador))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertContent($pdfCacheado);
     }
 
     private function fichaIndicator(): Indicador

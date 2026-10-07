@@ -13,7 +13,7 @@ class PublicProgramDetailTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_derived_program_detail_hides_general_progress(): void
+    public function test_derived_program_detail_keeps_general_progress(): void
     {
         $plan = CatPlanEstatalDesarrollo::create([
             'nombre' => 'PED de prueba',
@@ -33,8 +33,8 @@ class PublicProgramDetailTest extends TestCase
         $this->get('/ped-programas/sectoriales/' . Str::slug($programa->nombre))
             ->assertOk()
             ->assertSee('Indicadores en total')
-            ->assertDontSee('id="gauge-general"', false)
-            ->assertDontSee('chartValGeneral', false);
+            ->assertSee('id="gauge-general"', false)
+            ->assertSee('chartValGeneral', false);
     }
 
     public function test_eje_detail_keeps_general_progress(): void

@@ -10,6 +10,7 @@ use App\Models\CatRegion;
 use App\Models\Institucion;
 use App\Models\Odses;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use App\Models\CatProgramaDerivadoSectorial;
 use App\Models\CatProgramaDerivadoInstitucional;
 use App\Models\CatProgramaDerivadoEspecial;
@@ -61,34 +62,50 @@ class HomeController extends Controller
     {
         $nombre = Str::slug($indicador->nombre ?: 'indicador');
         $html = view('ficha-tecnica-pdf', $this->fichaPdfData($indicador))->render();
-        $footer = '<div style="width: 100vw; margin: 0; padding: 0; color: #706b72; font: 9px Arial, sans-serif; text-align: center;">'
-            . 'Hoja <span class="pageNumber"></span> de <span class="totalPages"></span></div>';
-        $pdf = Browsershot::html($html)
-            ->setNodeBinary(config('browsershot.node_binary', 'node'))
-            ->setNodeModulePath(base_path('node_modules'))
-            ->setNodeEnv([
-                'PUPPETEER_CACHE_DIR' => storage_path('app/puppeteer'),
-            ])
-            ->format('a4')
-            ->margins(5, 5, 16, 5)
-            ->showBrowserHeaderAndFooter()
-            ->hideHeader()
-            ->footerHtml($footer)
-            ->timeout(120)
-            ->protocolTimeout(120)
-            ->showBackground()
-            ->setOption('viewport', [
-                'width' => 794,
-                'height' => 1123,
-                'deviceScaleFactor' => 2,
-            ])
-            ->setOption('args', [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--font-render-hinting=none',
-            ])
-            ->waitForFunction('window.pdfReady === true', null, 110000)
-            ->pdf();
+        $cachePath = "fichas-tecnicas/{$indicador->getKey()}.pdf";
+        $fingerprintPath = "fichas-tecnicas/{$indicador->getKey()}.sha256";
+        $fingerprint = hash('sha256', $html);
+        $storage = Storage::disk('local');
+
+        if (
+            $storage->exists($cachePath) &&
+            $storage->exists($fingerprintPath) &&
+            hash_equals(trim($storage->get($fingerprintPath)), $fingerprint)
+        ) {
+            $pdf = $storage->get($cachePath);
+        } else {
+            $footer = '<div style="width: 100vw; margin: 0; padding: 0; color: #706b72; font: 9px Arial, sans-serif; text-align: center;">'
+                . 'Hoja <span class="pageNumber"></span> de <span class="totalPages"></span></div>';
+            $pdf = Browsershot::html($html)
+                ->setNodeBinary(config('browsershot.node_binary', 'node'))
+                ->setNodeModulePath(base_path('node_modules'))
+                ->setNodeEnv([
+                    'PUPPETEER_CACHE_DIR' => storage_path('app/puppeteer'),
+                ])
+                ->format('a4')
+                ->margins(5, 5, 16, 5)
+                ->showBrowserHeaderAndFooter()
+                ->hideHeader()
+                ->footerHtml($footer)
+                ->timeout(120)
+                ->protocolTimeout(120)
+                ->showBackground()
+                ->setOption('viewport', [
+                    'width' => 794,
+                    'height' => 1123,
+                    'deviceScaleFactor' => 2,
+                ])
+                ->setOption('args', [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--font-render-hinting=none',
+                ])
+                ->waitForFunction('window.pdfReady === true', null, 110000)
+                ->pdf();
+
+            $storage->put($cachePath, $pdf);
+            $storage->put($fingerprintPath, $fingerprint);
+        }
 
         return response($pdf, 200, [
             'Content-Type' => 'application/pdf',
