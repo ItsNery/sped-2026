@@ -112,8 +112,10 @@
                                     Avance promedio de indicadores evaluables
                                 </p>
                                 <p class="mb-0 text-muted small">
-                                    {{ $metricasPlan['total_evaluables'] }} evaluables ·
-                                    {{ number_format($metricasPlan['cobertura_evaluacion'], 2) }}% de cobertura
+
+                                    {{ $metricasPlan['total_evaluables'] }} de {{ $metricasPlan['total_registrados'] }}
+                                    indicadores cuentan con información suficiente para medir su avance
+                                    ({{ number_format($metricasPlan['cobertura_evaluacion'], 2) }}%).
                                 </p>
                             </div>
                         </div>
@@ -137,7 +139,7 @@
 
                         <p class="inicio-dashboard__stats-desc">
                             El avance promedio se calcula con indicadores que cuentan con datos validados y condiciones
-                            suficientes para compararse contra una meta. Los indicadores no evaluables se muestran por
+                            suficientes para compararse contra la meta 2030. Los indicadores no evaluables se muestran por
                             separado en el desglose.
                             <a href="{{ url('/ped#metodologia') }}" class="inicio-dashboard__methodology-link">¿Cómo se
                                 calcula?</a>
@@ -272,7 +274,7 @@
                                             </strong>
                                             <span class="ms-2">
                                                 {{ $eje['indicadores_evaluables'] }} de {{ $eje['total_indicadores'] }}
-                                                evaludos
+                                                evaluados
                                             </span>
                                         </span>
                                     </div>
@@ -308,7 +310,7 @@
 
                 @if ($programasData->count() > 0)
                     <div class="inicio-cumplimiento__header inicio-cumplimiento__header--programas">
-                        <h3>Avance por Programas Derivados</h3>
+                        <h3>Avance por Programa Derivado</h3>
                         <span class="inicio-cumplimiento__header-sub">Indicadores agrupados por tipo de programa</span>
                     </div>
 
@@ -501,7 +503,8 @@
                         alt="Sistema Estatal de Planeación Democrática">
                     <p>
                         El esquema integral define el conjunto de procedimientos y actividades mediante las cuales
-                        las instituciones de la Administración Pública Estatal y Municipal, entre sí, y en colaboración con
+                        las instituciones de la Administración Pública Estatal (APE) y Municipal, entre sí, y en
+                        colaboración con
                         los sectores de la sociedad, toman decisiones para llevar de forma coordinada el proceso de
                         planeación a fin de garantizar el desarrollo integral y sostenible del estado.
                     </p>
@@ -523,7 +526,8 @@
                     <p>
                         De tal forma el SPED automatiza el proceso de seguimiento de las acciones y metas de los
                         instrumentos
-                        de planeación, el Informe de Gobierno, los programas presupuestales y los ODS de la Agenda 2030.
+                        de planeación, el Informe de Gobierno, los programas presupuestales y los Objetivos de Desarrollo
+                        Sostenible de la Agenda 2030.
                     </p>
                 </div>
             </div>

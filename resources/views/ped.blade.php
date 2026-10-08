@@ -91,16 +91,20 @@
                         <i class="fas fa-chart-line"></i>
                         <div>
                             <h3>Avance promedio</h3>
-                            <p>Es el promedio simple del cumplimiento de los indicadores que tienen datos validados y
-                                condiciones suficientes para compararse contra su meta.</p>
+                            <p>
+                                Es el promedio simple del porcentaje de cumplimiento de los indicadores evaluables.
+                            </p>
                         </div>
                     </article>
                     <article class="ped-dashboard__methodology-item">
                         <i class="fas fa-filter"></i>
                         <div>
                             <h3>Indicadores evaluables</h3>
-                            <p>Los indicadores sin datos validados, sin meta o con información insuficiente se reportan por
-                                separado y no alteran el promedio.</p>
+                            <p>
+                                Indicadores que disponen de datos validados para medir su avance respecto a la meta 2030.
+                                Los casos sin información se reportan por separado para no distorsionar el resultado
+                                general.
+                            </p>
                         </div>
                     </article>
                     <article class="ped-dashboard__methodology-item">
@@ -198,7 +202,7 @@
                 </div>
 
                 <p class="ped-dashboard__methodology-note">
-                    La vista pública utiliza información validada. Los porcentajes reflejan el último dato disponible de
+                    Los porcentajes reflejan el último dato disponible de
                     cada indicador y pueden corresponder a distintos años de referencia.
                 </p>
                 <a href="{{ asset('docs/normatividad/nota-metodologica-semaforizacion.pdf') }}"
