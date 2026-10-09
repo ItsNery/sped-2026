@@ -28,9 +28,22 @@ class LogCambio extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'usuario_id',
         'usuario',
         'tabla',
+        'registro_id',
         'columna',
-        'accion'
+        'accion',
+        'valor_anterior',
+        'valor_nuevo',
+        'ip',
+        'user_agent',
+        'request_id',
+        'motivo',
+    ];
+
+    protected $casts = [
+        'registro_id' => 'integer',
+        'usuario_id' => 'integer',
     ];
 }

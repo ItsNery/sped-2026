@@ -39,20 +39,28 @@
 
 <body class="font-sans antialiased bg-light">
     <x-banner />
-    @livewire('navigation-menu')
+    <div class="admin-wrapper">
+        @include('layouts.admin-navigation')
 
-    <!-- Page Heading -->
-    <header class="d-flex py-3 bg-white shadow-sm border-bottom">
-        <div class="container">
-            {{ $header }}
+        <div class="admin-content">
+            <nav class="admin-topbar" aria-label="Barra superior">
+                <button class="admin-sidebar-toggle" type="button" data-sidebar-toggle aria-label="Abrir o contraer menú">
+                    <i class="fas fa-bars" aria-hidden="true"></i>
+                </button>
+                <span class="admin-topbar-title">@yield('title', 'Panel de administración')</span>
+                <span class="admin-topbar-user">{{ Auth::user()->name ?? '' }}</span>
+            </nav>
+
+            <header class="admin-page-heading">
+                <div class="container-fluid">{{ $header }}</div>
+            </header>
+
+            <main class="container-fluid my-2 content">
+                {{ $slot }}
+            </main>
+            @include('layouts.footer-admin')
         </div>
-    </header>
-
-    <!-- Page Content -->
-    <main class="container my-2 content">
-        {{ $slot }}
-    </main>
-    @include('layouts.footer-admin')
+    </div>
 
     @stack('modals')
 
@@ -72,7 +80,44 @@
         src="https://cdn.datatables.net/v/bs5/jszip-3.10.1/dt-2.2.2/af-2.7.0/b-3.2.2/b-colvis-3.2.2/b-html5-3.2.2/b-print-3.2.2/fh-4.0.1/kt-2.12.1/r-3.0.4/sp-2.3.3/sr-1.4.1/datatables.min.js"
         integrity="sha384-2KVVYSM6hFzM8i2jOn9yON6kgel4/a/gwaHwNzjT1Z4RmkPWRmqqQk7VU1s+wcqS" crossorigin="anonymous">
     </script>
+
     <script src="{{ asset('js/scripts-admin.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const wrapper = document.querySelector('.admin-wrapper');
+            const sidebar = document.getElementById('adminSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const storageKey = 'spedAdminSidebarCollapsed';
+            const isDesktop = () => window.innerWidth >= 992;
+
+            if (!wrapper || !sidebar || !overlay) return;
+
+            const applyState = () => {
+                if (!isDesktop()) {
+                    wrapper.classList.remove('sidebar-collapsed');
+                    return;
+                }
+
+                wrapper.classList.toggle('sidebar-collapsed', localStorage.getItem(storageKey) === 'true');
+            };
+
+            applyState();
+
+            document.querySelectorAll('[data-sidebar-toggle]').forEach((toggle) => {
+                toggle.addEventListener('click', () => {
+                    if (isDesktop()) {
+                        wrapper.classList.toggle('sidebar-collapsed');
+                        localStorage.setItem(storageKey, wrapper.classList.contains('sidebar-collapsed'));
+                    } else {
+                        sidebar.classList.toggle('show');
+                        overlay.classList.toggle('show');
+                    }
+                });
+            });
+
+            window.addEventListener('resize', applyState);
+        });
+    </script>
 </body>
 
 </html>

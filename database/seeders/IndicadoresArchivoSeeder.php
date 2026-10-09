@@ -60,7 +60,6 @@ class IndicadoresArchivoSeeder extends Seeder
         }
 
         // Vaciar las tablas originales después de la copia
-        DB::table('carrusel_indicadors')->truncate(); // Asegúrate de que esta tabla esté vacía
         DB::table('indicadors')->truncate();
         DB::table('datos_anuales_indicadores')->truncate();
         DB::table('indicador_ods')->truncate();

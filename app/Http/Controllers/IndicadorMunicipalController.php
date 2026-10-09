@@ -14,6 +14,8 @@ use App\Models\MunicipioConvenio;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
+use Spatie\Browsershot\Browsershot;
 
 
 class IndicadorMunicipalController extends Controller
@@ -28,37 +30,32 @@ class IndicadorMunicipalController extends Controller
         $this->middleware('permission:editar-indicador-municipal', ['only' => ['edit', 'update']]);
         $this->middleware('permission:borrar-indicador-municipal', ['only' => ['destroy']]);
         $this->middleware('permission:subir-resultados-indicador-municipal', ['only' => ['storeNuevosResultados']]);
-        $this->middleware('permission:editar-resultados-indicador-municipal', ['only' => ['guardarResultados']]);
+        $this->middleware('permission:editar-resultados-indicador-municipal', ['only' => ['actualizarResultadosIndMun', 'guardarResultados']]);
         $this->middleware('permission:validar-indicador-municipal', ['only' => ['toggleValidacion']]);
     }
     /**
      * Muestra una lista de los indicadores pertenecientes al municipio del usuario logueado.
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function index()
     {
         $municipio = auth()->user()->id_municipio;
         $municipio_nombre = CatMunicipio::find($municipio)->nombre;
-        // $indicadores = IndicadorMunicipal::with('resultados')->where('id_municipio', $municipio)->paginate(2000);
         $indicadores = IndicadorMunicipal::with('resultados')
             ->where('id_municipio', $municipio)
             ->get()
             ->map(function ($indicador) {
-                // Crear un arreglo con los valores más recientes por año
                 $valoresPorAño = [];
                 for ($anio = 2016; $anio <= now()->year; $anio++) {
-                    // Buscar el período más alto con dato no nulo
                     $resultado = ResultadoIndicadorMunicipal::where('id_indicador', $indicador->id)
                         ->where('año', $anio)
-                        ->whereNotNull('dato') // Solo resultados con datos
-                        ->orderByDesc('periodo') // Ordenar por período de mayor a menor
+                        ->whereNotNull('dato')
+                        ->orderByDesc('periodo')
                         ->first();
 
-                    // Guardar el valor en el arreglo si existe
                     $valoresPorAño["dato_$anio"] = $resultado ? $resultado->dato : null;
                 }
 
-                // Agregar los valores al indicador
                 $indicador->valoresPorAño = $valoresPorAño;
 
                 return $indicador;
@@ -68,7 +65,7 @@ class IndicadorMunicipalController extends Controller
 
     /**
      * Muestra el formulario para crear un nuevo indicador municipal.
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function create()
     {
@@ -81,8 +78,8 @@ class IndicadorMunicipalController extends Controller
     /**
      * Almacena un nuevo indicador y genera sus registros de resultados iniciales
      * basados en la periodicidad seleccionada.
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request
+     * @return RedirectResponse
      */
     public function store(Request $request)
     {
@@ -110,8 +107,8 @@ class IndicadorMunicipalController extends Controller
                 'publica' => 'required|boolean',
                 'id_ods' => 'required|array',
                 'id_ods.*' => 'exists:ods,id',
-                'datos_periodos' => 'required|array', // Validar que vengan datos para los periodos
-                'datos_periodos.*.dato' => 'nullable|numeric', // Los datos pueden ser nulos
+                'datos_periodos' => 'required|array',
+                'datos_periodos.*.dato' => 'nullable|numeric',
                 'datos_periodos.*.resultado' => 'nullable|string',
             ],
             [
@@ -168,26 +165,21 @@ class IndicadorMunicipalController extends Controller
 
         $validatedData['id_municipio'] = auth()->user()->id_municipio;
         $validatedData['instrumento'] = 'Plan de Desarrollo Municipal';
-        // dd($validatedData);
         $filteredData = collect($validatedData)->except(['id_ods', 'datos_periodos'])->toArray();
         $indicadorMunicipal = IndicadorMunicipal::create($filteredData);
 
-        // $indicadorMunicipal = IndicadorMunicipal::create($request->except(['id_ods', 'datos_periodos']));
-
         $indicadorMunicipal->ods()->sync($request->id_ods);
-        // Lógica para agregar registros en resultados_indicadores_municipales
         $periodicidadId = $request->input('periodicidad_id');
         $datosPeriodos = $request->input('datos_periodos');
-        $ano = $request->input('ano'); // Tomamos el año del campo línea base
+        $ano = $request->input('ano');
 
-        // Determinar el número de periodos según la periodicidad
         $periodos = [
-            1 => 1,  // Anual
-            2 => 6,  // Bimestral
-            3 => 3,  // Cuatrimestral
-            4 => 12, // Mensual
-            5 => 2,  // Semestral
-            6 => 4,  // Trimestral
+            1 => 1,
+            2 => 6,
+            3 => 3,
+            4 => 12,
+            5 => 2,
+            6 => 4,
         ];
         $numPeriodos = $periodos[$periodicidadId] ?? 0;
 
@@ -196,7 +188,6 @@ class IndicadorMunicipalController extends Controller
             $dato = $datosPeriodos[$periodo - 1]['dato'] ?? null;
             $resultado = $datosPeriodos[$periodo - 1]['resultado'] ?? null;
 
-            // Agregar registro solo si hay datos relevantes
             if (isset($dato) || isset($resultado)) {
                 $registros[] = [
                     'id_indicador' => $indicadorMunicipal->id,
@@ -205,35 +196,30 @@ class IndicadorMunicipalController extends Controller
                     'periodo' => $periodo,
                     'dato' => $dato,
                     'resultado' => $resultado,
-                    'created_at' => now(), // Usar la función de Laravel para timestamps
+                    'created_at' => now(),
                     'updated_at' => now(),
                 ];
             }
         }
 
-        // Inserción masiva
         if (!empty($registros)) {
             ResultadoIndicadorMunicipal::insert($registros);
         }
         return redirect()->route('panel-indicadores-municipales.index')->with('success', 'Indicador creado con éxito.');
-        // return redirect()->back()->with('success', 'Indicador municipal creado correctamente.');
     }
 
     /**
      * Muestra la vista de detalle de un indicador, incluyendo sus resultados por año y periodo.
      * @param  int $id
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function show($id)
     {
-        // Obtener el indicador junto con sus relaciones
         $indicador = IndicadorMunicipal::with(['resultados'])->findOrFail($id);
         $periodicidades = PeriodicidadIndicadorMunicipal::all();
         $añosDisponibles = $indicador->resultados->pluck('año')->unique()->sort()->toArray();
         $datosResultadosIndicador = ResultadoIndicadorMunicipal::where('id_indicador', $id)->get();
-        if (auth()->user()->id_municipio !== $indicador->id_municipio) {
-            abort(403, 'No tienes permiso para ver este indicador.');
-        }
+        $this->ensureMunicipalityOwnership($indicador);
         return view('panel-indicadores-municipales.mostrar', compact('indicador', 'añosDisponibles', 'datosResultadosIndicador', 'periodicidades'));
     }
 
@@ -241,7 +227,7 @@ class IndicadorMunicipalController extends Controller
      * Muestra el formulario para editar un indicador.
      * Bloquea la edición si el indicador ya está validado y el usuario no es administrador.
      * @param  int $id
-     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function edit($id)
     {
@@ -249,9 +235,10 @@ class IndicadorMunicipalController extends Controller
         $periodicidades = PeriodicidadIndicadorMunicipal::all();
         $odes = Odses::all();
         $indicador = IndicadorMunicipal::with(['resultados'])->findOrFail($id);
-        // Verificar si el indicador está validado y si el usuario no es Administrador Municipal
-        if ($indicador->validado == 1 && !auth()->user()->hasRole('Administrador Municipal')) {
-            // Redirigir o devolver un mensaje de error si no se puede editar
+        $this->ensureMunicipalityOwnership($indicador);
+        if ($indicador->validado == 1
+            && !auth()->user()->hasRole('Administrador Municipal')
+            && !auth()->user()->isSuperAdministrator()) {
             return redirect()->route('panel-indicadores-municipales.index')->with('error', 'La información de este indicador no puede ser editada porque ha sido validado.');
         }
         $datosResultadosIndicador = ResultadoIndicadorMunicipal::where('id_indicador', $id)->get();
@@ -260,13 +247,14 @@ class IndicadorMunicipalController extends Controller
 
     /**
      * Actualiza los datos principales de un indicador.
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function update(Request $request, $id)
     {
         $indicador = IndicadorMunicipal::findOrFail($id);
+        $this->ensureMunicipalityOwnership($indicador);
 
         // Validación de los datos del formulario
         $validatedData = $request->validate([
@@ -293,46 +281,33 @@ class IndicadorMunicipalController extends Controller
             'id_ods.*' => 'exists:ods,id',
         ]);
 
-        // Actualizar el indicador principal
         $indicador->update(collect($validatedData)->except(['id_ods', 'datos_periodos', 'nuevos_registros', 'eliminar_registros'])->toArray());
 
-        // Sincronizar ODS
         $indicador->ods()->sync($request->input('id_ods'));
 
-
-        // Redirigir al usuario con un mensaje de éxito
         return redirect()->route('panel-indicadores-municipales.index')->with('success', 'Indicador actualizado con éxito');
     }
 
     /**
      * Elimina un indicador y todos sus datos relacionados (resultados, relaciones con ODS).
      * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function destroy($id)
     {
-        // Buscar el indicador
         $indicador = IndicadorMunicipal::findOrFail($id);
-
-        // Eliminar los resultados relacionados con este indicador
-        $indicador->resultados()->delete(); // Elimina los resultados asociados
-
-        // Eliminar las relaciones en la tabla pivote si existen
-        $indicador->ods()->detach(); // Eliminar la relación de ODS, si aplica
-
-        // Eliminar el indicador
+        $this->ensureMunicipalityOwnership($indicador);
+        $indicador->resultados()->delete();
+        $indicador->ods()->detach();
         $indicador->delete();
-
-        // Redirigir a una página con un mensaje de éxito
         return redirect()->route('panel-indicadores-municipales.index')->with('success', 'El indicador se ha eliminado correctamente');
     }
 
     /**
      * Actualiza los datos de un conjunto de resultados para un año específico.
-     * Probablemente llamado desde la vista de detalle.
-     * @param  \Illuminate\Http\Request $request
+     * @param  Request $request
      * @param  int $año
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function actualizarResultadosIndMun(Request $request, $año)
     {
@@ -344,7 +319,8 @@ class IndicadorMunicipalController extends Controller
         ]);
 
         foreach ($validatedData['resultados'] as $id => $data) {
-            $resultado = ResultadoIndicadorMunicipal::findOrFail($id);
+            $resultado = ResultadoIndicadorMunicipal::with('indicador')->findOrFail($id);
+            $this->ensureMunicipalityOwnership($resultado->indicador);
             $resultado->update([
                 'dato' => $data['dato'] ?? null,
                 'resultado' => $data['resultado'] ?? null,
@@ -356,7 +332,6 @@ class IndicadorMunicipalController extends Controller
 
     public function storeNuevosResultados(Request $request)
     {
-        // Validar los datos recibidos
         $validated = $request->validate([
             'ano' => 'required|integer',
             'periodicidad_id' => 'required|exists:periodicidades,id',
@@ -367,9 +342,7 @@ class IndicadorMunicipalController extends Controller
             'nuevos_registros.*.resultado' => 'nullable|string',
         ]);
 
-        // Procesar y guardar los nuevos resultados
         foreach ($request->input('nuevos_registros') as $registro) {
-            // Crear el nuevo resultado (ajusta según tu modelo)
             ResultadoIndicadorMunicipal::create([
                 'año' => $registro['año'],
                 'periodo' => $registro['periodo'],
@@ -378,19 +351,17 @@ class IndicadorMunicipalController extends Controller
             ]);
         }
 
-        // Puedes devolver una respuesta o redirigir según tu preferencia
         return response()->json(['message' => 'Nuevos resultados agregados exitosamente.'], 200);
     }
 
     /**
      * Almacena nuevos registros de resultados para un indicador.
-     * @param  \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @param  Request $request
+     * @return JsonResponse
      */
     public function guardarResultados(Request $request)
     {
-        // Validar los datos
-        $request->validate([
+        $validatedData = $request->validate([
             'id_indicador' => 'required|exists:indicadores_municipales,id',
             'ano' => 'required|integer|digits:4',
             'periodicidad_id' => 'required|exists:periodicidad_indicadores_municipales,id',
@@ -400,46 +371,43 @@ class IndicadorMunicipalController extends Controller
             'nuevos_registros.*.dato' => 'nullable|numeric',
             'nuevos_registros.*.resultado' => 'nullable|string',
         ]);
-        $idIndicador = $request->id_indicador;
-        // Recibir los nuevos registros
-        $nuevosRegistros = $request->input('nuevos_registros');
+        $indicador = IndicadorMunicipal::findOrFail($validatedData['id_indicador']);
+        $this->ensureMunicipalityOwnership($indicador);
+        $nuevosRegistros = $validatedData['nuevos_registros'];
 
-        // Guardar cada nuevo registro en la base de datos
         foreach ($nuevosRegistros as $registro) {
             ResultadoIndicadorMunicipal::create([
-                'id_indicador' => $idIndicador,
+                'id_indicador' => $indicador->id,
                 'año' => $registro['año'],
-                'periodicidad_id' => $request->periodicidad_id,
+                'periodicidad_id' => $validatedData['periodicidad_id'],
                 'periodo' => $registro['periodo'],
                 'dato' => $registro['dato'] ?? null,
                 'resultado' => $registro['resultado'] ?? null,
             ]);
         }
 
-        // Redirigir con éxito
         return redirect()->back()->with('success', 'El resultado anual se ha agregado correctamente.');
     }
 
     /**
      * Cambia el estado de validación (Validado/No Validado) de un indicador.
      * @param  int $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function toggleValidacion($id)
     {
         $indicador = IndicadorMunicipal::findOrFail($id);
+        $this->ensureMunicipalityOwnership($indicador);
 
-        // Alternar el estado de validación
         $indicador->validado = !$indicador->validado;
         $indicador->save();
 
-        // Redirigir con un mensaje de éxito
         return redirect()->back()->with('status', 'El estado de validación del indicador ha sido actualizado.');
     }
 
     /**
      * Genera la vista de reporte imprimible para los indicadores de un municipio.
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function reporteIndicadores()
     {
@@ -449,21 +417,17 @@ class IndicadorMunicipalController extends Controller
             ->where('id_municipio', $municipio)
             ->get()
             ->map(function ($indicador) {
-                // Crear un arreglo con los valores más recientes por año
                 $valoresPorAño = [];
                 for ($anio = 2016; $anio <= now()->year; $anio++) {
-                    // Buscar el período más alto con dato no nulo
                     $resultado = ResultadoIndicadorMunicipal::where('id_indicador', $indicador->id)
                         ->where('año', $anio)
-                        ->whereNotNull('dato') // Solo resultados con datos
-                        ->orderByDesc('periodo') // Ordenar por período de mayor a menor
+                        ->whereNotNull('dato')
+                        ->orderByDesc('periodo')
                         ->first();
 
-                    // Guardar el valor en el arreglo si existe
                     $valoresPorAño["dato_$anio"] = $resultado ? $resultado->dato : null;
                 }
 
-                // Agregar los valores al indicador
                 $indicador->valoresPorAño = $valoresPorAño;
 
                 return $indicador;
@@ -474,24 +438,101 @@ class IndicadorMunicipalController extends Controller
 
     /**
      * Genera una ficha técnica pública para un indicador municipal.
-     * @param  int $id
+     * @param  IndicadorMunicipal $indicador
      * @return \Illuminate\View\View
      */
-    public function mostrarFicha($id)
+    public function mostrarFicha(IndicadorMunicipal $indicador)
     {
-        // Obtener el indicador
-        $indicador = IndicadorMunicipal::findOrFail($id);
+        return view('ficha-tecnica-municipal', $this->datosFichaPublica($indicador));
+    }
 
-        // Acceder a los resultados relacionados con el indicador
+    /**
+     * Descarga una ficha técnica municipal en PDF.
+     */
+    public function descargarFicha(IndicadorMunicipal $indicador)
+    {
+        $html = view('ficha-tecnica-municipal-pdf', [
+            ...$this->datosFichaPublica($indicador),
+            'pdfAsset' => fn (string $path): string => $this->inlinePublicAsset($path),
+            'pdfEcharts' => file_get_contents(public_path('js/echarts.min.js')),
+        ])->render();
+
+        $footer = '<div style="position: relative; top: -6mm; z-index: 20; width: 100vw; margin: 0; padding: 0; background: #fff; color: #706b72; font: 9px Arial, sans-serif; text-align: center;">'
+            . 'Hoja <span class="pageNumber"></span> de <span class="totalPages"></span></div>';
+
+        $pdf = Browsershot::html($html)
+            ->setNodeBinary(config('browsershot.node_binary', 'node'))
+            ->setNodeModulePath(base_path('node_modules'))
+            ->setNodeEnv([
+                'PUPPETEER_CACHE_DIR' => storage_path('app/puppeteer'),
+            ])
+            ->paperSize(210, 297, 'mm')
+            ->margins(5, 5, 16, 5)
+            ->scale(1)
+            ->showBrowserHeaderAndFooter()
+            ->footerHtml($footer)
+            ->showBackground()
+            ->setOption('viewport', [
+                'width' => 1240,
+                'height' => 1754,
+                'deviceScaleFactor' => 2,
+            ])
+            ->setOption('args', [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--font-render-hinting=none',
+            ])
+            ->waitForFunction('window.pdfReady === true', null, 110000)
+            ->pdf();
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="ficha-tecnica-municipal-' . Str::slug($indicador->indicador ?: 'indicador') . '.pdf"',
+        ]);
+    }
+
+    /**
+     * @return array{
+     *     indicador: IndicadorMunicipal,
+     *     municipio: ?MunicipioConvenio,
+     *     nombreMunicipio: string,
+     *     ultimoDato: ?ResultadoIndicadorMunicipal,
+     *     ultimoResultado: ?ResultadoIndicadorMunicipal,
+     *     anioMeta: int,
+     *     anioInicioGrafica: int,
+     *     anioFinGrafica: int
+     * }
+     */
+    private function datosFichaPublica(IndicadorMunicipal $indicador): array
+    {
+        $indicador->loadMissing([
+            'resultados',
+            'ods',
+            'periodicidad',
+            'tipo',
+            'nivel',
+            'dimension',
+            'municipio',
+        ]);
+
         $resultados = $indicador->resultados;
-
-        // Rango de años que queremos verificar (por ejemplo, de 2015 a 2024)
-        $años = range(2015, 2024);
+        $anioActual = now()->year;
+        $anioMeta = 2027;
+        $aniosIniciales = array_filter([
+            $indicador->linea_base ? (int) $indicador->linea_base : null,
+            $resultados->min('año'),
+        ]);
+        $anioInicio = min($aniosIniciales ?: [2015]);
+        $años = range($anioInicio, $anioActual);
 
         // Iterar sobre los años y agregar atributos dinámicos
         foreach ($años as $año) {
             // Buscar el resultado correspondiente a ese año
-            $resultadoAño = $resultados->where('año', $año)->sortByDesc('periodo')->first();
+            $resultadoAño = $resultados
+                ->where('año', $año)
+                ->filter(fn (ResultadoIndicadorMunicipal $resultado): bool => $resultado->dato !== null)
+                ->sortByDesc('periodo')
+                ->first();
 
             // Si existe un resultado para ese año, agregar el dato del periodo más grande
             if ($resultadoAño) {
@@ -505,27 +546,61 @@ class IndicadorMunicipalController extends Controller
             }
         }
 
-        // Buscar el año más reciente
-        $anioMasReciente = $resultados->sortByDesc('año')->first();
-        if ($anioMasReciente) {
-            $resultadoMasReciente = $resultados->where('año', $anioMasReciente->año)
-                ->sortByDesc('periodo')
-                ->first();
+        $ordenarResultados = fn (ResultadoIndicadorMunicipal $resultado): string => sprintf(
+            '%04d%04d',
+            (int) $resultado->año,
+            (int) $resultado->periodo,
+        );
 
-            // Si el resultado del periodo más reciente está vacío, buscar el siguiente periodo más grande
-            if (empty($resultadoMasReciente->resultado)) {
-                $resultadoMasReciente = $resultados->where('año', $anioMasReciente->año)
-                    ->sortByDesc('periodo')
-                    ->skip(1)  // Obtener el siguiente periodo
-                    ->first();
-            }
+        $ultimoDato = $resultados
+            ->filter(fn (ResultadoIndicadorMunicipal $resultado): bool => $resultado->dato !== null)
+            ->sortByDesc($ordenarResultados)
+            ->first();
+        $ultimoResultado = $resultados
+            ->filter(fn (ResultadoIndicadorMunicipal $resultado): bool => trim((string) $resultado->resultado) !== '')
+            ->sortByDesc($ordenarResultados)
+            ->first();
+        $municipio = MunicipioConvenio::query()
+            ->with('municipio')
+            ->where('id_municipio', $indicador->id_municipio)
+            ->first();
+        $nombreMunicipio = $municipio?->municipio?->nombre
+            ?? $indicador->municipio?->nombre
+            ?? 'Municipio no disponible';
+        $anioInicioGrafica = $anioInicio;
+        $anioFinGrafica = max($anioActual, $anioMeta);
 
-            // Asignamos el resultado más reciente (si existe)
-            $indicador->resultado_mas_reciente = $resultadoMasReciente ? $resultadoMasReciente->resultado : null;
+        return compact(
+            'indicador',
+            'municipio',
+            'nombreMunicipio',
+            'ultimoDato',
+            'ultimoResultado',
+            'anioMeta',
+            'anioInicioGrafica',
+            'anioFinGrafica',
+        );
+    }
+
+    private function inlinePublicAsset(string $path): string
+    {
+        $assetPath = public_path(ltrim($path, '/'));
+
+        if (!is_file($assetPath)) {
+            return asset($path);
         }
 
-        $municipio = MunicipioConvenio::where('id_municipio', $indicador->id_municipio)->first();
+        $mime = mime_content_type($assetPath) ?: 'application/octet-stream';
 
-        return view('ficha-tecnica-municipal', compact('indicador', 'municipio'));
+        return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($assetPath));
+    }
+
+    private function ensureMunicipalityOwnership(IndicadorMunicipal $indicador): void
+    {
+        abort_unless(
+            (int) auth()->user()->id_municipio === (int) $indicador->id_municipio,
+            403,
+            'No tienes permiso para acceder a este indicador.'
+        );
     }
 }

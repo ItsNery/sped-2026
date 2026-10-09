@@ -25,14 +25,17 @@
 @section('jss-inicial')
 @endsection
 @section('content')
-    <div class="container">
-        <h1 class="my-3">Datos Abiertos</h1>
-        <img class="w-100 block-auto" src="{{ asset('img/pleca-nueva.png') }}" title="Pleca"
-            alt="Pleca conformada por una línea partida por cuatro colores">
-        &nbsp;
-        <h4 class="text-justify my-3">Los datos abiertos disponibles pueden ser utilizados, reutilizados y
-            redistribuidos libremente por cualquier persona, se encuentran sujetos al requerimiento de atribución de
-            la misma manera en que aparecen.</h4>
+    <div class="datos-abiertos">
+        <section class="datos-abiertos__hero">
+            <div class="datos-abiertos__hero-container">
+                <div class="datos-abiertos__hero-content">
+                    <span class="datos-abiertos__hero-tag">Transparencia y consulta</span>
+                    <h1 class="datos-abiertos__hero-title">Datos Abiertos</h1>
+                    <p class="datos-abiertos__hero-desc">Consulta, reutiliza y redistribuye libremente los conjuntos de datos del Plan Estatal de Desarrollo 2024-2030.</p>
+                </div>
+            </div>
+        </section>
+        <div class="container datos-abiertos-page">
         <section id="ped-section" class="mb-5">
             <div class="row g-4">
                 <div class="col-md-3">
@@ -52,10 +55,6 @@
                             aria-selected="false">
                             Programas Derivados
                         </button> --}}
-                        <button class="nav-link" id="reporte-eje-tab" data-bs-toggle="pill" data-bs-target="#reporte-eje"
-                            type="button" role="tab" aria-controls="reporte-eje" aria-selected="false">
-                            Reporte Ejecutivo
-                        </button>
                     </div>
                 </div>
                 <div class="col-md-9">
@@ -436,7 +435,7 @@
                                                 {{-- No necesitas 'nombre_archivo' para una respuesta JSON en el navegador --}}
 
                                                 <button type="submit"
-                                                    title="Ver Datos Completos de los Indicadores del Eje 6 del PED en JSON"
+                                                     title="Ver Datos Completos de los Indicadores del Eje Transversal del PED en JSON"
                                                     class="btn btn-link p-0">
                                                     <img src="{{ asset('img/js.png') }}" alt="Icono de JSON">
                                                     {{-- Necesitarás un icono JSON --}}
@@ -449,7 +448,7 @@
                                                 <input type="hidden" name="nombre_archivo" value="BD_Eje6_PED_Completa">
 
                                                 <button type="submit"
-                                                    title="Descargar BD Completa de los Indicadores del Eje 6 del PED en CSV"
+                                                     title="Descargar BD Completa de los Indicadores del Eje Transversal del PED en CSV"
                                                     class="btn btn-link p-0">
                                                     <img src="{{ asset('img/csv.png') }}" alt="Icono de CSV">
                                                     {{-- Necesitarás un icono CSV --}}
@@ -462,7 +461,7 @@
                                                 <input type="hidden" name="nombre_archivo" value="BD_Eje6_PED_Completa">
 
                                                 <button type="submit"
-                                                    title="Descargar BD Completa de los Indicadores del Eje 6 del PED"
+                                                     title="Descargar BD Completa de los Indicadores del Eje Transversal del PED"
                                                     class="btn btn-link p-0"
                                                     style="border:none; background:none; cursor:pointer;">
                                                     <img src="{{ asset('img/xls.png') }}" alt="Icono de XLS"
@@ -470,29 +469,6 @@
 
                                                 </button>
                                             </form> --}}
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="tab-pane fade" id="reporte-eje" role="tabpanel" aria-labelledby="reporte-eje-tab">
-                            <h4 class="h5 mb-3 fw-semibold" style="color: var(--color-primary);">Reporte Ejecutivo</h4>
-                            <p class="mb-4 text-muted">Reporte ejecutivo de cumplimiento de indicadores del SPED.</p>
-                            <table class="table table-bordered data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Nombre del Conjunto</th>
-                                        <th>Formatos de Descarga</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Reporte Ejecutivo 2025 </td>
-                                        <td class="download-icons">
-                                            <a href="{{ asset('docs/datos-abiertos/2024-2030/reporte/Reporte_Ejecutivo_2025.pdf') }}"
-                                                download="" title="Descargar PDF"><img
-                                                    src="{{ asset('img/PDF.png') }}" alt="Icono de PDF"
-                                                    title=" Icono PDF"></a>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -576,6 +552,7 @@
                 </div>
             </div>
         </section>
+        </div>
     </div>
 
 @endsection

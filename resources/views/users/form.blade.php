@@ -7,23 +7,16 @@
 
     @section('title', $action)
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ $action }}
-        </h2>
+        <div class="exec-header admin-index-header">
+            <div>
+                <span class="exec-eyebrow">Administración del sistema</span>
+                <h2 class="exec-header__title">{{ $action }}</h2>
+            </div>
+            <span class="exec-header__plan">Usuarios y permisos</span>
+        </div>
     </x-slot>
-    <div class="container py-12 mx-auto">
-        <div class="contenedor-principal mx-auto">
-            <div class="encabezado-lista my-2">
-                <h2>{{ $action }}</h2>
-            </div>
-            <div class="row">
-                <div class="col-lg-12 margin-tb">
-                    <div class="float-start my-2 mx-2">
-                        <h2></h2>
-                    </div>
-                </div>
-            </div>
-
+    <div class="admin-index">
+        <div class="contenedor-principal admin-index__surface mx-auto">
             <form class="mx-2 my-2"
                 action="{{ isset($user) ? route('panel-usuarios.update', $user->id) : route('panel-usuarios.store') }}"
                 method="POST" novalidate>

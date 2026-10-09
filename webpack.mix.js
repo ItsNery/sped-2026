@@ -13,9 +13,11 @@ const mix = require('laravel-mix');
 
 mix.js('resources/js/app.js', 'public/js')
     .sass('resources/sass/app.scss', 'public/css')
+    .copy('node_modules/tom-select/dist/css/tom-select.bootstrap5.min.css', 'public/vendor/tom-select')
+    .copy('node_modules/tom-select/dist/js/tom-select.complete.min.js', 'public/vendor/tom-select')
     .webpackConfig(require('./webpack.config'));
 
 if (mix.inProduction()) {
     mix.version();
 }
-mix.browserSync('127.0.0.1:8000');
+mix.browserSync('localhost:8000');

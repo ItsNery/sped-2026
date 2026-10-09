@@ -36,3 +36,30 @@ El módulo está protegido por el `middleware` de `spatie/laravel-permission`. C
 * **Activación/Desactivación**: Los administradores pueden habilitar o deshabilitar temporalmente el acceso de un usuario sin borrar su cuenta. Un diálogo de confirmación (`SweetAlert2`) previene acciones accidentales.
 * **Creación y Edición (`store` / `update`)**: El administrador interactúa con el formulario dinámico para establecer los datos del usuario, su tipo, su rol y sus relaciones. La lógica del controlador valida los datos de forma condicional y se encarga de crear o actualizar las relaciones correctas en la base de datos (`id_institucion`, `id_municipio`, o la tabla pivote `institucion_user`).
 * **Seguridad de Contraseña**: Al crear un usuario, la contraseña se hashea de forma segura. Al editar, la contraseña solo se actualiza si el administrador introduce un nuevo valor en el campo, de lo contrario, se mantiene la existente.
+
+## Restablecimiento Masivo de Enlaces Dependencia
+
+Para renovar contraseñas de usuarios activos con el rol exacto `Enlace dependencia`, usar el comando Artisan. Debe ejecutarse solamente contra la base de datos objetivo; hacerlo en `bd_sped_candidate` no cambia las contraseñas de producción.
+
+Primero revisar el alcance sin modificar cuentas ni generar secretos:
+
+```bash
+php artisan sped:reset-dependency-passwords
+```
+
+Si el número de cuentas es correcto, ejecutar el restablecimiento:
+
+```bash
+php artisan sped:reset-dependency-passwords --execute
+```
+
+El comando genera una contraseña aleatoria de 20 caracteres para cada cuenta incluida, invalida el token de “recordarme” y reinicia los intentos fallidos. No cambia usuarios inactivos ni cuentas con otros roles.
+
+Al ejecutar, crea un CSV privado en `storage/app/password-resets/` con ID, nombre, correo y contraseña temporal. El archivo tiene permisos `0600`, no se expone desde `public/` y las contraseñas no se imprimen en la consola ni se guardan en logs.
+
+Entregar el CSV por un canal seguro y eliminarlo después de distribuir las credenciales. Se puede definir una ruta privada alternativa:
+
+```bash
+php artisan sped:reset-dependency-passwords --execute \
+  --report=/ruta/privada/enlaces-dependencia.csv
+```

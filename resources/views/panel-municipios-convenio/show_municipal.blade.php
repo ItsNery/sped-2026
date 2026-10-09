@@ -1,9 +1,13 @@
 <x-app-layout>
     @section('title', 'Municipios: Detalle Indicador Municipal')
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Municipios con convenio') }}
-        </h2>
+        <div class="exec-header indicator-detail-header">
+            <div>
+                <span class="exec-eyebrow">Indicador municipal</span>
+                <h2 class="exec-header__title">Detalle del indicador</h2>
+            </div>
+            <span class="exec-header__plan">Solo lectura</span>
+        </div>
     </x-slot>
     @if ($message = Session::get('success'))
         <script>
@@ -26,23 +30,20 @@
         </script>
     @endif
 
-
-    <div class="container mx-auto">
-        <div class="contenedor-principal mx-auto">
+    <div class="indicator-detail mx-auto">
+        <div class="contenedor-principal mx-auto indicator-detail__surface">
             <div class="encabezado-lista my-2">
                 <h2>Vista de Indicador Municipal (Solo Lectura)</h2>
             </div>
-            <div class="d-flex justify-content-end gap-3 pb-2 mx-2">
+            <div class="indicator-detail__actions">
                 @can('ver-indicador')
-                    <a href="{{ url()->previous() }}" class="text-decoration-none mt-2">
-                        <button type="button" class="button-action button-back">
-                            <span class="button__text">Regresar</span>
-                            <span class="button__icon">
-                                <svg class="svg" viewBox="0 0 24 24">
-                                    <path d="M15 18l-6-6 6-6" />
-                                </svg>
-                            </span>
-                        </button>
+                    <a href="{{ url()->previous() }}" class="button-action button-back text-decoration-none">
+                        <span class="button__text">Regresar</span>
+                        <span class="button__icon">
+                            <svg class="svg" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M15 18l-6-6 6-6" />
+                            </svg>
+                        </span>
                     </a>
                 @endcan
             </div>
@@ -59,53 +60,53 @@
                         <div class="custom-title text-center py-2 td-ods">
                             @foreach ($indicador->ods->unique('id') as $ods)
                                 <img src="{{ asset('assets-administrador/img/ods/' . $ods->id . '.png') }}"
-                                    alt="Imagen de ODS {{ $ods->id }}" class="img-fluid ods-icono">
+                                    alt="ODS {{ $ods->id }}" class="img-fluid ods-icono">
                             @endforeach
                         </div>
                         <div class="row">
                             <div class="col-md-3">
-                                <div class="custom-section-title"><i class="fa-regular fa-building"></i>Municipio
+                                <div class="custom-section-title"><i class="fa-regular fa-building" aria-hidden="true"></i>Municipio
                                     Responsable
                                 </div>
                                 <p>{{ $indicador->municipio->nombre ?? 'Sin asignar' }}</p>
                             </div>
                             <div class="col-md-3">
-                                <div class="custom-section-title"><i class="fa-solid fa-book"></i>Instrumento de
+                                <div class="custom-section-title"><i class="fa-solid fa-book" aria-hidden="true"></i>Instrumento de
                                     Planeación
                                 </div>
                                 <p>{{ $indicador->instrumento }}</p>
                             </div>
                             <div class="col-md-3">
-                                <div class="custom-section-title"><i class="fa-solid fa-book-open"></i>Eje</div>
+                                <div class="custom-section-title"><i class="fa-solid fa-book-open" aria-hidden="true"></i>Eje</div>
                                 <p>{{ $indicador->eje_indicador }}</p>
                             </div>
                             <div class="col-md-3">
-                                <div class="custom-section-title"><i class="fa-solid fa-signal"></i>Estatus</div>
-                                <p class="d-flex justify-content-center">
+                                <div class="custom-section-title"><i class="fa-solid fa-signal" aria-hidden="true"></i>Estatus</div>
+                                <div class="indicator-detail__status">
                                     @if ($indicador->validado === 1)
-                                        <div class="btn btn-sm btn-success text-white">
-                                            <i class="fa-solid fa-check"></i> Validado
-                                        </div>
+                                        <span class="indicator-detail-status indicator-detail-status--validated">
+                                            <i class="fa-solid fa-check" aria-hidden="true"></i> Validado
+                                        </span>
                                     @elseif ($indicador->validado === null)
-                                        <div class="btn btn-sm btn-danger">
-                                            <i class="fa-solid fa-times"></i> Sin Actualizar
-                                        </div>
+                                        <span class="indicator-detail-status indicator-detail-status--unavailable">
+                                            <i class="fa-solid fa-times" aria-hidden="true"></i> Sin actualizar
+                                        </span>
                                     @else
-                                        <div class="btn btn-sm btn-info">
-                                            <i class="fa-solid fa-minus"></i> Actualizado
-                                        </div>
-                                        <div class="btn btn-sm btn-warning">
-                                            <i class="fa-solid fa-exclamation-triangle"></i> No Validado
-                                        </div>
+                                        <span class="indicator-detail-status indicator-detail-status--updated">
+                                            <i class="fa-solid fa-minus" aria-hidden="true"></i> Actualizado
+                                        </span>
+                                        <span class="indicator-detail-status indicator-detail-status--pending">
+                                            <i class="fa-solid fa-exclamation-triangle" aria-hidden="true"></i> No validado
+                                        </span>
                                     @endif
-                                </p>
+                                </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="custom-section-title"><i class="fa-regular fa-bookmark"></i>Temática</div>
+                                <div class="custom-section-title"><i class="fa-regular fa-bookmark" aria-hidden="true"></i>Temática</div>
                                 <p>{{ $indicador->tematica }}</p>
                             </div>
                             <div class="col-md-3">
-                                <div class="custom-section-title"><i class="fa-regular fa-chart-bar"></i>
+                                <div class="custom-section-title"><i class="fa-regular fa-chart-bar" aria-hidden="true"></i>
                                     Línea Base
                                     {{ $indicador->linea_base }}
                                 </div>
@@ -114,42 +115,42 @@
                                 </p>
                             </div>
                             <div class="col-md-3">
-                                <div class="custom-section-title"><i class="fa-solid fa-bullseye"></i>Meta 2027</div>
+                                <div class="custom-section-title"><i class="fa-solid fa-bullseye" aria-hidden="true"></i>Meta 2027</div>
                                 <p> {{ $indicador->meta_2024 }}</p>
                             </div>
                             <div class="col-md-2">
-                                <div class="custom-section-title"><i class="fa-solid fa-chart-area"></i>Cobertura</div>
+                                <div class="custom-section-title"><i class="fa-solid fa-chart-area" aria-hidden="true"></i>Cobertura</div>
                                 <p> {{ $indicador->cobertura }}</p>
                             </div>
                             <div class="col-md-3">
-                                <div class="custom-section-title"><i class="fa-solid fa-bullseye"></i>Tipo</div>
+                                <div class="custom-section-title"><i class="fa-solid fa-bullseye" aria-hidden="true"></i>Tipo</div>
                                 <p> {{ $indicador->tipo->nombre }}</p>
                             </div>
                             <div class="col-md-3">
-                                <div class="custom-section-title"><i class="fa-solid fa-bullseye"></i>Nivel</div>
+                                <div class="custom-section-title"><i class="fa-solid fa-bullseye" aria-hidden="true"></i>Nivel</div>
                                 <p> {{ $indicador->nivel->nombre }}</p>
                             </div>
                             <div class="col-md-3">
-                                <div class="custom-section-title"><i class="fa-solid fa-bullseye"></i>Dimensión</div>
+                                <div class="custom-section-title"><i class="fa-solid fa-bullseye" aria-hidden="true"></i>Dimensión</div>
                                 <p> {{ $indicador->dimension->nombre }}</p>
                             </div>
                             <div class="col-md-3">
-                                <div class="custom-section-title"><i class="fa-solid fa-bullseye"></i>¿La información es
+                                <div class="custom-section-title"><i class="fa-solid fa-bullseye" aria-hidden="true"></i>¿La información es
                                     pública?</div>
                                 <p> {{ $indicador->publica == 1 ? 'Si' : 'No' }}</p>
                             </div>
                             <div class="col-md-4">
-                                <div class="custom-section-title"><i class="fa-solid fa-tower-broadcast"></i>Fuente
+                                <div class="custom-section-title"><i class="fa-solid fa-tower-broadcast" aria-hidden="true"></i>Fuente
                                 </div>
                                 <p> {{ $indicador->fuente }}</p>
                             </div>
                             <div class="col-md-4">
-                                <div class="custom-section-title"><i class="fa-solid fa-link"></i>Enlace de la fuente
+                                <div class="custom-section-title"><i class="fa-solid fa-link" aria-hidden="true"></i>Enlace de la fuente
                                 </div>
                                 <p>
                                     @if ($indicador->liga)
-                                        <a href="{{ $indicador->liga }}" target="_blank"
-                                            title="Fuente de {{ $indicador->nombre }}">
+                                        <a href="{{ $indicador->liga }}" target="_blank" rel="noopener noreferrer"
+                                            title="Fuente de {{ $indicador->indicador }}">
                                             Enlace
                                         </a>
                                     @else
@@ -158,21 +159,21 @@
                                 </p>
                             </div>
                             <div class="col-md-4">
-                                <div class="custom-section-title"><i class="fas fa-sync-alt"></i>Periodicidad</div>
+                                <div class="custom-section-title"><i class="fas fa-sync-alt" aria-hidden="true"></i>Periodicidad</div>
                                 <p> {{ $indicador->periodicidad->nombre }}</p>
                             </div>
                             <div class="col-md-3">
-                                <div class="custom-section-title"><i class="fa-solid fa-ruler"></i>Unidad de medidad
+                                <div class="custom-section-title"><i class="fa-solid fa-ruler" aria-hidden="true"></i>Unidad de medida
                                 </div>
                                 <p> {{ $indicador->unidad_medida }}</p>
                             </div>
                             <div class="col-md-3">
-                                <div class="custom-section-title"><i class="fa-solid fa-chart-line"></i>Tendencia</div>
+                                <div class="custom-section-title"><i class="fa-solid fa-chart-line" aria-hidden="true"></i>Tendencia</div>
                                 <p> {{ $indicador->tendencia }}</p>
                             </div>
                             <div class="col-md-6">
                                 <div class="custom-section-title"><i
-                                        class="fa-solid fa-square-root-variable"></i>Fórmula</div>
+                                        class="fa-solid fa-square-root-variable" aria-hidden="true"></i>Fórmula</div>
                                 <p> {{ $indicador->formula }}</p>
                             </div>
                         </div>
@@ -219,7 +220,10 @@
                             </div>
                         @endforeach
                     @else
-                        <p>No hay resultados registrados para este indicador.</p>
+                        <div class="indicator-detail__empty" role="status">
+                            <i class="fa-regular fa-calendar-xmark" aria-hidden="true"></i>
+                            No hay resultados registrados para este indicador.
+                        </div>
                     @endif
                 </div>
             </div>

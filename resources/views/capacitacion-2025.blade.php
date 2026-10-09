@@ -39,7 +39,7 @@ $yaDisponible = $ahora->greaterThanOrEqualTo($fechaEstreno);
         {{-- Título de la Sección --}}
         <div class="row mb-4 text-center">
             <div class="col-12">
-                <h2 style="color: #691C32; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+                <h2 style="color: #0c312d; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
                     Material Audiovisual
                 </h2>
                 <div style="width: 80px; height: 3px; background-color: #BC955C; margin: 10px auto;"></div>
@@ -105,7 +105,7 @@ $yaDisponible = $ahora->greaterThanOrEqualTo($fechaEstreno);
                         <div class="countdown-wrapper">
                             <div class="overlay-content text-center">
                                 <i class="fa-solid fa-lock fa-3x mb-3 text-muted"></i>
-                                <h4 class="mb-4" style="color: #691C32;">Este contenido estará disponible en:</h4>
+                                <h4 class="mb-4" style="color: #0c312d;">Este contenido estará disponible en:</h4>
 
                                 {{-- Contador JS --}}
                                 <div id="countdown" class="d-flex justify-content-center gap-3"

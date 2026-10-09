@@ -29,4 +29,5 @@ class Institucion extends Model
     {
         return $this->belongsToMany(User::class, 'institucion_user')->withTimestamps();
     }
+
 }

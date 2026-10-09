@@ -239,13 +239,6 @@ body {
     }
 }
 
-.apexcharts-title-text {
-    white-space: normal;
-    word-wrap: break-word;
-    max-width: 400px;
-    line-height: 1.2;
-}
-
 /* Header */
 .logo-header {
     width: 500px;
@@ -374,12 +367,6 @@ body {
     font-size: 7.5pt;
     font-weight: bold;
     color: #333;
-    border-left: 1px solid #e0e0e0;
-    /* Separador sutil */
-}
-
-.dato-anio:first-child .anio-valor {
-    border-left: none;
 }
 
 /* Firma */

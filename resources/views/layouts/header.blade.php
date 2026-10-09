@@ -1,109 +1,105 @@
-<header id="navbar">
-    <div class="encabezado-movil" id="movil-navbar">
-        <div class="logo">
-            <a href="{{ url('/') }}">
-                <img src="{{ asset('img/Cadena_SPED_.png') }}" alt="Logo SPED" class="w-100">
-            </a>
-        </div>
-        <div class="menu">
-            <button class="menu-button" id="menuButton" aria-label="Abrir menú" aria-expanded="false"
-                aria-controls="mobileMenu" title="Mostrar menú">☰</button>
+<header class="site-header">
+    <div class="header-logos-container">
+        <div class="container">
+            <div class="logos-wrapper">
+                <div class="logos-group left">
+                    <a href="https://spfa.puebla.gob.mx/">
+                        <img src="{{ asset('img/Cintillo_Gobierno_SEI-06.png') }}" alt="Logo SPED">
+                    </a>
+                </div>
+                <div class="logos-group right">
+                    <a href="{{ url('/') }}" target="_self" title="Sistema Estatal de Información">
+                        <img src="{{ asset('img/Nuevo-logo-SPED.png') }}" alt="Logo SEI Puebla">
+                    </a>
+                </div>
+            </div>
+
+
+            <button id="hamburger-menu" class="hamburger-menu" aria-label="Abrir menú de navegación"
+                aria-controls="main-nav" aria-expanded="false">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
         </div>
     </div>
+</header>
 
-    <div class="menu-overlay" id="menuOverlay"></div>
-
-    <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-labelledby="mobileMenuTitle">
-        <div class="logo mb-3 d-flex justify-content-between align-items-center">
-            <h2 id="mobileMenuTitle" class="h5">Menú Principal</h2> <button class="btn-close btn-close-white"
-                aria-label="Cerrar menú" id="closeMenuButton"></button>
-        </div>
-        <ul>
-            <li class="nav-item {{ request()->is('/') ? 'active' : '' }}">
-                <a class="nav-link" href="{{ url('/') }}">Inicio</a>
+<nav id="main-nav" class="main-nav" aria-label="Navegación principal">
+    <div class="container nav-container">
+        <ul class="nav-links">
+            <li>
+                <a href="{{ url('/') }}" class="{{ request()->is('/') ? 'active' : '' }}">Inicio</a>
             </li>
 
-            <li
-                class="nav-item dropdown {{ request()->is('informacion-general', 'normatividad', 'datos-abiertos*') ? 'active' : '' }}">
-                <a class="nav-link dropdown-toggle" href="#" id="mobileInicioDropdownTrigger" role="button"
-                    data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside"> Datos generales
+            <li class="dropdown">
+                <a href="#" data-menu-toggle
+                    class="{{ request()->is('ped', 'ped/eje-1', 'ped/eje-2', 'ped/eje-3', 'ped/eje-4', 'ped/eje-5', 'ped/eje-6') ? 'active' : '' }}">
+                    Plan Estatal de Desarrollo <span class="arrow">▾</span>
                 </a>
-                <div class="dropdown-menu" aria-labelledby="mobileInicioDropdownTrigger">
-                    <a class="dropdown-item" href="{{ url('/informacion-general') }}">Información general</a>
-                    <a class="dropdown-item" href="{{ url('/normatividad') }}">Normatividad</a>
-
-                    <div class="dropdown segundo-dropdown">
-                        <a class="dropdown-item dropdown-toggle" href="#" id="mobileDatosAbiertosSubmenuTrigger"
-                            role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Datos abiertos
-                        </a>
-                        <div class="dropdown-menu segundo-dropdown-menu"
-                            aria-labelledby="mobileDatosAbiertosSubmenuTrigger">
-                            <a class="dropdown-item" href="{{ url('/datos-abiertos-ped') }}">Plan Estatal de Desarrollo
-                                2024-2030</a>
-                            <a class="dropdown-item" href="{{ url('/datos-abiertos-hist-ped') }}">Hist. Planes Estatales
-                                de Desarrollo</a>
-                            <a class="dropdown-item" href="{{ url('/datos-abiertos-hist-mun') }}">Hist. Indicadores
-                                Municipales</a>
-                        </div>
-                    </div>
-                </div>
+                <ul class="dropdown-content">
+                    <li><a href="{{ url('/ped') }}">Visión general</a></li>
+                    <li><a href="{{ url('/ped/eje-1') }}">Eje 1 - Humanismo con Bienestar</a></li>
+                    <li><a href="{{ url('/ped/eje-2') }}">Eje 2 - Prosperidad y Estabilidad Económica</a></li>
+                    <li><a href="{{ url('/ped/eje-3') }}">Eje 3 - Estado de Derecho, Seguridad y Justicia</a></li>
+                    <li><a href="{{ url('/ped/eje-4') }}">Eje 4 - Desarrollo Urbano y Crecimiento Sostenible</a></li>
+                    <li><a href="{{ url('/ped/eje-5') }}">Eje 5 - Gobierno Transformador y de Resultados</a></li>
+                    <li><a href="{{ url('/ped/eje-6') }}">Eje Transversal - Por Amor a Puebla</a></li>
+                </ul>
             </li>
 
-            <li
-                class="nav-item dropdown {{ request()->is('ped', 'ped/eje-1', 'ped/eje-2', 'ped/eje-3', 'ped/eje-4', 'ped/eje-5') ? 'active' : '' }}">
-                <a class="nav-link dropdown-toggle" href="#" id="mobilePedDropdownTrigger" role="button"
-                    data-bs-toggle="dropdown" aria-expanded="false">
-                    Plan Estatal de Desarrollo
+            <li class="dropdown">
+                <a href="#" data-menu-toggle class="{{ request()->is('ped-programas*') ? 'active' : '' }}">
+                    Programas Derivados <span class="arrow">▾</span>
                 </a>
-                <div class="dropdown-menu" aria-labelledby="mobilePedDropdownTrigger">
-                    <a class="dropdown-item" href="{{ url('/ped') }}">Visión general</a>
-                    <a class="dropdown-item" href="{{ url('/ped/eje-1') }}">Eje 1 - Humanismo con Bienestar</a>
-                    <a class="dropdown-item" href="{{ url('/ped/eje-2') }}">Eje 2 - Prosperidad y Estabilidad
-                        Económica</a>
-                    <a class="dropdown-item" href="{{ url('/ped/eje-3') }}">Eje 3 - Estado de Derecho, Seguridad y
-                        Justicia</a>
-                    <a class="dropdown-item" href="{{ url('/ped/eje-4') }}">Eje 4 - Desarrollo Urbano y Crecimiento
-                        Sostenible</a>
-                    <a class="dropdown-item" href="{{ url('/ped/eje-5') }}">Eje 5 - Gobierno Transformador y de
-                        Resultados</a>
-                    <a class="dropdown-item" href="{{ url('/ped/eje-6') }}">Eje Transversal - Por Amor a Puebla</a>
-                </div>
-            </li>
-            {{-- Comentado el 15 de mayo en desarrollo  a la espera de que se defina la alineación de los futuros indicadores, que exista algun municipio con convenio y programas derivados --}}
-            <li class="nav-item dropdown {{ request()->is('ped-programas*') ? 'active' : '' }}">
-                <a class="nav-link dropdown-toggle" href="#" id="mobileProgramasDropdownTrigger" role="button"
-                    data-bs-toggle="dropdown" aria-expanded="false">
-                    Programas Derivados
-                </a>
-                <div class="dropdown-menu" aria-labelledby="mobileProgramasDropdownTrigger">
-                    <a class="dropdown-item" href="{{ url('/ped-programas/sectoriales') }}">Programas Sectoriales</a>
-                    <a class="dropdown-item" href="{{ url('/ped-programas/especiales') }}">Programas Especiales</a>
-                    <a class="dropdown-item" href="{{ url('/ped-programas/institucionales') }}">Programas
-                        Institucionales</a>
-                    <a class="dropdown-item" href="{{ url('/ped-programas/regionales') }}">Programa Regional</a>
-                </div>
+                <ul class="dropdown-content">
+                    <li><a href="{{ url('/ped-programas/sectoriales') }}">Programas Sectoriales</a></li>
+                    <li><a href="{{ url('/ped-programas/especiales') }}">Programas Especiales</a></li>
+                    <li><a href="{{ url('/ped-programas/institucionales') }}">Programas Institucionales</a></li>
+                </ul>
             </li>
 
-            <li class="nav-item {{ request()->is('pm*') ? 'active' : '' }}">
-                <a class="nav-link" href="{{ url('/pm') }}">Planes Municipales de Desarrollo</a>
-            </li>
-
-            {{-- <li class="nav-item {{ request()->is('agenda') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ url('/agenda') }}">Agenda 2030</a>
-            </li> --}}
-
-            <li class="nav-item" id="buscador">
-                <a class="nav-link" href="#" onclick="openSearchModal();">
-                    <i class="fas fa-search" aria-hidden="true"></i> Buscar
+            <li>
+                <a href="{{ url('/pm') }}"
+                    class="{{ request()->is('pm*', 'ficha-tecnica-municipal/*') ? 'active' : '' }}">
+                    Planes Municipales de Desarrollo
                 </a>
             </li>
-            <li class="nav-item nav-item-login">
-                <a class="nav-link" href="{{ route('login') }}" title="Iniciar sesión" rel="noopener"
-                    target="_self">
-                    <i class="fas fa-right-to-bracket" aria-hidden="true"></i> Entrar
+            <li class="dropdown">
+                <a href="#" data-menu-toggle
+                    class="{{ request()->is('normatividad', 'reportes-anuales', 'datos-abiertos*', 'informacion-general/*') ? 'active' : '' }}">
+                    Datos generales <span class="arrow">▾</span>
+                </a>
+                <ul class="dropdown-content">
+                    <li><a href="{{ url('/informacion-general/api') }}">API</a></li>
+                    <li><a href="{{ url('/normatividad') }}">Normatividad</a></li>
+                    <li><a href="{{ route('reportes-anuales') }}">Reportes anuales</a></li>
+                    <li class="dropdown-nested">
+                        <a href="#" data-menu-toggle>Datos abiertos <span class="arrow-right">▸</span></a>
+                        <ul class="dropdown-content-nested">
+                            <li><a href="{{ url('/datos-abiertos-ped') }}">Plan Estatal de Desarrollo 2024-2030</a>
+                            </li>
+                            <li><a href="{{ url('/datos-abiertos-hist-ped') }}">Hist. Planes Estatales de
+                                    Desarrollo</a>
+                            </li>
+                            <li><a href="{{ url('/datos-abiertos-hist-mun') }}">Hist. Indicadores Municipales</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <a href="#customSearchModal" onclick="openSearchModal(event);" aria-label="Buscar indicadores"
+                    title="Buscar indicadores">
+                    <i class="fas fa-search" aria-hidden="true"></i><span class="visually-hidden">Buscar
+                        indicadores</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('login') }}" aria-label="Iniciar sesión" title="Iniciar sesión">
+                    <i class="fas fa-right-to-bracket" aria-hidden="true"></i><span class="visually-hidden">Iniciar
+                        sesión</span>
                 </a>
             </li>
         </ul>
     </div>
-</header>
+</nav>

@@ -20,7 +20,7 @@ class MunicipioConvenioController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('permission:ver-municipios-convenio|crear-municipios-convenio|editar-municipios-convenio|borrar-municipios-convenio', ['only' => ['index']]);
+        $this->middleware('permission:ver-municipios-convenio|crear-municipios-convenio|editar-municipios-convenio|borrar-municipios-convenio', ['only' => ['index', 'indicadores']]);
         $this->middleware('permission:crear-municipios-convenio', ['only' => ['create', 'store']]);
         $this->middleware('permission:editar-municipios-convenio', ['only' => ['edit', 'update']]);
         $this->middleware('permission:borrar-municipios-convenio', ['only' => ['destroy']]);
@@ -33,15 +33,29 @@ class MunicipioConvenioController extends Controller
      */
     public function index()
     {
-        // $municipios = CatMunicipio::all();
-        $municipios = CatMunicipio::with('indicadores')->get();
-        // $municipiosConConvenio = MunicipioConvenio::all();
-        $municipiosConConvenio = MunicipioConvenio::with([
-            'municipio.indicadores' => function ($query) {
-                $query->where('publica', 1);
-            }
-        ])->get();
+        $municipios = CatMunicipio::orderBy('nombre')->get();
+        $municipiosConConvenio = MunicipioConvenio::with('municipio')
+            ->withCount([
+                'indicadores as indicadores_publicos_count' => fn ($query) => $query->where('publica', 1),
+            ])
+            ->get();
+
         return view('panel-municipios-convenio.index', compact('municipios', 'municipiosConConvenio'));
+    }
+
+    /**
+     * Muestra los indicadores públicos asociados a un municipio con convenio.
+     */
+    public function indicadores(MunicipioConvenio $municipioConvenio): View
+    {
+        $municipioConvenio->load('municipio');
+        $indicadores = $municipioConvenio->indicadores()
+            ->where('publica', 1)
+            ->with('periodicidad')
+            ->orderBy('indicador')
+            ->get();
+
+        return view('panel-municipios-convenio.indicadores', compact('municipioConvenio', 'indicadores'));
     }
 
     /**

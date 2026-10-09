@@ -7,6 +7,15 @@ use Illuminate\Http\Request;
 
 class InstitucionController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            abort_unless(auth()->user()?->isAdministrator(), 403);
+
+            return $next($request);
+        });
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -14,7 +23,8 @@ class InstitucionController extends Controller
      */
     public function index()
     {
-        $instituciones = Institucion::all();
+        $instituciones = Institucion::orderBy('nombre')->get();
+
         return view('panel-instituciones.index', compact('instituciones'));
     }
 
@@ -36,12 +46,9 @@ class InstitucionController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'titular' => 'required|string|max:255',
-        ]);
+        $validated = $request->validate($this->rules());
 
-        Institucion::create($request->all());
+        Institucion::create($validated);
 
         return redirect()->route('panel-cat-instituciones.index')
             ->with('success', 'Institución creada exitosamente.');
@@ -78,12 +85,9 @@ class InstitucionController extends Controller
      */
     public function update(Request $request, Institucion $institucion)
     {
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'titular' => 'required|string|max:255',
-        ]);
+        $validated = $request->validate($this->rules());
 
-        $institucion->update($request->all());
+        $institucion->update($validated);
 
         return redirect()->route('panel-cat-instituciones.index')
             ->with('success', 'Institución actualizada exitosamente.');
@@ -114,5 +118,13 @@ class InstitucionController extends Controller
 
         return redirect()->route('panel-cat-instituciones.index')
             ->with('success', 'Institución eliminada exitosamente.');
+    }
+
+    private function rules(): array
+    {
+        return [
+            'nombre' => ['required', 'string', 'max:255'],
+            'titular' => ['required', 'string', 'max:255'],
+        ];
     }
 }

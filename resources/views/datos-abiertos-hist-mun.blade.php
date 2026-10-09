@@ -25,17 +25,22 @@
     Sistema de Información para el
     Seguimiento a la Planeación y Evaluación del Desarrollo
     del Estado de Puebla.')
+@section('css')
+@endsection
 @section('content')
 
 
-    <div class="container">
-        <h1 class="my-3">Datos Abiertos: Histórico de los Indicadores Municipales</h1>
-        <img class="w-100 block-auto" src="{{ asset('img/pleca-nueva.png') }}" title="Pleca"
-            alt="Pleca conformada por una línea partida por cuatro colores">
-        &nbsp;
-        <h4 class="text-justify my-3">Los datos abiertos disponibles pueden ser utilizados, reutilizados y
-            redistribuidos libremente por cualquier persona, se encuentran sujetos al requerimiento de atribución de
-            la misma manera en que aparecen.</h4>
+    <div class="datos-abiertos">
+        <section class="datos-abiertos__hero">
+            <div class="datos-abiertos__hero-container">
+                <div class="datos-abiertos__hero-content">
+                    <span class="datos-abiertos__hero-tag">Archivo municipal</span>
+                    <h1 class="datos-abiertos__hero-title">Histórico de Indicadores Municipales</h1>
+                    <p class="datos-abiertos__hero-desc">Consulta los datos históricos de los indicadores municipales derivados de los planes de desarrollo.</p>
+                </div>
+            </div>
+        </section>
+        <div class="container datos-abiertos-page">
         <section id="mun-section" class="mb-5">
             <div class="row g-4">
                 <div class="col-md-3">
@@ -206,5 +211,6 @@
                 </div>
             </div>
         </section>
+        </div>
     </div>
 @endsection

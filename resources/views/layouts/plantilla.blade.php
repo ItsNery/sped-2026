@@ -60,111 +60,98 @@
     <link href="{{ asset('css/media_queries.css') }}" rel="stylesheet">
     <link href="{{ asset('css/efectos.css') }}" rel="stylesheet">
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/estilos.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/estilos.css') }}?v={{ filemtime(public_path('css/estilos.css')) }}" rel="stylesheet">
+    <script src="{{ asset('js/echarts.min.js') }}"></script>
+    <script src="{{ asset('./js/sienna-accessibility.umd.js') }}" async></script>
 
     @yield('jss-inicial')
     @yield('css')
 </head>
 
-<body>
+<body class="@yield('body-class')">
     @auth
-        <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
-            <div class="container">
-                <a class="navbar-brand" href="{{ url('/') }}" rel="noopener" target="_self" title="Inicio">
-                    <img src="{{ asset('img/logo_sped.png') }}" alt="" class="w-10p">
+        <div class="floating-user-menu">
+            <button type="button" class="floating-user-menu__button" id="floatingUserButton" aria-expanded="false"
+                aria-controls="floatingUserDropdown" aria-label="Abrir menú de usuario">
+                <span class="fas fa-user" aria-hidden="true"></span>
+            </button>
+
+            <div class="floating-user-menu__dropdown" id="floatingUserDropdown" aria-hidden="true">
+                <div class="floating-user-menu__user">
+                    <span class="fas fa-user-circle" aria-hidden="true"></span>
+                    <div>
+                        <strong>{{ Auth::user()->name }}</strong>
+                        <small>Usuario</small>
+                    </div>
+                </div>
+
+                <div class="floating-user-menu__divider"></div>
+
+                <a class="floating-user-menu__item" href="{{ route('dashboard') }}" title="Panel">
+                    <span class="fas fa-tachometer-alt" aria-hidden="true"></span>
+                    <span>Panel</span>
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarSupportedContent1" aria-controls="navbarSupportedContent1" aria-expanded="false"
-                    aria-label="{{ __('Toggle navigation') }}">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
 
-                <div class="collapse navbar-collapse" id="navbarSupportedContent1">
-                    <!-- Left Side Of Navbar -->
-                    <ul class="navbar-nav mr-auto">
-                    </ul>
-                    <!-- Right Side Of Navbar -->
-                    <ul class="navbar-nav ml-auto">
-                        <!-- Authentication Links -->
-                        @guest
-                            @if (Route::has('login'))
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
-                                </li>
-                            @endif
+                <form id="logout-form" action="{{ route('logout') }}" method="POST">
+                    @csrf
 
-                            @if (Route::has('register'))
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
-                                </li>
-                            @endif
-                        @else
-                            <li class="nav-item dropdown">
-                                <a id="navbarDropdown" class="nav-link dropdown-toggle m-w-150" href="#"
-                                    role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
-                                    v-pre>
-                                    {{ Auth::user()->name }}
-                                </a>
-
-                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                                    <a class="dropdown-item" href="{{ route('dashboard') }}" target="_self" title="Panel"
-                                        rel="noopener">
-                                        {{ __('Panel') }}
-                                    </a>
-                                    <a class="dropdown-item" href="{{ route('logout') }}"
-                                        onclick="event.preventDefault();
-                                                        document.getElementById('logout-form').submit();"
-                                        title="Cerrar Sesión" rel="noopener">
-                                        {{ __('Cerrar Sesión') }}
-                                    </a>
-                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                        @csrf
-                                    </form>
-                                </div>
-                            </li>
-                        @endguest
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    @endauth
-    <main>
-        @include('layouts.header')
-        <div id="customSearchModal" class="custom-modal-search">
-            <div class="custom-modal-content">
-                <div class="custom-modal-header">
-                    <span class="custom-close" onclick="closeSearchModal()">&times;</span>
-                    <h5 class="custom-modal-title">Buscar con Google</h5>
-                </div>
-                <div class="custom-modal-body">
-                    <script async src="https://cse.google.com/cse.js?cx=031f16cfb8b5845ab"></script>
-                    <div class="gcse-searchbox-only"></div>
-                </div>
+                    <button type="submit" class="floating-user-menu__item floating-user-menu__logout">
+                        <span class="fas fa-sign-out-alt" aria-hidden="true"></span>
+                        <span>Cerrar sesión</span>
+                    </button>
+                </form>
             </div>
         </div>
-        @yield('content')
+    @endauth
+    <div id="wrapperBody">
+        @include('layouts.header')
+        <div class="header-scroll"></div>
+        <main>
+            <a class="visually-hidden-focusable" href="#contenido-principal">Saltar al contenido principal</a>
+            <div id="customSearchModal" class="custom-modal-search" role="dialog" aria-modal="true"
+                aria-labelledby="customSearchModalTitle" aria-hidden="true" tabindex="-1">
+                <div class="custom-modal-content">
+                    <div class="custom-modal-header">
+                        <h5 id="customSearchModalTitle" class="custom-modal-title">Buscar indicadores</h5>
+                        <button type="button" class="btn-close custom-close" aria-label="Cerrar búsqueda"
+                            onclick="closeSearchModal()"></button>
+                    </div>
+                    <div class="custom-modal-body">
+                        <form id="indicatorSearchForm" class="indicator-search-form" role="search">
+                            <label class="visually-hidden" for="indicatorSearchInput">Buscar indicador</label>
+                            <div class="indicator-search-form__input-wrap">
+                                <i class="fas fa-search" aria-hidden="true"></i>
+                                <input id="indicatorSearchInput" type="search" name="q"
+                                    placeholder="Nombre, temática, eje o institución..." autocomplete="off">
+                            </div>
+                        </form>
+                        <div id="indicatorSearchStatus" class="indicator-search-status" aria-live="polite">
+                            Escribe al menos dos caracteres para buscar.
+                        </div>
+                        <div id="indicatorSearchResults" class="indicator-search-results"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="contenido-principal" tabindex="-1">
+                @yield('content')
+            </div>
+        </main>
         @include('layouts.footer')
-    </main>
+        <a class="btn-option scroll-top" href="#contenido-principal" aria-label="Volver al inicio de la página">
+            <svg class="scroll-top__progress" viewBox="0 0 44 44" aria-hidden="true">
+                <circle class="scroll-top__track" cx="22" cy="22" r="18"></circle>
+                <circle class="scroll-top__value" cx="22" cy="22" r="18"></circle>
+            </svg>
+            <span class="fas fa-angle-up scroll-top__icon" aria-hidden="true"></span>
+        </a>
+    </div>
     @yield('jss-final')
     <script>
-        window.addEventListener("load", function() {
-            let modal = document.getElementById("customSearchModal");
-
-            window.openSearchModal = function() {
-                modal.classList.add("show");
-            };
-
-            window.closeSearchModal = function() {
-                modal.classList.remove("show");
-            };
-
-            window.onclick = function(event) {
-                if (event.target === modal) {
-                    closeSearchModal();
-                }
-            };
-        });
+        window.AppRoutes = {
+            buscarIndicadores: "{{ route('public.buscar-indicadores') }}"
+        };
     </script>
+    <script src="{{ asset('js/scripts-plantilla.js') }}"></script>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-PZQY1MBD1G"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -173,10 +160,8 @@
             dataLayer.push(arguments);
         }
         gtag('js', new Date());
-
         gtag('config', 'G-PZQY1MBD1G');
     </script>
-
 </body>
 
 </html>

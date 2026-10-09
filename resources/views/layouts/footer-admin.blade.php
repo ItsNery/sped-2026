@@ -50,9 +50,9 @@
                     <b>Ubicación</b>
                 </h6>
                 <ul class="list-unstyled">
-                    <li><i class="fa fa-angle-right me-2"></i>11 Oriente #2224</li>
-                    <li><i class="fa fa-angle-right me-2"></i>Col. Azcarate C.P. 72501, Puebla,Pue.</li>
-                    <li><i class="fa fa-angle-right me-2"></i>Tel: (222) 2-29-70-00, Ext. 5051</li>
+                    <li><i class="fa fa-angle-right me-2"></i>Av. Cúmulo de Virgo 1358</li>
+                    <li><i class="fa fa-angle-right me-2"></i>Reserva Territorial Atlixcáyotl, Puebla, Pue.</li>
+                    <li><i class="fa fa-angle-right me-2"></i>Tel: 222 144 2449, Ext. 5040</li>
                 </ul>
             </div>
             <div class="col-md-3 mapa-sitio">
@@ -69,9 +69,9 @@
                             Inicio
                         </a>
                         <br>
-                        <a class="text-white mb-2" href="{{ url('/informacion-general') }}">
+                        <a class="text-white mb-2" href="{{ url('/informacion-general/api') }}">
                             <i class="fa fa-angle-right mr-2"></i>
-                            Información General
+                            API Pública
                         </a>
                         <br>
                         <a class="text-white mb-2" href="{{ url('/normatividad') }}">

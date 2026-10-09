@@ -1,53 +1,171 @@
-# Documentación: Módulo de Dashboard
+# Documentación: Centro de mando del PED
 
-## 📝 Resumen
+## Propósito
 
-El Dashboard es un centro de inteligencia y visualización de datos para la plataforma. Su propósito no es la gestión de contenido (CRUD), sino **agregar, procesar y presentar información clave** del estado de los indicadores, las instituciones y los usuarios. Está diseñado principalmente para el rol de **Administrador**, ofreciendo una visión panorámica a través de KPIs y gráficos interactivos.
+El dashboard administrativo es una superficie ejecutiva para revisar el estado del Plan Estatal de Desarrollo, detectar riesgos y dirigir la atención hacia indicadores, instituciones y programas que requieren intervención.
 
-## ⚙️ Flujo de Datos (`DashboardController@index`)
+La vista principal se encuentra en:
 
-El método `index` del controlador es el motor del dashboard. Antes de renderizar la vista, realiza una serie de consultas y cálculos complejos para recopilar todas las métricas necesarias. Las principales son:
-* **KPIs Generales**: Calcula el total y porcentaje de indicadores validados e incompletos.
-* **Actividad Reciente**: Obtiene los últimos 10 indicadores actualizados.
-* **Clasificación de Instituciones**: Identifica el "Top 5" de instituciones con más indicadores validados y aquellas que aún tienen indicadores pendientes de validar.
-* **Estado de Actualización**: Analiza las fechas de actualización de los indicadores para clasificarlos como "Caducados", "A Tiempo" o "Próximos a Actualizar".
-* **Agregación para Gráficos**: Prepara conjuntos de datos específicos para alimentar cada uno de los gráficos de ApexCharts, como el conteo de indicadores por semáforo, por año, por periodicidad y por usuario "Enlace".
+- `GET /dashboard`
+- `resources/views/dashboard.blade.php`
 
----
+El dashboard público continúa disponible en `/ped` y utiliza únicamente información validada.
 
-## 📊 Visualización de Datos e Interactividad (`dashboard.blade.php`)
+## Universo de datos
 
-El dashboard utiliza la librería **ApexCharts.js** para transformar los datos en visualizaciones claras e interactivas.
+Todas las métricas administrativas parten del mismo universo:
 
-### 1. Tarjetas de KPIs (Cards)
+- Indicadores asociados al plan seleccionado.
+- Ejes del plan.
+- Programas derivados del plan.
+- Programas institucionales vinculados al plan.
 
-La parte superior del dashboard muestra tarjetas con los indicadores de rendimiento clave (KPIs) más importantes, como:
-* **Total de Indicadores Validados**.
-* **Total de Indicadores Incompletos**.
-* **Top 5 Instituciones**.
-* **Actividad Reciente**.
-* Listas de indicadores según su **estado de actualización**.
+El plan se selecciona mediante `plan_id`. Si no se envía, se utiliza el plan definido en `SPED_ACTIVE_PLAN_ID`.
 
-### 2. Gráficos Interactivos
+## Filtros
 
-El núcleo del dashboard son sus gráficos, que no solo muestran información, sino que también permiten "profundizar" en los datos (drill-down).
+La pantalla acepta los siguientes parámetros:
 
-* **Semaforización (Gráfico de Pastel)**:
-    * Muestra la distribución de todos los indicadores según su estado de semaforización ("Excedido", "Aceptable", etc.).
-    * **Es interactivo**: Al hacer clic en una de las porciones (ej. "Aceptable"), el administrador es redirigido a una nueva página que lista únicamente los indicadores que se encuentran en ese estado.
+- `plan_id`: plan estatal a consultar.
+- `solo_validados`: `1` para datos validados o `0` para todos los datos registrados.
+- `anio_desde`: año inicial del análisis histórico.
+- `anio_hasta`: año final del análisis histórico.
+- `eje_id[]`: ejes seleccionados.
+- `programa_tipo`: tipo de programa derivado.
+- `programa_id[]`: programas seleccionados.
+- `institucion_id[]`: instituciones seleccionadas.
+- `semaforo[]`: estados del semáforo.
+- `calidad[]`: criterios de calidad de información.
+- `buscar`: búsqueda por nombre, descripción o temática.
 
-* **Avance por Enlace (Gráficos de Pastel Múltiples)**:
-    * Se genera dinámicamente un gráfico de pastel para cada usuario con el rol "Enlace".
-    * Cada gráfico muestra el porcentaje de indicadores validados vs. no validados para ese usuario específico.
-    * **Es interactivo**: Al hacer clic en una porción (ej. "No Validados"), el administrador es llevado a una página que lista los indicadores no validados asignados a ese "Enlace".
+La vista ejecutiva usa datos validados por defecto.
 
-* **Indicadores por Año (Gráfico de Barras)**: Muestra cuántos indicadores tienen datos registrados para cada año, permitiendo ver la cobertura de información a lo largo del tiempo.
+Los filtros de alcance y diagnóstico se encuentran dentro del drawer **Más filtros** para mantener compacta la pantalla inicial. Los filtros activos se muestran como chips removibles.
 
-* **Periodicidad (Gráfico de Dona)**: Muestra la distribución de los indicadores según su frecuencia de medición (Anual, Semestral, etc.).
+## Drill-down
 
----
+La ruta `GET /dashboard/drill-down` muestra el detalle paginado del universo filtrado.
 
-### 👤 Flujo de Trabajo y Roles
+Puede recibir los mismos filtros del dashboard y ordena por prioridad, indicador, institución o avance. Cada fila enlaza al detalle administrativo del indicador.
 
-* **Vista de Administrador**: La vista completa del dashboard, con todos sus KPIs y gráficos, está restringida al usuario con `id = 1` (super-administrador).
-* **Otras Vistas**: El controlador detecta el rol del usuario. Si no es el administrador, puede mostrar una vista más simple o, como en el caso de los usuarios de tipo "Municipio", redirigirlos a un dashboard completamente diferente y específico para ellos.
+Los enlaces desde semáforo, ejes, instituciones, programas y prioridades conservan el plan, modo de validación y filtros seleccionados.
+
+## Métricas principales
+
+### Desempeño
+
+- Avance promedio evaluable.
+- Cobertura de evaluación.
+- Distribución por semáforo.
+- Avance por eje.
+- Avance por programa derivado.
+
+### Calidad
+
+- Indicadores sin dato anual.
+- Indicadores pendientes de validación.
+- Indicadores sin meta válida.
+- Indicadores sin tendencia definida.
+- Fecha del último corte de datos.
+
+### Prioridades
+
+La cola de atención se ordena así:
+
+1. Avance insuficiente.
+2. Actualización vencida.
+3. Pendiente de validación.
+4. Sin dato anual.
+5. Sin meta válida.
+6. Sin tendencia definida.
+
+Cada registro enlaza al detalle administrativo del indicador.
+
+## Evolución histórica
+
+El servicio `app/Services/PedTrendService.php` compara los dos últimos años disponibles por indicador.
+
+Clasificaciones:
+
+- `Mejoran`: incremento del avance superior a un punto porcentual.
+- `Retroceden`: disminución del avance superior a un punto porcentual.
+- `Estables`: variación de hasta un punto porcentual.
+- `Sin comparación`: no existen dos años comparables.
+
+La evolución se presenta como comportamiento observado. No es una proyección ni un pronóstico.
+
+## Dashboard municipal
+
+El módulo municipal conserva por ahora su interfaz y flujo administrativo anterior. No se modifica durante esta fase, porque los municipios se encuentran a mitad de su administración.
+
+El rediseño con métricas municipales, comparativos regionales y evolución histórica queda diferido para la renovación administrativa del próximo año.
+
+## Exportaciones
+
+Rutas administrativas:
+
+- `GET /dashboard/exportar/pdf`
+- `GET /dashboard/exportar/xlsx`
+
+Ambas reutilizan los mismos filtros y métricas del dashboard web.
+
+### PDF
+
+Incluye:
+
+- Resumen ejecutivo.
+- Semaforización.
+- Calidad de información.
+- Avance por eje.
+- Indicadores prioritarios.
+- Serie histórica.
+- Comparación entre periodos.
+
+### XLSX
+
+Incluye las hojas:
+
+- `Resumen`
+- `Prioridades`
+- `Ejes`
+- `Instituciones`
+- `Programas`
+- `Serie histórica`
+- `Metodología`
+
+## Servicios
+
+### `PedMetricsService`
+
+Calcula avance, cobertura, semaforización, validación y motivos de no evaluación.
+
+### `PedTrendService`
+
+Calcula series históricas y variaciones entre periodos.
+
+## Reglas de avance
+
+- `Mayor es mejor`: `dato / meta * 100`.
+- `Menor es mejor`: `meta / dato * 100`.
+- `Constante`: `dato / meta * 100`.
+
+Si no existe meta, tendencia o dato válido, el avance es `null` y no cero.
+
+Semáforo:
+
+- Excedido: `>= 110%`.
+- Aceptable: `>= 91%`.
+- Moderado: `>= 71%`.
+- Insuficiente: `< 71%`.
+- No clasificado: sin avance calculable.
+
+## Verificación manual
+
+- Cambiar el plan y confirmar que todas las secciones cambian.
+- Alternar datos validados y registrados.
+- Aplicar rango de años.
+- Revisar indicadores con valor cero.
+- Revisar indicadores sin meta o tendencia.
+- Abrir una prioridad desde la tabla.
+- Generar PDF y XLSX con los mismos filtros.
+- Confirmar que el dashboard municipal conserva su interfaz anterior.

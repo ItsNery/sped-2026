@@ -116,9 +116,6 @@
                                     <option value="Programa Especial"
                                         {{ old('tipo_programa') == 'Programa Especial' ? 'selected' : '' }}>Programa
                                         Especial</option>
-                                    <option value="Programa Institucional"
-                                        {{ old('tipo_programa') == 'Programa Institucional' ? 'selected' : '' }}>
-                                        Programa Institucional</option>
                                     <option value="Programa Regional"
                                         {{ old('tipo_programa') == 'Programa Regional' ? 'selected' : '' }}>Programa
                                         Regional</option>
@@ -142,8 +139,20 @@
                             </div>
                         </div>
 
-                        {{-- EJE (ANTES 'PROGRAMA') --}}
-                        <div class="col-md-6 mb-2">
+                        {{-- CONTENEDOR DE EJES DEL PLAN (VISIBLE CUANDO NO ES PROGRAMA DERIVADO) --}}
+                        <div class="col-md-12 row mb-2" id="eje_plan_container">
+                            <div class="col-md-6 mb-2">
+                                <label>Eje del Plan Estatal <span class="text-danger">*</span></label>
+                                <select name="eje_id" id="eje_id" class="form-control">
+                                    <option value="" disabled selected>Seleccione un Eje...</option>
+                                </select>
+                                @error('eje_id')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-2" style="display: none;">
                             <div class="custom-section-title"><i class="fa-solid fa-book"></i>
                                 Eje del Plan / Programa: <span class="text-danger">*</span>
                             </div>
@@ -154,19 +163,59 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+
+                        {{-- VINCULACIÓN CON PROGRAMAS INSTITUCIONALES (RELACIÓN MUCHOS A MUCHOS) --}}
+                        <div class="col-md-12 mb-3 mt-3">
+                            <div class="custom-section-title"><i class="fa-solid fa-hotel"></i>
+                                Vinculación con Programas Institucionales:
+                            </div>
+                            <div class="mb-2">
+                                <input type="text" class="form-control form-control-sm buscar-prog-inst"
+                                    placeholder="🔍 Buscar por nombre o siglas..."
+                                    data-target="container-prog-inst-crear">
+                            </div>
+                            <div class="card p-3 container-prog-inst-crear"
+                                style="max-height: 250px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 0.25rem;">
+                                <div class="row">
+                                    @foreach ($programasInstitucionales as $progInst)
+                                        <div class="col-md-6 mb-2 item-prog-inst"
+                                            data-nombre="{{ strtolower($progInst->nombre) }}"
+                                            data-siglas="{{ strtolower($progInst->siglas) }}">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox"
+                                                    name="programas_institucionales[]" value="{{ $progInst->id }}"
+                                                    id="prog_inst_{{ $progInst->id }}"
+                                                    {{ is_array(old('programas_institucionales')) && in_array($progInst->id, old('programas_institucionales')) ? 'checked' : '' }}>
+                                                <label class="form-check-label text-muted"
+                                                    for="prog_inst_{{ $progInst->id }}" style="font-size: 0.9rem;">
+                                                    <span class="badge text-white mr-1"
+                                                        style="background-color: {{ $progInst->color ?? '#0c312d' }};">{{ $progInst->siglas }}</span>
+                                                    {{ $progInst->nombre }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @error('programas_institucionales')
+                                <div class="text-danger mt-1" style="font-size: 0.875em;">{{ $message }}</div>
+                            @enderror
+                        </div>
                         {{-- Comentado el 20 de mayo, debido a que no hay cod_tematica    --}}
-                        {{-- <div class="col-md-2 mb-2">
+                        {{-- 
+                        <div class="col-md-2 mb-2">
                             <div class="custom-section-title"><i class="fa-solid fa-barcode"></i>
                                 Cod. Temática:
                             </div>
                             <input type="text" class="form-control @error('cod_tematica') is-invalid @enderror"
-                                id="cod_tematica" name="cod_tematica" value="{{ old('cod_tematica') }}"
-                                placeholder="Ej. S01.1">
+                                    id="cod_tematica" name="cod_tematica" value="{{ old('cod_tematica') }}"
+                            placeholder="Ej. S01.1">
                             @error('cod_tematica')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                        </div> --}}
-                        <div class="col-md-6 mb-2">
+                        </div> 
+                        --}}
+                        <div class="col-md-4 mb-2">
                             <div class="custom-section-title"><i class="fa-solid fa-bookmark"></i>
                                 Temática: <span class="text-danger">*</span>
                             </div>
@@ -177,7 +226,7 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-md-4 mb-2">
+                        <div class="col-md-6 mb-2">
                             <div class="custom-section-title"><i class="fa-solid fa-text-width"></i>
                                 Definición o descripción: <span class="text-danger">*</span>
                             </div>
@@ -264,14 +313,25 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                        <div class="col-md-2 mb-2">
+                            <div class="custom-section-title"><i class="fa-solid fa-bullseye"></i>
+                                Año meta: <span class="text-danger">*</span>
+                            </div>
+                            <input type="number" min="1900" max="2100"
+                                class="form-control @error('meta_anio') is-invalid @enderror" id="meta_anio"
+                                name="meta_anio" value="{{ old('meta_anio', $metaAnioSugerido) }}"
+                                placeholder="Ej. 2030">
+                            @error('meta_anio')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
                         <div class="col-md-4 mb-2">
                             <div class="custom-section-title"><i class="fa-solid fa-bullseye"></i>
-                                Meta 2030: <span class="text-danger">*</span>
+                                Meta: <span class="text-danger">*</span>
                             </div>
-                            <input type="number" class="form-control @error('meta_2024') is-invalid @enderror"
-                                id="meta_2024" name="meta_2024" value="{{ old('meta_2024') }}"
-                                placeholder="Ej. 200">
-                            @error('meta_2024')
+                            <input type="text" class="form-control @error('meta') is-invalid @enderror"
+                                id="meta" name="meta" value="{{ old('meta') }}" placeholder="Ej. 200">
+                            @error('meta')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -326,56 +386,50 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-
-
-                        {{-- <div class="col-md-3 mb-2">
+                        {{-- 
+                        <div class="col-md-3 mb-2">
                             <div class="custom-section-title"><i class="fa-solid fa-timeline"></i>
                                 Periodo:
                             </div>
                             <input type="text" class="form-control @error('periodo') is-invalid @enderror"
                                 id="periodo" name="periodo" value="{{ old('periodo') }}"
-                                placeholder="Ej. 1er Semestre">
+                            placeholder="Ej. 1er Semestre">
                             @error('periodo')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                        </div> --}}
-
-
-
-
-
-
-
-
-
-
-                        {{-- <div class="col-md-3 mb-2">
+                        </div> 
+                        --}}
+                        {{-- 
+                        <div class="col-md-3 mb-2">
                             <div class="custom-section-title"><i class="fa-solid fa-building-un"></i>
                                 ODS: *
                             </div>
                             <select name="odses[]" id="odses" class="form-control" multiple>
                                 @foreach ($odses as $item)
                                     <option value="{{ $item->id }}"
-                                        {{ in_array($item->id, old('ods', [])) ? 'selected' : '' }}>
-                                        {{ $item->id }} - {{ $item->nombre }}
+                                    {{ in_array($item->id, old('ods', [])) ? 'selected' : '' }}>
+                                    {{ $item->id }} - {{ $item->nombre }}
                                     </option>
                                 @endforeach
                             </select>
                             @error('odses')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                        </div> --}}
-                        {{-- <div class="col-md-6 mb-2">
+                        </div> 
+                        --}}
+                        {{-- 
+                        <div class="col-md-6 mb-2">
                             <div class="custom-section-title"><i class="fa-solid fa-quote-right"></i>
                                 Principales Resultados:
                             </div>
                             <textarea class="form-control @error('resultados') is-invalid @enderror" id="resultados" name="resultados"
                                 rows="4" placeholder="Ej. A lo largo del 2025 se ha logrado...">{{ old('resultados') }}</textarea>
                             @error('resultados')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                        </div> --}}
-                        <div class="col-md-12 mt-4"> {{-- Añadido mt-4 para un poco de espacio --}}
+                        </div> 
+                        --}}
+                        <div class="col-md-12 mt-4">
                             <div class="custom-section-title">
                                 <i class="fa-solid fa-box-archive"></i> Histórico de Datos Anuales:
                             </div>
@@ -413,17 +467,16 @@
                 </div>
             </form>
             <div id="dato-anual-template" style="display: none;">
-                <div class="dato-anual-block card mb-3"> {{-- Usamos la clase 'card' de Bootstrap para mejor presentación --}}
+                <div class="dato-anual-block card mb-3">
                     <div class="card-body">
                         <h5 class="card-title">Nuevo Año</h5>
-                        <div class="form-group row mb-2"> {{-- Añadido mb-2 para espaciado interno --}}
+                        <div class="form-group row mb-2">
                             <label class="col-sm-3 col-form-label">Año del Dato <span
                                     class="text-danger">*</span></label>
                             <div class="col-sm-9">
                                 <input type="number" class="form-control anio-input"
-                                    name="datos_anuales[__INDEX__][anio]" {{-- Correcto --}}
-                                    placeholder="Ej: {{ date('Y') - 1 }}" required>
-                                {{-- Aquí podrías añadir un div para mensajes de error de validación si es necesario --}}
+                                    name="datos_anuales[__INDEX__][anio]" placeholder="Ej: {{ date('Y') - 1 }}"
+                                    required>
                                 <div class="invalid-feedback" data-input-name="datos_anuales.__INDEX__.anio"></div>
                             </div>
                         </div>
@@ -470,7 +523,7 @@
                                     placeholder="Observaciones específicas de este año"></textarea>
                             </div>
                         </div>
-                        <div class="text-right mt-2"> {{-- Añadido mt-2 para espaciar el botón --}}
+                        <div class="text-right mt-2">
                             <button type="button" class="btn btn-danger btn-sm remove-dato-anual">Eliminar
                                 Año</button>
                         </div>
@@ -490,26 +543,46 @@
 
             // -- Logic --
 
-            // 1. Toggle Derived Program Container
-            function toggleDerivedContainer() {
+            // 1. Toggle Containers
+            const ejePlanContainer = document.getElementById('eje_plan_container');
+            const ejeIdSelect = document.getElementById('eje_id');
+            const ejeAppInput = document.getElementById('eje_app');
+
+            function toggleContainers() {
                 if (derivedSwitch.checked) {
-                    derivedContainer.style.display = 'flex'; // Use flex because it's a row
+                    derivedContainer.style.display = 'flex';
+                    ejePlanContainer.style.display = 'none';
+
                     tipoProgramaSelect.setAttribute('required', 'required');
                     programaSelect.setAttribute('required', 'required');
+                    ejeIdSelect.removeAttribute('required');
+
+                    // Reset eje_id when switching
+                    ejeIdSelect.value = "";
+                    ejeAppInput.value = "";
                 } else {
                     derivedContainer.style.display = 'none';
+                    ejePlanContainer.style.display = 'flex';
+
                     tipoProgramaSelect.removeAttribute('required');
                     programaSelect.removeAttribute('required');
+                    ejeIdSelect.setAttribute('required', 'required');
 
-                    // Reset selections when hiding
+                    // Reset derived selections
                     tipoProgramaSelect.value = "";
                     programaSelect.innerHTML = '<option value="">Seleccione primero el tipo...</option>';
                     programaSelect.setAttribute('disabled', 'disabled');
+                    ejeAppInput.value = "";
+
+                    // Trigger Ejes fetch if plan is selected
+                    if (planSelect.value) {
+                        fetchEjes();
+                    }
                 }
             }
 
-            derivedSwitch.addEventListener('change', toggleDerivedContainer);
-            toggleDerivedContainer(); // Run on load (for validation errors)
+            derivedSwitch.addEventListener('change', toggleContainers);
+            toggleContainers(); // Run on load
 
             // 2. Fetch Programs when Type Changes
             async function fetchPrograms() {
@@ -558,7 +631,8 @@
                         });
                     } else {
                         programaSelect.innerHTML =
-                            '<option value="">No hay programas disponibles para este plan/tipo.</option>';
+                            '<option value="" disabled selected>No hay programas disponibles para este plan/tipo.</option>';
+                        programaSelect.setAttribute('disabled', 'disabled');
                     }
 
                 } catch (error) {
@@ -567,17 +641,75 @@
                 }
             }
 
+            // 3. Fetch Ejes when Plan Changes
+            async function fetchEjes() {
+                const planId = planSelect.value;
+                if (!planId) return;
+
+                ejeIdSelect.innerHTML = '<option value="">Cargando ejes...</option>';
+                ejeIdSelect.setAttribute('disabled', 'disabled');
+
+                try {
+                    const response = await fetch(
+                        `{{ route('api.programas_derivados') }}?plan_id=${planId}&tipo=Eje`);
+                    const ejes = await response.json();
+
+                    ejeIdSelect.innerHTML = '<option value="" disabled selected>Seleccione un Eje...</option>';
+                    if (ejes.length > 0) {
+                        ejeIdSelect.removeAttribute('disabled');
+                        ejes.forEach(eje => {
+                            const option = document.createElement('option');
+                            option.value = eje.id;
+                            option.textContent = eje.nombre;
+
+                            const oldEjeId = "{{ old('eje_id') }}";
+                            if (oldEjeId && oldEjeId == eje.id) {
+                                option.selected = true;
+                                ejeAppInput.value = eje.nombre; // Match name
+                            }
+
+                            ejeIdSelect.appendChild(option);
+                        });
+                    } else {
+                        ejeIdSelect.innerHTML =
+                            '<option value="" disabled selected>No hay ejes disponibles para este plan.</option>';
+                        ejeIdSelect.setAttribute('disabled', 'disabled');
+                    }
+                } catch (error) {
+                    console.error('Error fetching ejes:', error);
+                    ejeIdSelect.innerHTML = '<option value="">Error al cargar ejes.</option>';
+                }
+            }
+
+            ejeIdSelect.addEventListener('change', function() {
+                // Update eje_app hidden/input field with the selected Eje name
+                const selectedOption = ejeIdSelect.options[ejeIdSelect.selectedIndex];
+                if (selectedOption && selectedOption.value) {
+                    ejeAppInput.value = selectedOption.textContent;
+                }
+            });
+
+            programaSelect.addEventListener('change', function() {
+                const selectedOption = programaSelect.options[programaSelect.selectedIndex];
+                if (selectedOption && selectedOption.value) {
+                    ejeAppInput.value = selectedOption.textContent;
+                }
+            });
+
             tipoProgramaSelect.addEventListener('change', fetchPrograms);
             planSelect.addEventListener('change', function() {
-                // If plan changes, and we are in derived mode, we might need to reset or refresh programs
-                if (derivedSwitch.checked && tipoProgramaSelect.value) {
-                    fetchPrograms();
+                if (derivedSwitch.checked) {
+                    if (tipoProgramaSelect.value) fetchPrograms();
+                } else {
+                    fetchEjes();
                 }
             });
 
             // Trigger fetch if we have old values (validation fail)
             if (derivedSwitch.checked && tipoProgramaSelect.value && planSelect.value) {
                 fetchPrograms();
+            } else if (!derivedSwitch.checked && planSelect.value) {
+                fetchEjes();
             }
 
 
@@ -632,6 +764,28 @@
                     // si se eliminan elementos intermedios.
                 }
             });
+
+            // --- Programas Institucionales Checklist Filter ---
+            const searchInput = document.querySelector('.buscar-prog-inst');
+            if (searchInput) {
+                const targetClass = searchInput.getAttribute('data-target');
+                const listContainer = document.querySelector('.' + targetClass);
+                if (listContainer) {
+                    const items = listContainer.querySelectorAll('.item-prog-inst');
+                    searchInput.addEventListener('input', function() {
+                        const query = searchInput.value.toLowerCase().trim();
+                        items.forEach(item => {
+                            const nombre = item.getAttribute('data-nombre') || '';
+                            const siglas = item.getAttribute('data-siglas') || '';
+                            if (nombre.includes(query) || siglas.includes(query)) {
+                                item.style.display = '';
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        });
+                    });
+                }
+            }
 
             // Opcional: Si quieres que se añada un primer año automáticamente al cargar la página
             // addButton.click(); // Descomenta esta línea si quieres un bloque de año por defecto

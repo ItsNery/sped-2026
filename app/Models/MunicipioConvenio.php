@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 /**
@@ -50,6 +51,11 @@ class MunicipioConvenio extends Model
     public function municipio()
     {
         return $this->belongsTo(CatMunicipio::class, 'id_municipio');
+    }
+
+    public function indicadores(): HasMany
+    {
+        return $this->hasMany(IndicadorMunicipal::class, 'id_municipio', 'id_municipio');
     }
 
     // Automatización

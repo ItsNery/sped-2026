@@ -9,16 +9,16 @@
 
     @section('title', $title)
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __($title) }}
-        </h2>
-    </x-slot>
-
-    <div class="contenedor-principal">
-        <div class="encabezado-lista my-2">
-            <h2>{{ $title }}</h2>
+        <div class="exec-header admin-index-header">
+            <div>
+                <span class="exec-eyebrow">Catálogo de planeación</span>
+                <h2 class="exec-header__title">{{ $title }}</h2>
+            </div>
+            <span class="exec-header__plan">Planes e instrumentos</span>
         </div>
-        <div class="container">
+    </x-slot>
+    <div class="admin-index">
+        <div class="contenedor-principal admin-index__surface mx-auto">
             <form action="{{ $action }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @if ($isEdit)
@@ -27,7 +27,7 @@
 
                 <div class="mb-3">
                     <label class="form-label custom-section-title" for="nombre">
-                        <i class="fa-solid fa-file-signature"></i> Nombre del Programa
+                        <i class="fa-solid fa-file-signature" aria-hidden="true"></i> Nombre del Programa
                     </label>
                     <input type="text" class="form-control @error('nombre') is-invalid @enderror" name="nombre"
                         id="nombre" value="{{ old('nombre', $programa->nombre ?? '') }}" required autofocus>
@@ -41,7 +41,7 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label class="form-label custom-section-title" for="plan_estatal">
-                                <i class="fa-solid fa-file-signature"></i> Plan Estatal de Desarrollo
+                                <i class="fa-solid fa-file-signature" aria-hidden="true"></i> Plan Estatal de Desarrollo
                             </label>
                             <select name="plan_estatal" id="plan_estatal"
                                 class="form-select @error('plan_estatal') is-invalid @enderror" required>
@@ -61,13 +61,36 @@
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="mb-4">
-                            <label class="form-label custom-section-title" for="descripcion">
-                                <i class="fa-solid fa-file-signature"></i> Descripción
+                        <div class="mb-3">
+                            <label class="form-label custom-section-title" for="siglas">
+                                <i class="fa-solid fa-tag" aria-hidden="true"></i> Siglas / Acrónimo
                             </label>
-                            <textarea name="descripcion" id="descripcion" rows="4"
-                                class="form-control @error('descripcion') is-invalid @enderror" required>{{ old('descripcion', $programa->descripcion ?? '') }}</textarea>
-                            @error('descripcion')
+                            <input type="text" class="form-control @error('siglas') is-invalid @enderror"
+                                name="siglas" id="siglas" value="{{ old('siglas', $programa->siglas ?? '') }}"
+                                placeholder="Ej: SMT">
+                            @error('siglas')
+                                <small class="invalid-feedback">
+                                    <strong>{{ $message }}</strong>
+                                </small>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label custom-section-title" for="grupo">
+                                <i class="fa-solid fa-folder" aria-hidden="true"></i> Grupo / Categoría
+                            </label>
+                            <select name="grupo" id="grupo"
+                                class="form-select @error('grupo') is-invalid @enderror">
+                                <option value="">Seleccione grupo...</option>
+                                <option value="Secretarías"
+                                    {{ (old('grupo') ?? ($programa->grupo ?? '')) == 'Secretarías' ? 'selected' : '' }}>
+                                    Secretarías</option>
+                                <option value="Organismos Auxiliares"
+                                    {{ (old('grupo') ?? ($programa->grupo ?? '')) == 'Organismos Auxiliares' ? 'selected' : '' }}>
+                                    Organismos Auxiliares</option>
+                            </select>
+                            @error('grupo')
                                 <small class="invalid-feedback">
                                     <strong>{{ $message }}</strong>
                                 </small>
@@ -76,33 +99,50 @@
                     </div>
                     <div class="col-md-6">
                         <div class="mb-4">
-                            <label class="form-label custom-section-title" for="color">
-                                <i class="fa-solid fa-file-signature"></i> Color
+                            <label class="form-label custom-section-title" for="descripcion">
+                                <i class="fa-solid fa-file-signature" aria-hidden="true"></i> Descripción (opcional)
                             </label>
-                            <div class="d-flex items-center flex-row">
-                                <input type="color" name="color_picker" id="color_picker" class=""
+                            <textarea name="descripcion" id="descripcion" rows="4"
+                                class="form-control @error('descripcion') is-invalid @enderror">{{ old('descripcion', $programa->descripcion ?? '') }}</textarea>
+                            @error('descripcion')
+                                <small class="invalid-feedback">
+                                    <strong>{{ $message }}</strong>
+                                </small>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        @include('partials.form-icono-programa', ['defaultIcono' => 'fa-building'])
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <label class="form-label custom-section-title" for="color">
+                                <i class="fa-solid fa-file-signature" aria-hidden="true"></i> Color
+                            </label>
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="color" name="color_picker" id="color_picker"
                                     onchange="document.getElementById('color').value = this.value"
                                     value="{{ old('color', $programa->color ?? '#000000') }}">
                                 <input type="text" name="color" id="color"
                                     class="form-control @error('color') is-invalid @enderror"
-                                    value="{{ old('color', $programa->color ?? '#000000') }}" maxlength="7" required>
+                                    value="{{ old('color', $programa->color ?? '#000000') }}" maxlength="7"
+                                    required>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label custom-section-title" for="imagen">
-                            <i class="fa-solid fa-file-signature"></i> Imagen de Portada
+                            <i class="fa-solid fa-file-signature" aria-hidden="true"></i> Imagen de Portada (opcional)
                         </label>
                         @if ($isEdit && !empty($programa->imagen))
                             <div class="mb-2">
-                                <img src="{{ asset($programa->imagen) }}" alt="Imagen actual"
+                                <img src="{{ asset($programa->imagen) }}" alt="Imagen actual de {{ $programa->nombre }}"
                                     style="max-height: 100px; max-width: 100px; object-fit: cover;">
                                 <small class="text-muted d-block">Imagen actual</small>
                             </div>
                         @endif
                         <input type="file" name="imagen" id="imagen" accept="image/*"
-                            class="form-control @error('imagen') is-invalid @enderror" accept="image/*"
-                            {{ $isEdit ? '' : 'required' }}>
+                            class="form-control @error('imagen') is-invalid @enderror">
                         @error('imagen')
                             <small class="invalid-feedback">
                                 <strong>{{ $message }}</strong>
@@ -112,7 +152,7 @@
                     <div class="col-md-12">
                         <div class="mb-4">
                             <label class="form-label custom-section-title" for="documento">
-                                <i class="fa-solid fa-link"></i> Link del Documento
+                                <i class="fa-solid fa-link" aria-hidden="true"></i> Link del Documento
                             </label>
                             <input type="url" name="documento" id="documento"
                                 class="form-control @error('documento') is-invalid @enderror"
@@ -131,7 +171,7 @@
                         <span class="button__text">{{ $isEdit ? 'Actualizar' : 'Guardar' }}</span>
                         @include('components.svg-save')
                     </button>
-                    <a href="{{ route('panel-cat-prog-der-sect.index') }}" class="text-decoration-none">
+                    <a href="{{ route('panel-cat-prog-der-instit.index') }}" class="text-decoration-none">
                         <button class="button-cancel" type="button">
                             <span class="button__text">Cancelar</span>
                             @include('components.svg-cancel')

@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Indicador;
+use App\Policies\IndicadorPolicy;
+
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 
@@ -13,7 +16,7 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        // 'App\Models\Model' => 'App\Policies\ModelPolicy',
+        Indicador::class => IndicadorPolicy::class,
     ];
 
     /**
@@ -26,7 +29,7 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         Gate::before(function ($user, $ability) {
-            return $user->email == 'estadistica@puebla.gob.mx' ?? null;
+            return $user->isSuperAdministrator() ? true : null;
         });
     }
 }

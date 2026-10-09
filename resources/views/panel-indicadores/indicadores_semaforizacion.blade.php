@@ -35,7 +35,7 @@
                             <td>{{ $indicador->anio_ultimo_dato ?? 'N/A' }}</td>
                             <td>{{ $indicador->ultimo_dato !== null ? number_format($indicador->ultimo_dato, 2, '.', ',') : 'N/A' }}
                             </td>
-                            <td>{{ $indicador->meta_2024 }}</td>
+                            <td>{{ $indicador->meta_anio }}: {{ $indicador->meta }}</td>
                             <td>{{ $indicador->avance ? number_format($indicador->avance, 2) . '%' : 'N/A' }}</td>
                             <td>
                                 @if ($indicador->avance !== null)

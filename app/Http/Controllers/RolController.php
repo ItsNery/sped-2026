@@ -6,12 +6,15 @@ use Illuminate\Http\Request;
 
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 
 class RolController extends Controller
 {
+    private const SYSTEM_PERMISSIONS = [
+        'administrar-sistema',
+        'proteger-cuenta-sistema',
+    ];
 
     /**
      * Aplica el middleware de permisos a las acciones del controlador.
@@ -41,7 +44,7 @@ class RolController extends Controller
      */
     public function create()
     {
-        $permission = Permission::get();
+        $permission = $this->availablePermissions();
         return view('roles.form', compact('permission'));
     }
 
@@ -52,11 +55,12 @@ class RolController extends Controller
      */
     public function store(Request $request)
     {
-        $this->validate(
+        $validated = $this->validate(
             $request,
             [
                 'name' => 'required|unique:roles,name',
-                'permission' => 'required',
+                'permission' => 'required|array',
+                'permission.*' => 'exists:permissions,name',
             ],
             [
                 'name.required' => 'El campo NO puede estar vacío',
@@ -65,12 +69,14 @@ class RolController extends Controller
             ]
         );
 
-        // $role = Role::create(['name' => $request->input('name')]);
+        $this->ensureSystemPermissionsAllowed($validated['permission']);
+        abort_if($validated['name'] === 'SuperAdministrador' && !auth()->user()->hasRole('SuperAdministrador'), 403, 'Solo SuperAdministrador puede crear este rol.');
+
         $role = Role::create([
-            'name' => $request->input('name'),
+            'name' => $validated['name'],
             'guard_name' => 'web',
         ]);
-        $role->syncPermissions($request->input('permission'));
+        $role->syncPermissions($validated['permission']);
 
         return redirect()->route('panel-roles.index')->with('success', 'Rol creado correctamente');
     }
@@ -93,11 +99,10 @@ class RolController extends Controller
      */
     public function edit($id)
     {
-        $role = Role::find($id);
-        $permission = Permission::get();
-        $rolePermissions = DB::table("role_has_permissions")->where("role_has_permissions.role_id", $id)
-            ->pluck('role_has_permissions.permission_id', 'role_has_permissions.permission_id')
-            ->all();
+        $role = Role::findOrFail($id);
+        $this->ensureRoleIsManageable($role);
+        $permission = $this->availablePermissions();
+        $rolePermissions = $role->permissions->pluck('name')->all();
 
         return view('roles.form', compact('role', 'permission', 'rolePermissions'));
     }
@@ -110,11 +115,12 @@ class RolController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $this->validate(
+        $validated = $this->validate(
             $request,
             [
                 'name' => 'required',
-                'permission' => 'required',
+                'permission' => 'required|array',
+                'permission.*' => 'exists:permissions,name',
             ],
             [
                 'name.required' => 'El campo NO puede estar vacío',
@@ -122,11 +128,13 @@ class RolController extends Controller
             ]
         );
 
-        $role = Role::find($id);
-        $role->name = $request->input('name');
+        $role = Role::findOrFail($id);
+        $this->ensureRoleIsManageable($role);
+        $this->ensureSystemPermissionsAllowed($validated['permission']);
+        $role->name = $validated['name'];
         $role->save();
 
-        $role->syncPermissions($request->input('permission'));
+        $role->syncPermissions($validated['permission']);
 
         return redirect()->route('panel-roles.index')->with('success', 'Rol actualizado correctamente');
     }
@@ -138,7 +146,36 @@ class RolController extends Controller
      */
     public function destroy($id)
     {
-        DB::table("roles")->where('id', $id)->delete();
+        $role = Role::findOrFail($id);
+        $this->ensureRoleIsManageable($role);
+        abort_if($role->name === 'SuperAdministrador', 403, 'El rol SuperAdministrador no puede eliminarse.');
+        $role->delete();
         return redirect()->route('panel-roles.index')->with('success', 'Rol eliminado correctamente');
+    }
+
+    private function availablePermissions()
+    {
+        $permissions = Permission::query()->where('guard_name', 'web');
+
+        if (!auth()->user()->hasRole('SuperAdministrador')) {
+            $permissions->whereNotIn('name', self::SYSTEM_PERMISSIONS);
+        }
+
+        return $permissions->orderBy('name')->get();
+    }
+
+    private function ensureSystemPermissionsAllowed(array $permissions): void
+    {
+        if (!auth()->user()->hasRole('SuperAdministrador')
+            && array_intersect($permissions, self::SYSTEM_PERMISSIONS)) {
+            abort(403, 'Solo SuperAdministrador puede asignar permisos de sistema.');
+        }
+    }
+
+    private function ensureRoleIsManageable(Role $role): void
+    {
+        if ($role->name === 'SuperAdministrador' && !auth()->user()->hasRole('SuperAdministrador')) {
+            abort(403, 'Solo SuperAdministrador puede modificar este rol.');
+        }
     }
 }
