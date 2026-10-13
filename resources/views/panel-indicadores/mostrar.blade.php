@@ -38,6 +38,24 @@
                 <h2>Detalles del indicador</h2>
             </div>
 
+            @if (isset($estadoPeriodo) && !auth()->user()->isAdministrator() && !$estadoPeriodo['puede_capturar'])
+                <div class="alert alert-warning d-flex align-items-center mb-3 py-2 px-3 rounded-3" role="alert">
+                    <i class="fa-solid fa-clock-rotate-left me-2 fs-5 text-warning" aria-hidden="true"></i>
+                    <div>
+                        <strong>Periodo de captura cerrado:</strong> {{ $estadoPeriodo['mensaje'] }} La información se encuentra en modo de solo lectura.
+                    </div>
+                </div>
+            @elseif (isset($estadoPeriodo) && !auth()->user()->isAdministrator() && $estadoPeriodo['tiene_prorroga'])
+                <div class="alert alert-info d-flex align-items-center mb-3 py-2 px-3 rounded-3" role="alert">
+                    <i class="fa-solid fa-clock me-2 fs-5 text-info" aria-hidden="true"></i>
+                    <div>
+                        <strong>Prórroga autorizada:</strong> {{ $estadoPeriodo['mensaje'] }}
+                    </div>
+                </div>
+            @endif
+
+
+
             <div class="indicator-detail__actions">
                 @can('ver-indicador')
                     <a href="{{ route('panel-indicadores.index') }}" class="button-action button-back text-decoration-none">
@@ -424,7 +442,9 @@
                                         $datoAnualValidado = (bool) $datoAnualDelAnio?->validado;
                                         $usuarioFinalizado = $user->finalizado == 1;
 
-                                        $puedeEditar = $esAdmin || (!$datoAnualValidado && !$usuarioFinalizado);
+                                        $capturaHabilitada = $estadoPeriodo['puede_capturar'] ?? true;
+
+                                        $puedeEditar = $esAdmin || (!$datoAnualValidado && !$usuarioFinalizado && $capturaHabilitada);
                                     @endphp
 
                                     <div class="indicator-detail__year-actions">
@@ -447,6 +467,10 @@
                                                 <span
                                                     class="indicator-detail-status indicator-detail-status--unavailable">Periodo
                                                     finalizado</span>
+                                            @elseif (!$capturaHabilitada)
+                                                <span
+                                                    class="indicator-detail-status indicator-detail-status--unavailable" title="{{ $estadoPeriodo['mensaje'] ?? '' }}"><i class="fa-regular fa-clock me-1"></i> Plazo
+                                                    concluido</span>
                                             @endif
                                         @endif
 
@@ -501,7 +525,7 @@
                                         <label for="modal_valor_dato_{{ $year }}"
                                             class="form-label">Resultado/Dato
                                             {{ $year }}</label>
-                                        <input type="number" step="any"
+                                        <input type="text" inputmode="decimal" pattern="[0-9]*[.]?[0-9]*"
                                             id="modal_valor_dato_{{ $year }}"
                                             class="form-control @error('valor_dato', " updateAnualValidation_{$year}") is-invalid @enderror"
                                             name="valor_dato"
@@ -631,7 +655,7 @@
 
                                     <div class="mb-3">
                                         <label for="modal_valor_dato" class="form-label">Resultado/Dato</label>
-                                        <input type="number" step="any"
+                                        <input type="text" inputmode="decimal" pattern="[0-9]*[.]?[0-9]*"
                                             class="form-control @error('valor_dato') is-invalid @enderror"
                                             name="valor_dato" id="modal_valor_dato" value="{{ old('valor_dato') }}">
                                         @error('valor_dato')

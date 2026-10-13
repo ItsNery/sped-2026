@@ -37,6 +37,7 @@ use Illuminate\Validation\Rule;
 use App\Services\AuditLogger;
 use App\Services\ActivePlanResolver;
 use App\Services\InstitutionAccessService;
+use App\Services\PeriodoCapturaService;
 use App\Services\SpreadsheetValueSanitizer;
 
 class IndicadorController extends Controller
@@ -44,7 +45,8 @@ class IndicadorController extends Controller
     public function __construct(
         private AuditLogger $auditLogger,
         private ActivePlanResolver $activePlan,
-        private InstitutionAccessService $institutionAccess
+        private InstitutionAccessService $institutionAccess,
+        private PeriodoCapturaService $periodoCapturaService
     ) {
         SpreadsheetValueSanitizer::bindStrings();
 
@@ -132,7 +134,9 @@ class IndicadorController extends Controller
             $mostrarBotonFinalizar = $puedeGenerarReporte && $todosValidados && !$finalizado;
             $mostrarBotonGenerarReporte = $puedeGenerarReporte && $todosValidados && $finalizado;
 
-            return view('panel-indicadores.index', compact('indicadores', 'mostrarBotonFinalizar', 'user', 'mostrarBotonGenerarReporte', 'reporteGenerado', 'institucionesDirectas'));
+            $estadoPeriodo = $this->periodoCapturaService->verificarEstadoCaptura($user, $user->id_institucion, $activePlanId);
+
+            return view('panel-indicadores.index', compact('indicadores', 'mostrarBotonFinalizar', 'user', 'mostrarBotonGenerarReporte', 'reporteGenerado', 'institucionesDirectas', 'estadoPeriodo'));
         }
 
         $indicadores = Indicador::forPlan($activePlanId)
@@ -146,7 +150,9 @@ class IndicadorController extends Controller
         $mostrarBotonFinalizar = $todosValidados && $user->finalizado != 1;
         $mostrarBotonGenerarReporte = $todosValidados && $user->finalizado == 1 && $user->reporte_generado != 1;
 
-        return view('panel-indicadores.index', compact('indicadores', 'mostrarBotonFinalizar', 'user', 'mostrarBotonGenerarReporte'));
+        $estadoPeriodo = $this->periodoCapturaService->verificarEstadoCaptura($user, $user->id_institucion, $activePlanId);
+
+        return view('panel-indicadores.index', compact('indicadores', 'mostrarBotonFinalizar', 'user', 'mostrarBotonGenerarReporte', 'estadoPeriodo'));
     }
 
     /**
@@ -469,12 +475,13 @@ class IndicadorController extends Controller
         $indicador = $query->findOrFail($id);
 
         $this->authorize('view', $indicador);
-
+        $estadoPeriodo = $this->periodoCapturaService->verificarEstadoCaptura($user, $indicador->id_institucion, $indicador->plan_id ?? $planId);
         if ($user->isAdministrator()) {
-            return view('panel-indicadores.mostrar', compact('indicador'));
+            return view('panel-indicadores.mostrar', compact('indicador', 'estadoPeriodo'));
         }
 
-        return view('panel-indicadores.mostrar', compact('indicador'));
+
+        return view('panel-indicadores.mostrar', compact('indicador', 'estadoPeriodo'));
     }
 
     /**

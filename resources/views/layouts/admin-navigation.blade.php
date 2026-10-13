@@ -77,6 +77,12 @@
                     </a>
                 </li>
                 <li class="sidebar-item">
+                    <a class="sidebar-link {{ request()->routeIs('panel-control-captura*') ? 'active' : '' }}"
+                        href="{{ route('panel-control-captura.index') }}" title="Control de Captura">
+                        <i class="fas fa-calendar-check" aria-hidden="true"></i><span>Control Captura</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
                     <a class="sidebar-link {{ request()->routeIs('panel-roles*') ? 'active' : '' }}"
                         href="{{ route('panel-roles.index') }}" title="Roles">
                         <i class="fas fa-user-shield" aria-hidden="true"></i><span>Roles</span>

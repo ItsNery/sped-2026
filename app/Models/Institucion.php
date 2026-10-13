@@ -24,6 +24,11 @@ class Institucion extends Model
     {
         return $this->hasMany(User::class, 'id_institucion');
     }
+
+    public function users()
+    {
+        return $this->hasMany(User::class, 'id_institucion');
+    }
     
     public function usuarios()
     {

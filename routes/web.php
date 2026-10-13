@@ -23,6 +23,7 @@ use App\Http\Controllers\DashboardGeneralController;
 use App\Http\Controllers\DashboardExportController;
 use App\Http\Controllers\DashboardDrillDownController;
 use App\Http\Controllers\ProgramaDerivadoReporteController;
+use App\Http\Controllers\ControlCapturaController;
 // use App\Http\Controllers\PublicProgramasController;
 
 /*
@@ -174,6 +175,11 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::patch('/users/{user}/deactivate', [UserController::class, 'deactivate'])->name('users.deactivate');
     Route::patch('/users/{user}/activate', [UserController::class, 'activate'])->name('users.activate');
     Route::resource('panel-accesos', LoginAttemptController::class)->only(['index']);
+    Route::get('/panel-control-captura', [ControlCapturaController::class, 'index'])->name('panel-control-captura.index');
+    Route::post('/panel-control-captura/periodo', [ControlCapturaController::class, 'guardarPeriodo'])->name('panel-control-captura.guardarPeriodo');
+    Route::post('/panel-control-captura/cambiar-estatus-masivo', [ControlCapturaController::class, 'cambiarEstatusMasivo'])->name('panel-control-captura.cambiarEstatusMasivo');
+    Route::post('/panel-control-captura/cambiar-estatus/{institucion}', [ControlCapturaController::class, 'cambiarEstatusIndividual'])->name('panel-control-captura.cambiarEstatusIndividual');
+    Route::post('/panel-control-captura/prorroga', [ControlCapturaController::class, 'asignarProrroga'])->name('panel-control-captura.asignarProrroga');
 
     // --- Catálogos y Entidades Base ---
     Route::middleware('permission:administrar-catalogos-ped')->group(function () {

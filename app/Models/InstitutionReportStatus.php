@@ -15,12 +15,15 @@ class InstitutionReportStatus extends Model
         'plan_id',
         'finalizado_at',
         'finalizado_por_user_id',
+        'prorroga_hasta',
+        'motivo_prorroga',
         'reporte_generado_at',
         'reporte_generado_por_user_id',
     ];
 
     protected $casts = [
         'finalizado_at' => 'datetime',
+        'prorroga_hasta' => 'datetime',
         'reporte_generado_at' => 'datetime',
     ];
 
@@ -42,5 +45,10 @@ class InstitutionReportStatus extends Model
     public function reporteGeneradoPor()
     {
         return $this->belongsTo(User::class, 'reporte_generado_por_user_id');
+    }
+
+    public function tieneProrrogaActiva(): bool
+    {
+        return $this->prorroga_hasta !== null && now()->lte($this->prorroga_hasta);
     }
 }

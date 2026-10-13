@@ -32,6 +32,34 @@
                 </div>
                 <span class="admin-index__count">{{ count($indicadores) }} registros</span>
             </div>
+
+            @if (isset($estadoPeriodo) && !auth()->user()->isAdministrator())
+                @if (!$estadoPeriodo['puede_capturar'])
+                    <div class="alert alert-warning d-flex align-items-center mb-4 py-2 px-3 shadow-sm rounded-3">
+                        <i class="fa-solid fa-clock-rotate-left me-3 fs-4 text-warning"></i>
+                        <div>
+                            <strong class="d-block">Periodo de captura cerrado</strong>
+                            <span class="text-muted small">{{ $estadoPeriodo['mensaje'] }} El sistema se encuentra en modo de consulta (solo lectura).</span>
+                        </div>
+                    </div>
+                @elseif ($estadoPeriodo['tiene_prorroga'])
+                    <div class="alert alert-info d-flex align-items-center mb-4 py-2 px-3 shadow-sm rounded-3">
+                        <i class="fa-solid fa-clock-rotate-left me-3 fs-4 text-info"></i>
+                        <div>
+                            <strong class="d-block text-primary">Prórroga de captura activa</strong>
+                            <span class="small">{{ $estadoPeriodo['mensaje'] }} (Quedan aproximadamente {{ $estadoPeriodo['dias_restantes'] }} días).</span>
+                        </div>
+                    </div>
+                @elseif ($estadoPeriodo['estado'] === 'abierto')
+                    <div class="alert alert-light border d-flex align-items-center mb-4 py-2 px-3 shadow-sm rounded-3">
+                        <i class="fa-regular fa-calendar-check me-3 fs-4 text-success"></i>
+                        <div>
+                            <strong class="d-block text-success">Periodo de captura ordinario abierto</strong>
+                            <span class="text-muted small">{{ $estadoPeriodo['mensaje'] }} (Quedan {{ $estadoPeriodo['dias_restantes'] }} días para el cierre).</span>
+                        </div>
+                    </div>
+                @endif
+            @endif
             @auth
                 @if (auth()->user()->isAdministrator())
                     @if (isset($instituciones) && isset($tiposPrograma))

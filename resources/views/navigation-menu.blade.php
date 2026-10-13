@@ -55,6 +55,9 @@
                         <x-dropdown-link href="{{ route('panel-usuarios.index') }}">
                             {{ __('Usuarios') }}
                         </x-dropdown-link>
+                        <x-dropdown-link href="{{ route('panel-control-captura.index') }}">
+                            {{ __('Control de Captura') }}
+                        </x-dropdown-link>
                         <x-dropdown-link href="{{ route('panel-roles.index') }}">
                             {{ __('Roles') }}
                         </x-dropdown-link>

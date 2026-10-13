@@ -5,11 +5,14 @@ namespace App\Policies;
 use App\Models\Indicador;
 use App\Models\User;
 use App\Services\InstitutionAccessService;
+use App\Services\PeriodoCapturaService;
 
 class IndicadorPolicy
 {
-    public function __construct(private InstitutionAccessService $institutionAccess)
-    {
+    public function __construct(
+        private InstitutionAccessService $institutionAccess,
+        private PeriodoCapturaService $periodoCapturaService
+    ) {
     }
 
     public function before(User $user, string $ability): ?bool
@@ -43,13 +46,15 @@ class IndicadorPolicy
     public function addAnnualData(User $user, Indicador $indicador): bool
     {
         return $user->can('agregar-dato-anual')
-            && $this->institutionAccess->canViewInstitution($user, $indicador->id_institucion);
+            && $this->institutionAccess->canViewInstitution($user, $indicador->id_institucion)
+            && $this->periodoCapturaService->verificarEstadoCaptura($user, $indicador->id_institucion)['puede_capturar'];
     }
 
     public function updateAnnualData(User $user, Indicador $indicador): bool
     {
         return $user->can('editar-indicador-anual')
-            && $this->institutionAccess->canViewInstitution($user, $indicador->id_institucion);
+            && $this->institutionAccess->canViewInstitution($user, $indicador->id_institucion)
+            && $this->periodoCapturaService->verificarEstadoCaptura($user, $indicador->id_institucion)['puede_capturar'];
     }
 
     public function validate(User $user, Indicador $indicador): bool
