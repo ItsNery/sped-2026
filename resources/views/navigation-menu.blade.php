@@ -84,27 +84,15 @@
 
                     <x-slot name="content">
                         @auth
-                            @if (auth()->user()->hasRole('Enlace dependencia'))
-                                <x-dropdown-link href="{{ asset('docs/normatividad/Manual-Instituciones.pdf') }}"
-                                    target="_blank">
-                                    {{ __('Manual de usuario') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link
-                                    href="{{ asset('docs/normatividad/Guia_para_la_modificacion_de_Indicadores.zip') }}"
-                                    target="_blank">
-                                    {{ __('Manual Mod. Ind. y Metas') }}
-                                </x-dropdown-link>
-                            @else
-                                <x-dropdown-link
-                                    href="{{ asset('docs/normatividad/Guia_para_la_modificacion_de_Indicadores.zip') }}"
-                                    target="_blank">
-                                    {{ __('Manual Mod. Ind. y Metas') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link href="{{ asset('docs/normatividad/Manual-Instituciones.pdf') }}"
-                                    target="_blank">
-                                    {{ __('Manual de usuario') }}
-                                </x-dropdown-link>
-                            @endif
+                            <x-dropdown-link href="{{ asset('docs/normatividad/Manual-Instituciones.pdf') }}"
+                                target="_blank">
+                                {{ __('Manual de usuario') }}
+                            </x-dropdown-link>
+                            <x-dropdown-link
+                                href="{{ asset('docs/normatividad/Guia_para_la_modificacion_de_Indicadores.zip') }}"
+                                target="_blank">
+                                {{ __('Manual Mod. Ind. y Metas') }}
+                            </x-dropdown-link>
                         @endauth
                     </x-slot>
                 </x-dropdown>
