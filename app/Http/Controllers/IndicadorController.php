@@ -1212,6 +1212,41 @@ class IndicadorController extends Controller
     }
 
     /**
+     * Elimina todos los datos de un año para un indicador (solo Enlace dependencia).
+     * @param  int $id  ID del Indicador
+     * @param  int $year  Año a eliminar
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function destroyAnualData(Request $request, $id, $year)
+    {
+        $indicador = Indicador::forPlan($this->activePlan->id())->findOrFail($id);
+        $this->authorize('deleteAnnualData', $indicador);
+
+        $datoAnual = $indicador->datosAnuales()->where('anio', $year)->firstOrFail();
+
+        if ($datoAnual->validado) {
+            return redirect()->back()->with('error', "No se puede eliminar el año {$year} porque ya está validado.");
+        }
+
+        DB::beginTransaction();
+        try {
+            $this->deleteEvidence($datoAnual->evidencia);
+            $datoAnual->delete();
+
+            DB::commit();
+            Log::info("IndicadorController@destroyAnualData: Año {$year} eliminado del Indicador ID {$id}.");
+
+            return redirect()->back()->with('success', "Los datos del año {$year} han sido eliminados correctamente.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("IndicadorController@destroyAnualData: Error al eliminar año {$year} del Indicador ID {$id}.", [
+                'message' => $e->getMessage(),
+            ]);
+            return redirect()->back()->with('error', "Ocurrió un error al eliminar el año {$year}.");
+        }
+    }
+
+    /**
      * Finaliza el periodo de captura para un usuario.
      * @param  Request $request
      * @return JsonResponse

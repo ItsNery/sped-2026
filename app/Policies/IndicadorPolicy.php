@@ -57,6 +57,12 @@ class IndicadorPolicy
             && $this->periodoCapturaService->verificarEstadoCaptura($user, $indicador->id_institucion)['puede_capturar'];
     }
 
+    public function deleteAnnualData(User $user, Indicador $indicador): bool
+    {
+        return $user->hasRole('Enlace')
+            && $this->institutionAccess->canViewInstitution($user, $indicador->id_institucion);
+    }
+
     public function validate(User $user, Indicador $indicador): bool
     {
         return $user->can('validar-indicador')

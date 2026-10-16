@@ -207,6 +207,8 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::patch('/indicadores/{id}/toggle-validacion', [IndicadorController::class, 'toggleValidacion'])->name('indicadores.toggleValidacion');
     Route::patch('/indicadores/{id}/{year}/toggle-validacion-anual', [IndicadorController::class, 'toggleValidacionAnual'])->name('indicadores.toggleValidacionAnual');
     Route::put('indicador/{id}/{year}', [IndicadorController::class, 'updateAnualData'])->name('indicador.updateAnual');
+    Route::delete('indicador/{id}/{year}', [IndicadorController::class, 'destroyAnualData'])->name('indicador.destroyAnual');
+
     Route::post('indicador/{id}/anual', [IndicadorController::class, 'storeAnualData'])->name('indicador.storeAnual');
     Route::post('/finalizar-captura', [IndicadorController::class, 'finalizarCaptura'])->name('finalizar.captura');
     Route::get('/panel-indicadores/semaforizacion/{categoria}', [DashboardController::class, 'semaforizacion'])

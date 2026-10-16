@@ -490,6 +490,24 @@
                                                     </button>
                                                 </form>
                                             @endcan
+
+                                            @can('deleteAnnualData', $indicador)
+                                                @if (!$datoAnualDelAnio->validado)
+                                                    <button type="button"
+                                                        class="indicator-detail-button indicator-detail-button--danger btn-eliminar-anio"
+                                                        data-year="{{ $year }}"
+                                                        data-form="#form-delete-anio-{{ $year }}"
+                                                        title="Eliminar todos los datos del {{ $year }}">
+                                                        <i class="fa-solid fa-trash-can me-1"></i> Eliminar {{ $year }}
+                                                    </button>
+                                                    <form id="form-delete-anio-{{ $year }}"
+                                                        action="{{ route('indicador.destroyAnual', ['id' => $indicador->id, 'year' => $year]) }}"
+                                                        method="POST" class="d-none">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                    </form>
+                                                @endif
+                                            @endcan
                                         @endif
                                     </div>
                                 </div>
@@ -719,4 +737,32 @@
                 </div>
             @endcan
         </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.btn-eliminar-anio').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const year = this.dataset.year;
+                    const formSelector = this.dataset.form;
+                    const form = document.querySelector(formSelector);
+
+                    Swal.fire({
+                        title: '\u00bfEliminar datos del ' + year + '?',
+                        text: 'Se eliminar\u00e1n permanentemente todos los datos (valor, resultados, observaciones y evidencia) del a\u00f1o ' + year + '. Esta acci\u00f3n no se puede deshacer.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: '\u00a1S\u00ed, eliminar!',
+                        cancelButtonText: 'Cancelar',
+                        reverseButtons: true,
+                    }).then(function (result) {
+                        if (result.isConfirmed && form) {
+                            form.submit();
+                        }
+                    });
+                });
+            });
+        });
+    </script>
 </x-app-layout>
