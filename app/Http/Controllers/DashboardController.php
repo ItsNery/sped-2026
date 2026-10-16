@@ -361,6 +361,26 @@ class DashboardController extends Controller
             ->sortBy('nombre')
             ->values();
 
+        $indicadoresSinEnlace = Indicador::forPlan($plan->id)
+            ->whereNotIn('id', $indicadoresAsignados->pluck('id'))
+            ->with('institucion:id,nombre')
+            ->select('id', 'id_institucion', 'nombre', 'slug')
+            ->orderBy('nombre')
+            ->get()
+            ->map(fn (Indicador $indicador) => [
+                'id' => $indicador->id,
+                'nombre' => $indicador->nombre,
+                'slug' => $indicador->slug,
+                'institucion_id' => $indicador->id_institucion,
+                'institucion' => $indicador->institucion?->nombre ?? 'Sin dependencia',
+                'enlace_ids' => collect(),
+                'enlaces' => collect(),
+            ]);
+        $indicadoresAsignados = $indicadoresAsignados
+            ->merge($indicadoresSinEnlace)
+            ->sortBy('nombre')
+            ->values();
+
         return view('dashboard-asignaciones-enlaces', compact('plan', 'asignacionesEnlaces', 'indicadoresAsignados'));
     }
 

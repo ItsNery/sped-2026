@@ -35,6 +35,14 @@ class DashboardLiaisonAssignmentsTest extends TestCase
         $liaison->assignRole(Role::findOrCreate('Enlace', 'web'));
         $liaison->instituciones()->attach($institution);
         $indicator = $eje->indicadores()->create($this->indicatorAttributes($institution));
+        $unassignedInstitution = Institucion::create([
+            'nombre' => 'Dependencia sin enlace',
+            'titular' => 'Titular sin enlace',
+        ]);
+        $unassignedIndicator = $eje->indicadores()->create(array_merge(
+            $this->indicatorAttributes($unassignedInstitution),
+            ['nombre' => 'Indicador sin enlace']
+        ));
         $administrator = User::factory()->create();
         $administrator->assignRole(Role::findOrCreate('Administrador', 'web'));
 
@@ -49,6 +57,10 @@ class DashboardLiaisonAssignmentsTest extends TestCase
             ->assertSeeText($liaison->name)
             ->assertSeeText($institution->nombre)
             ->assertSeeText($indicator->nombre)
+            ->assertSeeText($unassignedInstitution->nombre)
+            ->assertSeeText($unassignedIndicator->nombre)
+            ->assertSee(route('panel-indicadores.show', ['indicador' => $indicator->id, 'plan_id' => $plan->id]), false)
+            ->assertSeeText('Sin enlace asignado')
             ->assertSee('id="enlace-filter"', false)
             ->assertSee('id="dependencia-filter"', false);
 

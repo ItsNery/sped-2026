@@ -26,6 +26,7 @@
                     <label class="form-label" for="enlace-filter">Enlace</label>
                     <select id="enlace-filter" class="form-select">
                         <option value="">Todos los enlaces</option>
+                        <option value="__sin_enlace__">Sin enlace asignado</option>
                         @foreach ($asignacionesEnlaces as $enlace)
                             <option value="{{ $enlace->id }}">{{ $enlace->name }}</option>
                         @endforeach
@@ -51,18 +52,21 @@
                     <tbody>
                         @forelse ($indicadoresAsignados as $indicador)
                             <tr data-enlace-ids="{{ $indicador['enlace_ids']->implode(',') }}"
-                                data-dependencia-id="{{ $indicador['institucion_id'] }}">
+                                data-dependencia-id="{{ $indicador['institucion_id'] }}"
+                                data-sin-enlace="{{ $indicador['enlace_ids']->isEmpty() ? '1' : '0' }}">
                                 <td data-label="Indicador">
                                     <a class="exec-table__indicator"
-                                        href="{{ route('panel-indicadores.show', $indicador['slug']) }}">
+                                        href="{{ route('panel-indicadores.show', ['indicador' => $indicador['id'], 'plan_id' => $plan->id]) }}">
                                         {{ $indicador['nombre'] }}
                                     </a>
                                 </td>
                                 <td data-label="Dependencia">{{ $indicador['institucion'] }}</td>
                                 <td data-label="Enlace(s)">
-                                    @foreach ($indicador['enlaces'] as $enlace)
+                                    @forelse ($indicador['enlaces'] as $enlace)
                                         <span class="badge bg-secondary me-1 mb-1">{{ $enlace }}</span>
-                                    @endforeach
+                                    @empty
+                                        <span class="badge bg-warning text-dark">Sin enlace asignado</span>
+                                    @endforelse
                                 </td>
                             </tr>
                         @empty
@@ -103,8 +107,10 @@
 
                     const row = settings.aoData[dataIndex].nTr;
                     const enlaceIds = (row.dataset.enlaceIds || '').split(',');
+                    const isUnassigned = row.dataset.sinEnlace === '1';
 
-                    return (!enlaceFilter.value || enlaceIds.includes(enlaceFilter.value)) &&
+                    return (!enlaceFilter.value ||
+                            (enlaceFilter.value === '__sin_enlace__' ? isUnassigned : enlaceIds.includes(enlaceFilter.value))) &&
                         (!dependenciaFilter.value || row.dataset.dependenciaId === dependenciaFilter.value);
                 });
 
@@ -115,6 +121,12 @@
                     dependenciaFilter.disabled = true;
 
                     if (!this.value) {
+                        table.draw();
+                        return;
+                    }
+
+                    if (this.value === '__sin_enlace__') {
+                        dependenciaFilter.replaceChildren(new Option('Todas las dependencias', ''));
                         table.draw();
                         return;
                     }
