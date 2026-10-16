@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Indicador;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use App\Models\Odses;
 use App\Models\Institucion;
 use App\Models\InstitutionReportStatus;
@@ -22,6 +23,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -120,7 +122,7 @@ class IndicadorController extends Controller
                 ->orderBy('id')
                 ->get();
 
-            $todosValidados = $indicadores->isEmpty() ? false : ($indicadores->where('indicador_validado', 1)->count() === $indicadores->count());
+            $todosValidados = $this->coleccionIndicadoresEstaListaParaFinalizar($indicadores);
 
             $reporteInstitucional = $user->hasRole('Enlace dependencia') && $user->id_institucion
                 ? InstitutionReportStatus::query()
@@ -146,7 +148,7 @@ class IndicadorController extends Controller
             ->orderBy('id')
             ->get();
 
-        $todosValidados = $indicadores->isEmpty() ? false : ($indicadores->where('indicador_validado', 1)->count() === $indicadores->count());
+        $todosValidados = $this->coleccionIndicadoresEstaListaParaFinalizar($indicadores);
 
         $mostrarBotonFinalizar = $todosValidados && $user->finalizado != 1;
         $mostrarBotonGenerarReporte = $todosValidados && $user->finalizado == 1 && $user->reporte_generado != 1;
@@ -1258,18 +1260,13 @@ class IndicadorController extends Controller
         $user = $request->user();
 
         if ($user->hasRole('Enlace dependencia') && $user->id_institucion) {
-            $todosValidados = Indicador::forPlan($this->activePlan->id())
-                ->where('id_institucion', $user->id_institucion)
-                ->exists();
-            $indicadoresPendientes = Indicador::forPlan($this->activePlan->id())
-                ->where('id_institucion', $user->id_institucion)
-                ->where(function ($query) {
-                    $query->whereNull('indicador_validado')
-                        ->orWhere('indicador_validado', false);
-                })
-                ->exists();
-
-            abort_if(!$todosValidados || $indicadoresPendientes, 422, 'Todos los indicadores institucionales deben estar validados.');
+            $indicadores = Indicador::forPlan($this->activePlan->id())
+                ->where('id_institucion', $user->id_institucion);
+            abort_unless(
+                $this->indicadoresEstanListosParaFinalizar($indicadores),
+                422,
+                'Todos los indicadores institucionales y sus datos anuales deben estar validados.'
+            );
 
             InstitutionReportStatus::updateOrCreate(
                 ['institucion_id' => $user->id_institucion, 'plan_id' => $this->activePlan->id()],
@@ -1279,9 +1276,43 @@ class IndicadorController extends Controller
             return response()->json(['success' => true]);
         }
 
+        $indicadores = Indicador::forPlan($this->activePlan->id())
+            ->where('id_usuario', $user->id);
+        abort_unless(
+            $this->indicadoresEstanListosParaFinalizar($indicadores),
+            422,
+            'Todos los indicadores y sus datos anuales deben estar validados.'
+        );
+
         $user->update(['finalizado' => true]);
 
         return response()->json(['success' => true]);
+    }
+
+    private function coleccionIndicadoresEstaListaParaFinalizar(Collection $indicadores): bool
+    {
+        return $indicadores->isNotEmpty()
+            && $indicadores->every(fn (Indicador $indicador) => $indicador->indicador_validado
+                && $indicador->datosAnuales->isNotEmpty()
+                && $indicador->datosAnuales->every(fn ($datoAnual) => $datoAnual->validado));
+    }
+
+    private function indicadoresEstanListosParaFinalizar(Builder $indicadores): bool
+    {
+        if (!(clone $indicadores)->exists()) {
+            return false;
+        }
+
+        return !(clone $indicadores)
+            ->where(function (Builder $query) {
+                $query->whereNull('indicador_validado')
+                    ->orWhere('indicador_validado', false)
+                    ->orWhereDoesntHave('datosAnuales')
+                    ->orWhereHas('datosAnuales', function (Builder $datosAnuales) {
+                        $datosAnuales->whereNull('validado')->orWhere('validado', false);
+                    });
+            })
+            ->exists();
     }
 
     /**

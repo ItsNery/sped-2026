@@ -140,12 +140,18 @@ class ProgramaDerivadoReporteTest extends TestCase
             'color' => '#000000',
             'plan_id' => $plan->id,
         ]);
-        $eje->indicadores()->create(array_merge($this->indicatorAttributes($institucion), [
+        $indicador = $eje->indicadores()->create(array_merge($this->indicatorAttributes($institucion), [
             'nombre' => 'Indicador asignado a otra persona',
             'id_usuario' => $propietarioAnterior->id,
             'programa_derivado' => 'Plan Estatal de Desarrollo',
             'indicador_validado' => true,
         ]));
+        DatoAnual::create([
+            'id_indicador' => $indicador->id,
+            'anio' => 2025,
+            'valor_dato' => 10,
+            'validado' => true,
+        ]);
 
         $this->actingAs($dummy)
             ->postJson(route('finalizar.captura'))
@@ -163,6 +169,49 @@ class ProgramaDerivadoReporteTest extends TestCase
             ->assertSee('Indicador asignado a otra persona');
 
         $this->assertSame($dummy->id, InstitutionReportStatus::firstOrFail()->reporte_generado_por_user_id);
+    }
+
+    public function test_institution_user_cannot_finalize_with_an_unvalidated_annual_data_item(): void
+    {
+        $plan = CatPlanEstatalDesarrollo::create([
+            'nombre' => 'PED con dato pendiente',
+            'gobernador' => 'Gobernador de prueba',
+        ]);
+        config()->set('sped.active_plan_id', $plan->id);
+        $institucion = Institucion::create([
+            'nombre' => 'Institución con dato pendiente',
+            'titular' => 'Titular de prueba',
+        ]);
+        $user = User::factory()->create(['id_institucion' => $institucion->id]);
+        $user->assignRole(Role::findOrCreate('Enlace dependencia', 'web'));
+        $eje = CatEje::create([
+            'nombre' => 'Eje con dato pendiente',
+            'numero' => 1,
+            'color' => '#000000',
+            'plan_id' => $plan->id,
+        ]);
+        $indicador = $eje->indicadores()->create(array_merge($this->indicatorAttributes($institucion), [
+            'indicador_validado' => true,
+        ]));
+        DatoAnual::create([
+            'id_indicador' => $indicador->id,
+            'anio' => 2025,
+            'valor_dato' => 10,
+            'validado' => false,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('panel-indicadores.index'))
+            ->assertDontSeeText('Finalizar Captura');
+
+        $this->actingAs($user)
+            ->postJson(route('finalizar.captura'))
+            ->assertUnprocessable();
+
+        $this->assertDatabaseMissing('institution_report_statuses', [
+            'institucion_id' => $institucion->id,
+            'plan_id' => $plan->id,
+        ]);
     }
 
     /**
