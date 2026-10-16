@@ -126,6 +126,12 @@
                     target="_blank" rel="noopener" title="Manual de indicadores">
                     <i class="fas fa-file-arrow-down" aria-hidden="true"></i><span>Manual de indicadores</span>
                 </a>
+            <li class="sidebar-item">
+                <a class="sidebar-link" href="{{ asset('docs/normatividad/Manual-Instituciones.pdf') }}"
+                    target="_blank" rel="noopener" title="Manual de usuario">
+                    <i class="fas fa-book" aria-hidden="true"></i><span>Manual de usuario</span>
+                </a>
+            </li>
             </li>
 
             @if (auth()->user()->isAdministrator())
