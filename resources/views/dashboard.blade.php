@@ -506,6 +506,27 @@
             </section>
         </div>
 
+        @if ($asignacionesEnlaces->isNotEmpty())
+            <section class="exec-section" aria-labelledby="liaisons-title">
+                <div class="exec-section__heading">
+                    <div>
+                        <span class="exec-eyebrow">Responsabilidad operativa</span>
+                        <h2 id="liaisons-title">Asignación de enlaces</h2>
+                    </div>
+                    <span class="exec-section__meta">{{ $asignacionesEnlaces->count() }} enlaces</span>
+                </div>
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <p class="mb-0 text-muted">
+                        {{ $asignacionesEnlaces->sum('instituciones_count') }} dependencias asignadas.
+                    </p>
+                    <a class="exec-table__action"
+                        href="{{ route('dashboard.asignaciones-enlaces', ['plan_id' => $plan->id]) }}">
+                        Ver detalle <span aria-hidden="true">→</span>
+                    </a>
+                </div>
+            </section>
+        @endif
+
         <section class="exec-section" aria-labelledby="indicators-title">
             <div class="exec-section__heading">
                 <div>

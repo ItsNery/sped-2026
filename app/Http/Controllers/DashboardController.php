@@ -258,6 +258,15 @@ class DashboardController extends Controller
             ->sortBy('nombre')
             ->values();
 
+        $asignacionesEnlaces = $user->isAdministrator()
+            ? User::whereHas('roles', fn ($query) => $query->where('name', 'Enlace'))
+                ->withCount([
+                    'instituciones',
+                ])
+                ->orderBy('name')
+                ->get(['id', 'name'])
+            : collect();
+
         return view('dashboard', compact(
             'plan',
             'planes',
@@ -282,8 +291,96 @@ class DashboardController extends Controller
             'filters',
             'filterOptions',
             'programasPrioritarios',
-            'indicadoresResumen'
+            'indicadoresResumen',
+            'asignacionesEnlaces'
         ));
+    }
+
+    public function asignacionesEnlaces(Request $request)
+    {
+        abort_unless(auth()->user()->isAdministrator(), 403);
+
+        $plan = CatPlanEstatalDesarrollo::find($request->integer('plan_id')) ?? $this->activePlan->get();
+        $asignacionesEnlaces = User::whereHas('roles', fn ($query) => $query->where('name', 'Enlace'))
+            ->with([
+                'instituciones:id,nombre',
+                'instituciones.indicadores' => fn ($query) => $query
+                    ->forPlan($plan->id)
+                    ->select('id', 'id_institucion', 'nombre', 'slug')
+                    ->with('institucion:id,nombre')
+                    ->orderBy('nombre'),
+                'indicadores' => fn ($query) => $query
+                    ->forPlan($plan->id)
+                    ->select('id', 'id_usuario', 'id_institucion', 'nombre', 'slug')
+                    ->with('institucion:id,nombre')
+                    ->orderBy('nombre'),
+                ])
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
+
+        $indicadoresAsignados = $asignacionesEnlaces
+            ->flatMap(function (User $enlace) {
+                $indicadoresDirectos = collect($enlace->indicadores->map(fn (Indicador $indicador) => [
+                    'id' => $indicador->id,
+                    'nombre' => $indicador->nombre,
+                    'slug' => $indicador->slug,
+                    'institucion_id' => $indicador->id_institucion,
+                    'institucion' => $indicador->institucion?->nombre ?? 'Sin dependencia',
+                    'enlace_id' => $enlace->id,
+                    'enlace' => $enlace->name,
+                ])->all());
+                $indicadoresDependencias = collect($enlace->instituciones
+                    ->flatMap(fn ($institucion) => $institucion->indicadores)
+                    ->map(fn (Indicador $indicador) => [
+                        'id' => $indicador->id,
+                        'nombre' => $indicador->nombre,
+                        'slug' => $indicador->slug,
+                        'institucion_id' => $indicador->id_institucion,
+                        'institucion' => $indicador->institucion?->nombre ?? 'Sin dependencia',
+                        'enlace_id' => $enlace->id,
+                        'enlace' => $enlace->name,
+                    ])
+                    ->all());
+
+                return $indicadoresDirectos->merge($indicadoresDependencias);
+            })
+            ->groupBy('id')
+            ->map(function (Collection $asignaciones) {
+                $indicador = $asignaciones->first();
+
+                return [
+                    'id' => $indicador['id'],
+                    'nombre' => $indicador['nombre'],
+                    'slug' => $indicador['slug'],
+                    'institucion_id' => $indicador['institucion_id'],
+                    'institucion' => $indicador['institucion'],
+                    'enlace_ids' => $asignaciones->pluck('enlace_id')->unique()->values(),
+                    'enlaces' => $asignaciones->pluck('enlace')->unique()->sort()->values(),
+                ];
+            })
+            ->sortBy('nombre')
+            ->values();
+
+        return view('dashboard-asignaciones-enlaces', compact('plan', 'asignacionesEnlaces', 'indicadoresAsignados'));
+    }
+
+    public function dependenciasEnlace(Request $request)
+    {
+        abort_unless(auth()->user()->isAdministrator(), 403);
+
+        $filters = $request->validate([
+            'enlace_id' => ['required', 'integer'],
+        ]);
+        $enlace = User::whereHas('roles', fn ($query) => $query->where('name', 'Enlace'))
+            ->with('instituciones:id,nombre')
+            ->findOrFail($filters['enlace_id']);
+
+        return response()->json([
+            'dependencias' => $enlace->instituciones
+                ->sortBy('nombre')
+                ->values()
+                ->map(fn ($institucion) => ['id' => $institucion->id, 'nombre' => $institucion->nombre]),
+        ]);
     }
 
     private function buildActionQueue(Collection $indicadores, bool $soloValidados): Collection

@@ -154,6 +154,10 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 
     // --- Dashboards Generales ---
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/asignacion-enlaces', [DashboardController::class, 'asignacionesEnlaces'])
+        ->name('dashboard.asignaciones-enlaces');
+    Route::get('/dashboard/asignacion-enlaces/dependencias', [DashboardController::class, 'dependenciasEnlace'])
+        ->name('dashboard.asignaciones-enlaces.dependencias');
     Route::get('/dashboard/exportar/pdf', [DashboardExportController::class, 'pdf'])->name('dashboard.export.pdf');
     Route::get('/dashboard/exportar/xlsx', [DashboardExportController::class, 'xlsx'])->name('dashboard.export.xlsx');
     Route::get('/dashboard/drill-down', [DashboardDrillDownController::class, 'index'])->name('dashboard.drill-down');

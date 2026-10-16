@@ -40,8 +40,15 @@
                 </td>
                 <td>
                     <div class="admin-index-table-actions" role="group" aria-label="Acciones del indicador">
-                        @if ($indicador->datosAnuales->isNotEmpty() && $indicador->datosAnuales->every(fn ($datoAnual) => $datoAnual->validado))
+                        @if ($indicador->indicador_validado && $indicador->datosAnuales->isNotEmpty() && $indicador->datosAnuales->every(fn ($datoAnual) => $datoAnual->validado))
                             <span class="admin-index-table-action admin-index-table-action--validated">Validado</span>
+                        @elseif ($indicador->datosAnuales->isNotEmpty() && $indicador->datosAnuales->every(fn ($datoAnual) => $datoAnual->validado))
+                            <a href="{{ route('panel-indicadores.show', $indicador->id) }}"
+                                class="badge rounded-pill bg-info text-dark px-3 py-2 text-decoration-none"
+                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                title="Los datos anuales están validados; falta validar la ficha técnica.">
+                                <i class="fa-solid fa-file-circle-exclamation me-1" aria-hidden="true"></i>Ficha por validar
+                            </a>
                         @else
                             @can('update', $indicador)
                             <a href="{{ route('panel-indicadores.edit', $indicador->id) }}"

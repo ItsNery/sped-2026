@@ -17,9 +17,9 @@ class IndicatorIndexAnnualValidationStatusTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_shows_validated_when_all_annual_data_are_validated(): void
+    public function test_shows_validated_when_the_technical_sheet_and_all_annual_data_are_validated(): void
     {
-        $indicator = $this->createIndicator(false);
+        $indicator = $this->createIndicator(true);
         DatoAnual::create([
             'id_indicador' => $indicator->id,
             'anio' => 2025,
@@ -33,6 +33,24 @@ class IndicatorIndexAnnualValidationStatusTest extends TestCase
             ->assertSeeText('Validado')
             ->assertDontSeeText('Revisar')
             ->assertSee('title="No hay modificaciones pendientes en los datos anuales."', false);
+    }
+
+    public function test_shows_technical_sheet_pending_when_all_annual_data_are_validated_but_the_technical_sheet_is_not(): void
+    {
+        $indicator = $this->createIndicator(false);
+        DatoAnual::create([
+            'id_indicador' => $indicator->id,
+            'anio' => 2025,
+            'valor_dato' => 10,
+            'validado' => true,
+            'modificado' => false,
+        ]);
+
+        $this->actingAs($this->administrator())
+            ->get(route('panel-indicadores.index'))
+            ->assertSeeText('Ficha por validar')
+            ->assertDontSeeText('Validado')
+            ->assertSee('title="Los datos anuales están validados; falta validar la ficha técnica."', false);
     }
 
     public function test_shows_review_when_an_annual_data_item_is_pending_validation(): void
@@ -55,7 +73,7 @@ class IndicatorIndexAnnualValidationStatusTest extends TestCase
 
     public function test_dependency_liaison_sees_a_validated_badge_with_a_tooltip(): void
     {
-        $indicator = $this->createIndicator(false);
+        $indicator = $this->createIndicator(true);
         DatoAnual::create([
             'id_indicador' => $indicator->id,
             'anio' => 2025,
