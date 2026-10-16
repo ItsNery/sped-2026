@@ -26,70 +26,72 @@
                 <div class="normatividad__hero-content">
                     <span class="normatividad__hero-tag">Marco jurídico</span>
                     <h1 class="normatividad__hero-title">Normatividad</h1>
-                    <p class="normatividad__hero-desc">Consulta los documentos normativos que orientan la planeación, el seguimiento y la evaluación del desarrollo del Estado de Puebla.</p>
+                    <p class="normatividad__hero-desc">Consulta los documentos normativos que orientan la planeación, el
+                        seguimiento y la evaluación del desarrollo del Estado de Puebla.</p>
                 </div>
             </div>
         </section>
         <main class="normatividad__main">
             <div class="container normatividad__container">
                 <p class="normatividad__intro">Documentos disponibles para consulta y descarga.</p>
-            <div class="container my-4">
-                <ul class="normatividad__list">
-                    <li class="normatividad__item">
-                        <div class="normatividad__info">
-                            <h3 class="normatividad__title">Constitución Política del Estado de Puebla</h3>
-                            <span class="normatividad__format">
-                                <i class="fas fa-file-pdf"></i> PDF
-                            </span>
-                        </div>
-                        <a href="https://ojp.puebla.gob.mx/legislaciondelestado?catid=9" class="normatividad__download"
-                            target="_blank">
-                            <i class="fas fa-globe"></i> Consultar
-                        </a>
-                    </li>
-                    <li class="normatividad__item">
-                        <div class="normatividad__info">
-                            <h3 class="normatividad__title">Ley de Planeación para el Desarrollo del Estado de Puebla</h3>
-                            <span class="normatividad__format">
-                                <i class="fas fa-file-pdf"></i>
-                                PDF
-                            </span>
-                        </div>
-                        <a href="https://ojp.puebla.gob.mx/legislacion-del-estado/item/161-ley-de-planeacion-para-el-desarrollo-del-estado-de-puebla"
-                            class="normatividad__download" download target="_blank">
-                            <i class="fas fa-globe"></i>
-                            Consultar
-                        </a>
-                    </li>
-                    <li class="normatividad__item">
-                        <div class="normatividad__info">
-                            <h3 class="normatividad__title">Lineamientos para la operación del SEI</h3>
-                            <span class="normatividad__format">
-                                <i class="fas fa-file-pdf"></i>
-                                PDF
-                            </span>
-                        </div>
-                        <a href="https://ojp.puebla.gob.mx/legislacion-del-estado/item/1752-lineamientos-para-la-operacion-del-sistema-estatal-de-informacion"
-                            class="normatividad__download" download target="_blank">
-                            <i class="fas fa-globe"></i>
-                            Consultar
-                        </a>
-                    </li>
-                    <li class="normatividad__item">
-                        <div class="normatividad__info">
-                            <h3 class="normatividad__title">Lineamientos para la operación del SED</h3>
-                            <span class="normatividad__format">
-                                <i class="fas fa-file-pdf"></i>
-                                PDF
-                            </span>
-                        </div>
-                        <a href="https://ojp.puebla.gob.mx/legislacion-del-estado/item/1654-lineamientos-generales-para-el-seguimiento-y-evaluacion-de-los-documentos-rectores-y-programas-presupuestarios-de-la-administracion-publica-del-estado-de-puebla"
-                            class="normatividad__download" download target="_blank">
-                            <i class="fas fa-globe"></i>
-                            Consultar
-                        </a>
-                    </li>
-                    {{-- <li class="normatividad__item">
+                <div class="container my-4">
+                    <ul class="normatividad__list">
+                        <li class="normatividad__item">
+                            <div class="normatividad__info">
+                                <h3 class="normatividad__title">Constitución Política del Estado de Puebla</h3>
+                                <span class="normatividad__format">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </span>
+                            </div>
+                            <a href="https://ojp.puebla.gob.mx/legislaciondelestado?catid=9" class="normatividad__download"
+                                target="_blank">
+                                <i class="fas fa-globe"></i> Consultar
+                            </a>
+                        </li>
+                        <li class="normatividad__item">
+                            <div class="normatividad__info">
+                                <h3 class="normatividad__title">Ley de Planeación para el Desarrollo del Estado de Puebla
+                                </h3>
+                                <span class="normatividad__format">
+                                    <i class="fas fa-file-pdf"></i>
+                                    PDF
+                                </span>
+                            </div>
+                            <a href="https://ojp.puebla.gob.mx/legislacion-del-estado/item/161-ley-de-planeacion-para-el-desarrollo-del-estado-de-puebla"
+                                class="normatividad__download" download target="_blank">
+                                <i class="fas fa-globe"></i>
+                                Consultar
+                            </a>
+                        </li>
+                        <li class="normatividad__item">
+                            <div class="normatividad__info">
+                                <h3 class="normatividad__title">Lineamientos para la operación del SEI</h3>
+                                <span class="normatividad__format">
+                                    <i class="fas fa-file-pdf"></i>
+                                    PDF
+                                </span>
+                            </div>
+                            <a href="https://ojp.puebla.gob.mx/legislacion-del-estado/item/1752-lineamientos-para-la-operacion-del-sistema-estatal-de-informacion"
+                                class="normatividad__download" download target="_blank">
+                                <i class="fas fa-globe"></i>
+                                Consultar
+                            </a>
+                        </li>
+                        <li class="normatividad__item">
+                            <div class="normatividad__info">
+                                <h3 class="normatividad__title">Lineamientos para la operación del SED</h3>
+                                <span class="normatividad__format">
+                                    <i class="fas fa-file-pdf"></i>
+                                    PDF
+                                </span>
+                            </div>
+                            <a href="https://ojp.puebla.gob.mx/legislacion-del-estado/item/1654-lineamientos-generales-para-el-seguimiento-y-evaluacion-de-los-documentos-rectores-y-programas-presupuestarios-de-la-administracion-publica-del-estado-de-puebla"
+                                class="normatividad__download" download target="_blank">
+                                <i class="fas fa-globe"></i>
+                                Consultar
+                            </a>
+                        </li>
+                        {{-- <li class="normatividad__item">
                         <div class="normatividad__info">
                             <h3 class="normatividad__title">Manual del SPED</h3>
                             <span class="normatividad__format">
@@ -102,65 +104,81 @@
                             Proximamente
                         </a>
                     </li> --}}
-                    <li class="normatividad__item">
-                        <div class="normatividad__info">
-                            <h3 class="normatividad__title">Lineamientos para la operación del SPED</h3>
-                            <span class="normatividad__format">
-                                <i class="fas fa-file-pdf"></i>
-                                PDF
-                            </span>
-                        </div>
-                        <a href="https://ojp.puebla.gob.mx/legislacion-del-estado/item/3810-lineamientos-para-la-operacion-del-sistema-de-informacion-para-el-seguimiento-a-la-planeacion-y-evaluacion-del-desarrollo-en-el-estado-de-puebla"
-                            class="normatividad__download" download target="_blank">
-                            <i class="fas fa-globe"></i>
-                            Consultar
-                        </a>
-                    </li>
-                    <li class="normatividad__item">
-                        <div class="normatividad__info">
-                            <h3 class="normatividad__title">Guía para la Actualización, Revisión y Validación de Avances de los Indicadores del Plan Estatal de Desarrollo y sus Documentos Derivados</h3>
-                            <span class="normatividad__format">
-                                <i class="fas fa-file-pdf"></i>
-                                PDF
-                            </span>
-                        </div>
-                        <a href="{{ asset('docs/normatividad/guia-para-la-actulizacion-de-indicadores.pdf') }}" class="normatividad__download"
-                            target="_blank">
-                            <i class="fas fa-globe"></i>
-                            Consultar
-                        </a>
-                    </li>
-                    <li class="normatividad__item">
-                        <div class="normatividad__info">
-                            <h3 class="normatividad__title">Manual para la Construcción de Indicadores Estratégicos</h3>
-                            <span class="normatividad__format">
-                                <i class="fas fa-file-pdf"></i>
-                                PDF
-                            </span>
-                        </div>
-                        <a href="{{ asset('docs/normatividad/MANUAL-PARA-LA-CONSTRUCCION-DE-INDICADORES-ESTRATEGICOS.pdf') }}"
-                            class="normatividad__download" target="_blank">
-                            <i class="fas fa-globe"></i>
-                            Consultar
-                        </a>
-                    </li>
-                    <li class="normatividad__item">
-                        <div class="normatividad__info">
-                            <h3 class="normatividad__title">Nota Metodológica para la semaforización de Indicadores</h3>
-                            <span class="normatividad__format">
-                                <i class="fas fa-file-pdf"></i>
-                                PDF
-                            </span>
-                        </div>
-                        <a href="{{ asset('docs/normatividad/NOTA-METODOLOGICA-PARA-LA-SEMAFORIZACION-DE-INDICADORES.pdf') }}"
-                            class="normatividad__download" target="_blank">
-                            <i class="fas fa-globe"></i>
-                            Consultar
-                        </a>
-                    </li>
-                </ul>
-                <div class="row">
-                    {{-- <div class="col-md-3">
+                        <li class="normatividad__item">
+                            <div class="normatividad__info">
+                                <h3 class="normatividad__title">Lineamientos para la operación del SPED</h3>
+                                <span class="normatividad__format">
+                                    <i class="fas fa-file-pdf"></i>
+                                    PDF
+                                </span>
+                            </div>
+                            <a href="https://ojp.puebla.gob.mx/legislacion-del-estado/item/3810-lineamientos-para-la-operacion-del-sistema-de-informacion-para-el-seguimiento-a-la-planeacion-y-evaluacion-del-desarrollo-en-el-estado-de-puebla"
+                                class="normatividad__download" download target="_blank">
+                                <i class="fas fa-globe"></i>
+                                Consultar
+                            </a>
+                        </li>
+                        <li class="normatividad__item">
+                            <div class="normatividad__info">
+                                <h3 class="normatividad__title">Guía para la Actualización, Revisión y Validación de Avances
+                                    de los Indicadores del Plan Estatal de Desarrollo y sus Documentos Derivados</h3>
+                                <span class="normatividad__format">
+                                    <i class="fas fa-file-pdf"></i>
+                                    PDF
+                                </span>
+                            </div>
+                            <a href="{{ asset('docs/normatividad/guia-para-la-actulizacion-de-indicadores.pdf') }}"
+                                class="normatividad__download" target="_blank">
+                                <i class="fas fa-globe"></i>
+                                Consultar
+                            </a>
+                        </li>
+                        <li class="normatividad__item">
+                            <div class="normatividad__info">
+                                <h3 class="normatividad__title">Manual para la Construcción de Indicadores Estratégicos</h3>
+                                <span class="normatividad__format">
+                                    <i class="fas fa-file-pdf"></i>
+                                    PDF
+                                </span>
+                            </div>
+                            <a href="{{ asset('docs/normatividad/MANUAL-PARA-LA-CONSTRUCCION-DE-INDICADORES-ESTRATEGICOS.pdf') }}"
+                                class="normatividad__download" target="_blank">
+                                <i class="fas fa-globe"></i>
+                                Consultar
+                            </a>
+                        </li>
+                        <li class="normatividad__item">
+                            <div class="normatividad__info">
+                                <h3 class="normatividad__title">Nota Metodológica para la semaforización de Indicadores</h3>
+                                <span class="normatividad__format">
+                                    <i class="fas fa-file-pdf"></i>
+                                    PDF
+                                </span>
+                            </div>
+                            <a href="{{ asset('docs/normatividad/NOTA-METODOLOGICA-PARA-LA-SEMAFORIZACION-DE-INDICADORES.pdf') }}"
+                                class="normatividad__download" target="_blank">
+                                <i class="fas fa-globe"></i>
+                                Consultar
+                            </a>
+                        </li>
+                        <li class="normatividad__item">
+                            <div class="normatividad__info">
+                                <h3 class="normatividad__title">Manual del Sistema de Información para el Seguimiento a la
+                                    Planeación y Evaluación del Estado de Puebla</h3>
+                                <span class="normatividad__format">
+                                    <i class="fas fa-file-pdf"></i>
+                                    PDF
+                                </span>
+                            </div>
+                            <a href="{{ asset('docs/normatividad/Manual-Instituciones.pdf') }}"
+                                class="normatividad__download" target="_blank">
+                                <i class="fas fa-globe"></i>
+                                Consultar
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="row">
+                        {{-- <div class="col-md-3">
                         <div class="panel__image panel__image--book">
                             <a href="components/PDF/Constitucion_del_Estado_de_Puebla.pdf" class="books__book__image"
                                 target="_blank">
@@ -235,8 +253,8 @@
                             </a>
                         </div>
                     </div> --}}
+                    </div>
                 </div>
-            </div>
             </div>
         </main>
     </div>

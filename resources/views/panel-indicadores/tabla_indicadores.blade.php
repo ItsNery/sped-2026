@@ -40,7 +40,7 @@
                 </td>
                 <td>
                     <div class="admin-index-table-actions" role="group" aria-label="Acciones del indicador">
-                        @if ($indicador->indicador_validado == 1)
+                        @if ($indicador->datosAnuales->isNotEmpty() && $indicador->datosAnuales->every(fn ($datoAnual) => $datoAnual->validado))
                             <span class="admin-index-table-action admin-index-table-action--validated">Validado</span>
                         @else
                             @can('update', $indicador)
@@ -82,12 +82,12 @@
                 <td>
                     @if ($indicador->datosAnuales && $indicador->datosAnuales->isNotEmpty())
                         @if ($indicador->datosAnuales->where('modificado', true)->isNotEmpty())
-                            <span class="badge bg-warning text-dark">Indicador modificado</span>
+                            <span class="badge bg-warning text-dark" title="Uno o más datos anuales fueron modificados y requieren validación.">Indicador modificado</span>
                         @else
-                            <span class="badge bg-success">Sin cambios</span>
+                            <span class="badge bg-success" title="No hay modificaciones pendientes en los datos anuales.">Sin cambios</span>
                         @endif
                     @else
-                        <span class="badge bg-secondary">Sin datos anuales</span>
+                        <span class="badge bg-secondary" title="El indicador aún no tiene datos anuales registrados.">Sin datos anuales</span>
                     @endif
                 </td>
             </tr>

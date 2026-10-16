@@ -116,7 +116,7 @@ class IndicadorController extends Controller
             $indicadores = Indicador::forPlan($activePlanId)
                 ->whereIn('id_institucion', $institucionesVisibles)
                 ->where('id', '!=', 608)
-                ->with('institucion')
+                ->with(['datosAnuales', 'institucion'])
                 ->orderBy('id')
                 ->get();
 
@@ -142,6 +142,7 @@ class IndicadorController extends Controller
         $indicadores = Indicador::forPlan($activePlanId)
             ->where('id_usuario', $user->id)
             ->where('id', '!=', 608)
+            ->with('datosAnuales')
             ->orderBy('id')
             ->get();
 
@@ -912,7 +913,7 @@ class IndicadorController extends Controller
 
             $indicadores = Indicador::query()
                 ->forPlan($this->activePlan->id())
-                ->with('institucion')
+                ->with(['datosAnuales', 'institucion'])
                 ->when($institucion !== 'todos', function ($query) use ($institucion) {
                     $query->where('id_institucion', $institucion);
                 })

@@ -167,13 +167,18 @@
                                             <td>
                                                 <div class="admin-index-table-actions" role="group"
                                                     aria-label="Acciones del indicador">
-                                                    @if ($indicador->indicador_validado == 1)
-                                                        <span
-                                                            class="admin-index-table-action admin-index-table-action--validated">Validado</span>
+                                                    @if ($indicador->datosAnuales->isNotEmpty() && $indicador->datosAnuales->every(fn ($datoAnual) => $datoAnual->validado))
+                                                        <span class="badge rounded-pill bg-success px-3 py-2"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top"
+                                                            title="Todos los datos anuales del indicador están validados.">
+                                                            <i class="fa-solid fa-circle-check me-1" aria-hidden="true"></i>Validado
+                                                        </span>
                                                     @else
                                                         <a href="{{ route('panel-indicadores.show', $indicador->id) }}"
-                                                            class="admin-index-table-action admin-index-table-action--review">
-                                                            Revisar
+                                                            class="badge rounded-pill bg-warning text-dark px-3 py-2 text-decoration-none"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top"
+                                                            title="Hay datos anuales pendientes de validación o el indicador no tiene datos anuales.">
+                                                            <i class="fa-solid fa-magnifying-glass me-1" aria-hidden="true"></i>Revisar
                                                         </a>
                                                     @endif
                                                     @can('delete', $indicador)
@@ -191,12 +196,12 @@
                                             <td>
                                                 @if ($indicador->datosAnuales && $indicador->datosAnuales->isNotEmpty())
                                                     @if ($indicador->datosAnuales->where('modificado', true)->isNotEmpty())
-                                                        <span class="badge bg-warning text-dark">Indicador modificado</span>
+                                                        <span class="badge bg-warning text-dark" title="Uno o más datos anuales fueron modificados y requieren validación.">Indicador modificado</span>
                                                     @else
-                                                        <span class="badge bg-success">Sin cambios</span>
+                                                        <span class="badge bg-success" title="No hay modificaciones pendientes en los datos anuales.">Sin cambios</span>
                                                     @endif
                                                 @else
-                                                    <span class="badge bg-secondary">Sin datos anuales</span>
+                                                    <span class="badge bg-secondary" title="El indicador aún no tiene datos anuales registrados.">Sin datos anuales</span>
                                                 @endif
                                             </td>
                                         </tr>
@@ -280,7 +285,7 @@
                                             <td>
                                                 <div class="admin-index-table-actions" role="group"
                                                     aria-label="Acciones del indicador">
-                                                    @if ($indicador->indicador_validado == 1)
+                                                    @if ($indicador->datosAnuales->isNotEmpty() && $indicador->datosAnuales->every(fn ($datoAnual) => $datoAnual->validado))
                                                         <span
                                                             class="admin-index-table-action admin-index-table-action--validated">Validado</span>
                                                     @else
@@ -330,12 +335,12 @@
                                             <td>
                                                 @if ($indicador->datosAnuales && $indicador->datosAnuales->isNotEmpty())
                                                     @if ($indicador->datosAnuales->where('modificado', true)->isNotEmpty())
-                                                        <span class="badge bg-warning text-dark">Indicador modificado</span>
+                                                        <span class="badge bg-warning text-dark" title="Uno o más datos anuales fueron modificados y requieren validación.">Indicador modificado</span>
                                                     @else
-                                                        <span class="badge bg-success">Sin cambios</span>
+                                                        <span class="badge bg-success" title="No hay modificaciones pendientes en los datos anuales.">Sin cambios</span>
                                                     @endif
                                                 @else
-                                                    <span class="badge bg-secondary">Sin datos anuales</span>
+                                                    <span class="badge bg-secondary" title="El indicador aún no tiene datos anuales registrados.">Sin datos anuales</span>
                                                 @endif
                                             </td>
                                         </tr>
@@ -407,20 +412,19 @@
 
                                                 <div class="admin-index-table-actions" role="group"
                                                     aria-label="Acciones del indicador">
-                                                    @if ($indicador->indicador_validado == 1)
-                                                        <span
-                                                            class="admin-index-table-action admin-index-table-action--validated">Validado</span>
-                                                    @elseif($indicador->indicador_validado == null)
-                                                        <a href="{{ route('panel-indicadores.show', $indicador->id) }}"
-                                                            class="admin-index-table-action admin-index-table-action--review">
-                                                            Revisar
-                                                        </a>
+                                                    @if ($indicador->datosAnuales->isNotEmpty() && $indicador->datosAnuales->every(fn ($datoAnual) => $datoAnual->validado))
+                                                        <span class="badge rounded-pill bg-success px-3 py-2"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top"
+                                                            title="Todos los datos anuales del indicador están validados.">
+                                                            <i class="fa-solid fa-circle-check me-1" aria-hidden="true"></i>Validado
+                                                        </span>
                                                     @else
-                                                        <span
-                                                            class="admin-index-table-action admin-index-table-action--updated">Actualizado</span>
-                                                        <span
-                                                            class="admin-index-table-action admin-index-table-action--pending">Sin
-                                                            validar</span>
+                                                        <a href="{{ route('panel-indicadores.show', $indicador->id) }}"
+                                                            class="badge rounded-pill bg-warning text-dark px-3 py-2 text-decoration-none"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top"
+                                                            title="Hay datos anuales pendientes de validación o el indicador no tiene datos anuales.">
+                                                            <i class="fa-solid fa-magnifying-glass me-1" aria-hidden="true"></i>Revisar
+                                                        </a>
                                                     @endif
                                                 </div>
                                             </td>
@@ -477,6 +481,12 @@
         </script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
+                if (window.bootstrap?.Tooltip) {
+                    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(element) {
+                        new window.bootstrap.Tooltip(element);
+                    });
+                }
+
                 const language = {
                     search: 'Buscar:',
                     lengthMenu: 'Mostrar _MENU_ entradas',
