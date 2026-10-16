@@ -6,8 +6,11 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\View;
 use Illuminate\Database\Eloquent\Model;
 use App\Observers\ModeloObserver;
+use App\Models\User;
+use Illuminate\View\View as ViewInstance;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -46,5 +49,19 @@ class AppServiceProvider extends ServiceProvider
                 $claseModelo::observe(ModeloObserver::class);
             }
         }
+
+        View::composer('layouts.admin-navigation', function (ViewInstance $view): void {
+            $sidebarUser = auth()->user();
+            $sidebarLiaisons = collect();
+
+            if ($sidebarUser?->hasRole('Enlace dependencia') && $sidebarUser->id_institucion) {
+                $sidebarLiaisons = User::role('Enlace')
+                    ->whereHas('instituciones', fn ($query) => $query->whereKey($sidebarUser->id_institucion))
+                    ->orderBy('name')
+                    ->get(['id', 'name', 'email', 'telefono']);
+            }
+
+            $view->with('sidebarLiaisons', $sidebarLiaisons);
+        });
     }
 }

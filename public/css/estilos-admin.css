@@ -1612,6 +1612,44 @@ body {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+.sidebar-liaisons {
+    padding: 0.25rem 1.25rem 0.85rem;
+    border-bottom: 1px solid #334155;
+}
+.sidebar-liaisons .sidebar-label {
+    padding-right: 0;
+    padding-left: 0;
+}
+.sidebar-liaison {
+    display: grid;
+    gap: 0.35rem;
+    padding: 0.65rem;
+    border-radius: 0.45rem;
+    background: rgba(51, 65, 85, 0.7);
+}
+.sidebar-liaison__name {
+    overflow-wrap: anywhere;
+    color: #e2e8f0;
+    font-size: 0.78rem;
+}
+.sidebar-liaison__contact {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    overflow-wrap: anywhere;
+    color: #cbd5e1;
+    font-size: 0.72rem;
+    text-decoration: none;
+}
+.sidebar-liaison__contact:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+.sidebar-liaisons__empty {
+    margin: 0.35rem 0 0;
+    color: #94a3b8;
+    font-size: 0.75rem;
+}
 .sidebar-nav {
     margin: 0;
     padding: 0.5rem 0;
@@ -1813,7 +1851,8 @@ body {
 }
 .admin-wrapper.sidebar-collapsed .sidebar-link span,
 .admin-wrapper.sidebar-collapsed .sidebar-user-info,
-.admin-wrapper.sidebar-collapsed .sidebar-label {
+.admin-wrapper.sidebar-collapsed .sidebar-label,
+.admin-wrapper.sidebar-collapsed .sidebar-liaisons {
     display: none;
 }
 .admin-wrapper.sidebar-collapsed .sidebar-header {

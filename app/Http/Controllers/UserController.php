@@ -67,6 +67,7 @@ class UserController extends Controller
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
+            'telefono' => 'nullable|string|max:30',
             'password' => 'required|confirmed|min:6',
             'password_confirmation' => 'required',
             'roles' => 'required|string|exists:roles,name',
@@ -164,6 +165,7 @@ class UserController extends Controller
             $userData = [
                 'name' => $validatedData['name'],
                 'email' => $validatedData['email'],
+                'telefono' => $validatedData['telefono'] ?? null,
                 'password' => Hash::make($validatedData['password']),
                 'id_institucion' => $institucionIdParaUsuario, // Será null si es Enlace o Municipio
                 'id_municipio' => $municipioIdParaUsuario,     // Será null si es Institución
@@ -238,6 +240,7 @@ class UserController extends Controller
         $rules = [
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email,' . $id,
+            'telefono' => 'nullable|string|max:30',
             'password' => 'confirmed',
             'roles' => 'nullable|string|exists:roles,name',
             'instituciones' => 'required_if:roles,Enlace|array|min:1',

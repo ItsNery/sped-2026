@@ -25,7 +25,7 @@
                 @endif
                 @csrf
                 <div class="row">
-                    <div class="col-6">
+                    <div class="col-md-4">
                         <div class="mb-3">
                             <label class="form-label custom-section-title" for="name"><i
                                     class="fa-solid fa-file-signature"></i> Nombre</label>
@@ -40,7 +40,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-md-4">
                         <div class="mb-3">
                             <label class="custom-section-title form-label" for="email"><i class="fa-solid fa-at"></i>
                                 Correo</label>
@@ -49,6 +49,20 @@
                                 value="{{ isset($user->email) ? $user->email : old('email') }}"
                                 @error('email') autofocus @enderror required>
                             @error('email')
+                                <small class="invalid-feedback">
+                                    <strong>{{ $message }}</strong>
+                                </small>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="custom-section-title form-label" for="telefono"><i class="fa-solid fa-phone"></i>
+                                Teléfono</label>
+                            <input type="tel" class="form-control @error('telefono') is-invalid @enderror"
+                                name="telefono" id="telefono" autocomplete="tel"
+                                value="{{ old('telefono', $user->telefono ?? '') }}" @error('telefono') autofocus @enderror>
+                            @error('telefono')
                                 <small class="invalid-feedback">
                                     <strong>{{ $message }}</strong>
                                 </small>

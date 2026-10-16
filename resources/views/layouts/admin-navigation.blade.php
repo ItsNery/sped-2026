@@ -39,6 +39,27 @@
     @endauth
 
     <nav aria-label="Navegación administrativa">
+        @if ($sidebarUser?->hasRole('Enlace dependencia'))
+            <section class="sidebar-liaisons" aria-labelledby="sidebar-liaisons-title">
+                <span class="sidebar-label" id="sidebar-liaisons-title">Enlaces asignados</span>
+                @forelse ($sidebarLiaisons as $liaison)
+                    <div class="sidebar-liaison">
+                        <strong class="sidebar-liaison__name">{{ $liaison->name }}</strong>
+                        <a class="sidebar-liaison__contact" href="mailto:{{ $liaison->email }}">
+                            <i class="fas fa-envelope" aria-hidden="true"></i>{{ $liaison->email }}
+                        </a>
+                        @if ($liaison->telefono)
+                            <a class="sidebar-liaison__contact" href="tel:{{ $liaison->telefono }}">
+                                <i class="fas fa-phone" aria-hidden="true"></i>{{ $liaison->telefono }}
+                            </a>
+                        @endif
+                    </div>
+                @empty
+                    <p class="sidebar-liaisons__empty">Sin enlace asignado.</p>
+                @endforelse
+            </section>
+        @endif
+
         <ul class="sidebar-nav">
             <li class="sidebar-item">
                 <a class="sidebar-link {{ request()->routeIs('dashboard', 'panel-indicadores.index') ? 'active' : '' }}"
@@ -110,28 +131,18 @@
 
             <li class="sidebar-divider" role="separator"></li>
             <li class="sidebar-item"><span class="sidebar-label">Manuales</span></li>
-            @auth
-                @if (auth()->user()->hasRole('Enlace dependencia'))
-                    <li class="sidebar-item">
-                        <a class="sidebar-link" href="{{ asset('docs/normatividad/Manual-Instituciones.pdf') }}"
-                            target="_blank" rel="noopener" title="Manual de usuario">
-                            <i class="fas fa-book" aria-hidden="true"></i><span>Manual de usuario</span>
-                        </a>
-                    </li>
-                @endif
-            @endauth
             <li class="sidebar-item">
                 <a class="sidebar-link"
                     href="{{ asset('docs/normatividad/Guia_para_la_modificacion_de_Indicadores.zip') }}"
                     target="_blank" rel="noopener" title="Manual de indicadores">
                     <i class="fas fa-file-arrow-down" aria-hidden="true"></i><span>Manual de indicadores</span>
                 </a>
+            </li>
             <li class="sidebar-item">
                 <a class="sidebar-link" href="{{ asset('docs/normatividad/Manual-Instituciones.pdf') }}"
                     target="_blank" rel="noopener" title="Manual de usuario">
                     <i class="fas fa-book" aria-hidden="true"></i><span>Manual de usuario</span>
                 </a>
-            </li>
             </li>
 
             @if (auth()->user()->isAdministrator())
