@@ -43,6 +43,9 @@ class DashboardDrillDownController extends Controller
         if ($seguimiento && $request->filled('estado_plazo')) {
             $rows = $rows->where('estado_plazo', $request->input('estado_plazo'));
         }
+        if ($seguimiento && $request->filled('estado_actualizacion')) {
+            $rows = $rows->where('estado_actualizacion', $request->input('estado_actualizacion'));
+        }
         if ($seguimiento && $request->filled('periodicidad')) {
             $rows = $rows->where('periodicidad', $request->input('periodicidad'));
         }
@@ -151,6 +154,7 @@ class DashboardDrillDownController extends Controller
             'anio' => $resultado['anio_ultimo_dato'],
             'prioridad' => $prioridad,
             'estado_plazo' => $seguimiento['estado_plazo'],
+            'estado_actualizacion' => $seguimiento['estado_actualizacion'],
             'fecha_orden' => $proximaActualizacion?->toDateString(),
             'fecha_prevista' => $proximaActualizacion?->format('d/m/Y'),
             'fecha_fuente' => $seguimiento['fecha_proxima_fuente'],

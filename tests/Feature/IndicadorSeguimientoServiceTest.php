@@ -143,7 +143,39 @@ class IndicadorSeguimientoServiceTest extends TestCase
         $this->assertSame('2026-01-01', $todos['fecha_proxima_actualizacion']->toDateString());
     }
 
-    private function createIndicator(string $fechaActualizacion): Indicador
+    public function test_clasifica_actualizacion_por_fecha_y_periodicidad(): void
+    {
+        $this->travelTo(Carbon::parse('2026-06-15 12:00:00'));
+        $service = new IndicadorSeguimientoService();
+        $casos = [
+            ['Anual', 2025, null, 'Desactualizado'],
+            ['Anual', 2026, null, 'Actualizado'],
+            ['Bienal', 2025, null, 'Actualizado'],
+            ['Bienal', 2024, null, 'Desactualizado'],
+            ['Trimestral', 2026, null, 'Dato del año disponible; periodo sin verificar'],
+            ['Trimestral', 2025, null, 'Desactualizado'],
+            ['Ciclo escolar', 2026, null, 'Información insuficiente'],
+            ['Anual', null, null, 'Información insuficiente'],
+            ['Anual', 2025, '2026-06-16', 'Dentro del plazo'],
+            ['Anual', 2026, '2026-06-15', 'Vence hoy'],
+            ['Anual', 2026, '2026-06-14', 'Desactualizado'],
+        ];
+
+        foreach ($casos as [$periodicidad, $anio, $fecha, $estado]) {
+            $indicador = $this->createIndicator($fecha ?? '2028-01-01');
+            $indicador->periodicidad = $periodicidad;
+            if ($anio !== null) {
+                $indicador->datosAnuales()->create(['anio' => $anio, 'valor_dato' => 0, 'validado' => true]);
+            }
+            $indicador->refresh();
+            $indicador->periodicidad = $periodicidad;
+            $indicador->fecha_actualizacion = $fecha;
+
+            $this->assertSame($estado, $service->seguimiento($indicador)['estado_actualizacion'], "$periodicidad / $anio / $fecha");
+        }
+    }
+
+    private function createIndicator(?string $fechaActualizacion): Indicador
     {
         return Indicador::create([
             'nombre' => 'Indicador de prueba',

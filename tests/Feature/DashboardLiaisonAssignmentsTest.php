@@ -57,7 +57,8 @@ class DashboardLiaisonAssignmentsTest extends TestCase
             ->assertOk()
             ->assertSeeText('Seguimiento de actualizaciones')
             ->assertSeeText($indicator->nombre)
-            ->assertSeeText('01/01/2025');
+            ->assertSeeText('01/01/2025')
+            ->assertSeeText('Desactualizado');
 
         $this->actingAs($administrator)
             ->get(route('dashboard.drill-down', ['plan_id' => $plan->id, 'seguimiento' => 1, 'estado_plazo' => 'Sin fecha confiable']))

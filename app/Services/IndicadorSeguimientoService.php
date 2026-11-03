@@ -50,6 +50,7 @@ class IndicadorSeguimientoService
             'fecha_proxima_actualizacion' => $fechaProxima['fecha'],
             'fecha_proxima_fuente' => $fechaProxima['fuente'],
             'estado_plazo' => $this->estadoPlazo($fechaProxima['fecha']),
+            'estado_actualizacion' => $this->estadoActualizacion($indicador->periodicidad, $ultimo['anio'], $fechaProxima['fecha']),
             'avance' => $resultado['avance'],
             'semaforizacion' => $resultado['semaforizacion'],
             'evidencia' => [
@@ -60,6 +61,34 @@ class IndicadorSeguimientoService
             ],
             'motivos' => $this->motivos($indicador, $ultimo, $resultado['avance'], $fechaProxima['fecha']),
         ];
+    }
+
+    private function estadoActualizacion(?string $periodicidad, ?int $ultimoAnio, ?Carbon $fecha): string
+    {
+        if ($fecha !== null) {
+            return match ($this->estadoPlazo($fecha)) {
+                self::ESTADO_VENCIDO => 'Desactualizado',
+                self::ESTADO_VENCE_HOY => 'Vence hoy',
+                default => 'Dentro del plazo',
+            };
+        }
+
+        if ($ultimoAnio === null) {
+            return 'Información insuficiente';
+        }
+
+        $periodicidad = mb_strtolower(trim((string) $periodicidad));
+        $anioActual = ($this->fechaReferencia ?? Carbon::now())->year;
+        $intervalos = ['anual' => 1, 'bienal' => 2, 'bianual' => 2, 'trienal' => 3, 'quinquenal' => 5, 'sexenal' => 6];
+        if (isset($intervalos[$periodicidad])) {
+            return $ultimoAnio + $intervalos[$periodicidad] <= $anioActual ? 'Desactualizado' : 'Actualizado';
+        }
+
+        if (in_array($periodicidad, ['mensual', 'bimestral', 'trimestral', 'cuatrimestral', 'semestral'], true)) {
+            return $ultimoAnio < $anioActual ? 'Desactualizado' : 'Dato del año disponible; periodo sin verificar';
+        }
+
+        return 'Información insuficiente';
     }
 
     /**
