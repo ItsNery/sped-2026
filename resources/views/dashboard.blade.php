@@ -73,12 +73,12 @@
                         <label class="exec-filter-field exec-filter-field--year">
                             <span>Desde</span>
                             <input type="number" name="anio_desde" min="2000" max="2100"
-                                value="{{ request('anio_desde') }}" placeholder="Año">
+                                value="{{ $filters['anio_desde'] }}" placeholder="Año">
                         </label>
                         <label class="exec-filter-field exec-filter-field--year">
                             <span>Hasta</span>
                             <input type="number" name="anio_hasta" min="2000" max="2100"
-                                value="{{ request('anio_hasta') }}" placeholder="Año">
+                                value="{{ $filters['anio_hasta'] }}" placeholder="Año">
                         </label>
                         @foreach (['eje_id', 'programa_id', 'institucion_id', 'semaforo', 'calidad'] as $hiddenFilter)
                             @foreach ($filters[$hiddenFilter] as $hiddenValue)
@@ -95,7 +95,7 @@
                     </form>
                     <div class="exec-options__tools">
                         <div class="exec-options__tool-group">
-                            <a class="exec-clear-filters" href="{{ route('dashboard') }}">
+                            <a class="exec-clear-filters" href="{{ route('dashboard', ['limpiar_filtros' => 1]) }}">
                                 <span aria-hidden="true">×</span> Limpiar
                             </a>
                             <button type="button" class="exec-more-filters" data-bs-toggle="offcanvas"
@@ -222,7 +222,7 @@
                     </fieldset>
 
                     <div class="exec-drawer-actions"><a
-                            href="{{ route('dashboard', ['plan_id' => $plan->id]) }}">Limpiar</a><button
+                            href="{{ route('dashboard', ['limpiar_filtros' => 1, 'plan_id' => $plan->id]) }}">Limpiar</a><button
                             type="submit" class="exec-filter-button">Aplicar filtros</button></div>
                 </form>
             </div>

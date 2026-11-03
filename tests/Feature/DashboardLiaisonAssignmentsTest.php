@@ -71,7 +71,7 @@ class DashboardLiaisonAssignmentsTest extends TestCase
                 ->assertSeeText('Hasta: 2026');
         }
 
-        $this->actingAs($administrator)->get(route('dashboard.drill-down', ['plan_id' => $plan->id]))
+        $this->actingAs($administrator)->get(route('dashboard.drill-down', ['plan_id' => $plan->id, 'limpiar_filtros' => 1]))
             ->assertSeeText('Datos: Solo validados')
             ->assertSeeText('Desde: Sin límite')
             ->assertSeeText('Hasta: Sin límite');
@@ -99,6 +99,36 @@ class DashboardLiaisonAssignmentsTest extends TestCase
             ->assertOk()
             ->assertJsonPath('dependencias.0.id', $institution->id)
             ->assertJsonPath('dependencias.0.nombre', $institution->nombre);
+    }
+
+    public function test_dashboard_filters_persist_between_dashboard_and_details_until_cleared(): void
+    {
+        $plan = CatPlanEstatalDesarrollo::create(['nombre' => 'PED persistente', 'gobernador' => 'Gobernador']);
+        config()->set('sped.active_plan_id', $plan->id);
+        $user = User::factory()->create();
+        $user->assignRole(Role::findOrCreate('Administrador', 'web'));
+        $this->actingAs($user);
+
+        $this->get(route('dashboard', ['plan_id' => $plan->id, 'solo_validados' => 0, 'anio_desde' => 2024, 'anio_hasta' => 2026]))->assertOk();
+        foreach (['dashboard.drill-down', 'dashboard'] as $route) {
+            $this->get(route($route))->assertOk()
+                ->assertSeeText('Datos: Todos los registrados')
+                ->assertSeeText('Desde: 2024')
+                ->assertSeeText('Hasta: 2026');
+        }
+
+        $this->get(route('dashboard', ['solo_validados' => 1, 'anio_desde' => '', 'anio_hasta' => '']))
+            ->assertSeeText('Datos: Solo validados')
+            ->assertSeeText('Desde: Sin límite')
+            ->assertSeeText('Hasta: Sin límite');
+
+        $this->get(route('dashboard', ['solo_validados' => 0, 'anio_desde' => 2024]))->assertOk();
+        $this->get(route('dashboard', ['limpiar_filtros' => 1]))
+            ->assertSeeText('Datos: Solo validados')
+            ->assertSeeText('Desde: Sin límite');
+        $this->get(route('dashboard.drill-down'))
+            ->assertSeeText('Datos: Solo validados')
+            ->assertSeeText('Desde: Sin límite');
     }
 
     public function test_detail_page_excludes_enlace_dependencia_and_forbids_non_administrators(): void

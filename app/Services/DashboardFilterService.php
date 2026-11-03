@@ -27,20 +27,35 @@ class DashboardFilterService
 
     public function normalize(Request $request): array
     {
-        $requestedPlanId = $request->filled('plan_id')
-            ? (int) $request->input('plan_id')
-            : null;
+        $session = $request->hasSession() ? $request->session() : null;
+        if ($request->boolean('limpiar_filtros')) {
+            $session?->forget('dashboard.filtros_basicos');
+            $request->query->remove('limpiar_filtros');
+        }
+        $guardados = $session?->get('dashboard.filtros_basicos', []) ?? [];
+        $basicos = array_replace($guardados, $request->only(['plan_id', 'solo_validados', 'anio_desde', 'anio_hasta']));
+        $requestedPlanId = !empty($basicos['plan_id']) ? (int) $basicos['plan_id'] : null;
         $planId = $this->activePlan->id();
 
         if ($requestedPlanId && CatPlanEstatalDesarrollo::whereKey($requestedPlanId)->exists()) {
             $planId = $requestedPlanId;
         }
 
+        $soloValidados = filter_var($basicos['solo_validados'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $anioDesde = isset($basicos['anio_desde']) && $basicos['anio_desde'] !== '' ? (int) $basicos['anio_desde'] : null;
+        $anioHasta = isset($basicos['anio_hasta']) && $basicos['anio_hasta'] !== '' ? (int) $basicos['anio_hasta'] : null;
+        $session?->put('dashboard.filtros_basicos', [
+            'plan_id' => $planId,
+            'solo_validados' => $soloValidados,
+            'anio_desde' => $anioDesde,
+            'anio_hasta' => $anioHasta,
+        ]);
+
         return [
             'plan_id' => $planId,
-            'solo_validados' => $request->boolean('solo_validados', true),
-            'anio_desde' => $request->filled('anio_desde') ? (int) $request->input('anio_desde') : null,
-            'anio_hasta' => $request->filled('anio_hasta') ? (int) $request->input('anio_hasta') : null,
+            'solo_validados' => $soloValidados,
+            'anio_desde' => $anioDesde,
+            'anio_hasta' => $anioHasta,
             'eje_id' => $this->ids($request->input('eje_id', [])),
             'programa_id' => $this->ids($request->input('programa_id', [])),
             'programa_tipo' => array_key_exists($request->input('programa_tipo'), self::PROGRAM_TYPES)
