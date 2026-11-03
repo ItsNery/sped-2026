@@ -40,6 +40,7 @@ class DashboardDrillDownController extends Controller
 
         $seguimiento = $request->boolean('seguimiento');
         $estadosSeguimiento = $rows->countBy('estado_plazo');
+        $estadosActualizacion = $rows->countBy('estado_actualizacion');
         if ($seguimiento && $request->filled('estado_plazo')) {
             $rows = $rows->where('estado_plazo', $request->input('estado_plazo'));
         }
@@ -92,6 +93,7 @@ class DashboardDrillDownController extends Controller
             'total' => $rows->count(),
             'seguimiento' => $seguimiento,
             'estadosSeguimiento' => $estadosSeguimiento,
+            'estadosActualizacion' => $estadosActualizacion,
             'periodicidades' => $periodicidades,
             'responsables' => $responsables,
         ]);

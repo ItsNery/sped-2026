@@ -31,12 +31,16 @@
         </div>
 
         <section class="exec-section">
-            <div class="exec-section__heading">
+            <div class="exec-section__heading {{ $seguimiento ? 'tracking-heading' : '' }}">
                 <div>
                     <span class="exec-eyebrow">Detalle operativo</span>
                     <h2>{{ $seguimiento ? 'Fechas previstas y último dato' : 'Indicadores y responsables' }}</h2>
                     @if ($seguimiento)
                         <p>La fecha anual disponible tiene prioridad sobre la fecha del indicador. Sin fecha, se compara el último año disponible con la periodicidad. Los periodos menores a un año no pueden verificarse con el dato anual.</p>
+                        <a class="tracking-attention" href="{{ request()->fullUrlWithQuery(['estado_actualizacion' => 'Desactualizado', 'estado_plazo' => null, 'page' => null]) }}">
+                            <strong>{{ $estadosActualizacion->get('Desactualizado', 0) }}</strong>
+                            <span>indicadores desactualizados <small>Ver indicadores que requieren atención →</small></span>
+                        </a>
                         <div class="exec-filter-chips">
                             @foreach (['Vencido', 'Vence hoy', 'Próximo', 'Programado', 'Sin fecha confiable'] as $estado)
                                 <span>{{ $estado }}: {{ $estadosSeguimiento->get($estado, 0) }}</span>
@@ -44,7 +48,7 @@
                         </div>
                     @endif
                 </div>
-                <form method="GET" class="exec-drill-controls">
+                <form method="GET" class="exec-drill-controls {{ $seguimiento ? 'tracking-filters' : '' }}">
                     @foreach (request()->except(['buscar', 'sort', 'direction', 'page', 'estado_plazo', 'estado_actualizacion', 'periodicidad', 'responsable']) as $key => $value)
                         @if (is_array($value))
                             @foreach ($value as $item)<input type="hidden" name="{{ $key }}[]" value="{{ $item }}">@endforeach
@@ -56,7 +60,7 @@
                         <label for="drill-down-search">Buscar en el universo</label>
                         <div class="exec-drill-controls__search-row">
                             <input id="drill-down-search" type="search" name="buscar" value="{{ $filters['buscar'] ?? '' }}" placeholder="Indicador, temática o descripción">
-                            <button type="submit" class="exec-filter-button">Buscar</button>
+                            @unless ($seguimiento)<button type="submit" class="exec-filter-button">Buscar</button>@endunless
                             @if ($filters['buscar'])
                                 <a class="exec-drill-controls__clear" href="{{ request()->fullUrlWithQuery(['buscar' => null, 'page' => null]) }}">Limpiar</a>
                             @endif
@@ -73,14 +77,42 @@
                         </select>
                     </div>
                     @if ($seguimiento)
-                        <div><label for="estado-plazo">Estado de plazo</label><select id="estado-plazo" name="estado_plazo"><option value="">Todos</option>@foreach (['Vencido', 'Vence hoy', 'Próximo', 'Programado', 'Sin fecha confiable'] as $estado)<option value="{{ $estado }}" @selected(request('estado_plazo') === $estado)>{{ $estado }}</option>@endforeach</select></div>
-                        <div><label for="estado-actualizacion">Estado de actualización</label><select id="estado-actualizacion" name="estado_actualizacion"><option value="">Todos</option>@foreach (['Desactualizado', 'Vence hoy', 'Dentro del plazo', 'Actualizado', 'Dato del año disponible; periodo sin verificar', 'Información insuficiente'] as $estado)<option value="{{ $estado }}" @selected(request('estado_actualizacion') === $estado)>{{ $estado }}</option>@endforeach</select></div>
-                        <div><label for="periodicidad-seguimiento">Periodicidad</label><select id="periodicidad-seguimiento" name="periodicidad"><option value="">Todas</option>@foreach ($periodicidades as $periodicidad)<option value="{{ $periodicidad }}" @selected(request('periodicidad') === $periodicidad)>{{ $periodicidad }}</option>@endforeach</select></div>
-                        <div><label for="responsable-seguimiento">Responsable</label><select id="responsable-seguimiento" name="responsable"><option value="">Todos</option>@foreach ($responsables as $responsable)<option value="{{ $responsable }}" @selected(request('responsable') === $responsable)>{{ $responsable }}</option>@endforeach</select></div>
+                        <div class="tracking-filter"><label for="estado-plazo">Estado de plazo</label><select id="estado-plazo" name="estado_plazo"><option value="">Todos</option>@foreach (['Vencido', 'Vence hoy', 'Próximo', 'Programado', 'Sin fecha confiable'] as $estado)<option value="{{ $estado }}" @selected(request('estado_plazo') === $estado)>{{ $estado }}</option>@endforeach</select></div>
+                        <div class="tracking-filter"><label for="estado-actualizacion">Estado de actualización</label><select id="estado-actualizacion" name="estado_actualizacion"><option value="">Todos</option>@foreach (['Desactualizado', 'Vence hoy', 'Dentro del plazo', 'Actualizado', 'Dato del año disponible; periodo sin verificar', 'Información insuficiente'] as $estado)<option value="{{ $estado }}" @selected(request('estado_actualizacion') === $estado)>{{ $estado }}</option>@endforeach</select></div>
+                        <div class="tracking-filter"><label for="periodicidad-seguimiento">Periodicidad</label><select id="periodicidad-seguimiento" name="periodicidad"><option value="">Todas</option>@foreach ($periodicidades as $periodicidad)<option value="{{ $periodicidad }}" @selected(request('periodicidad') === $periodicidad)>{{ $periodicidad }}</option>@endforeach</select></div>
+                        <div class="tracking-filter"><label for="responsable-seguimiento">Responsable</label><select id="responsable-seguimiento" name="responsable"><option value="">Todos</option>@foreach ($responsables as $responsable)<option value="{{ $responsable }}" @selected(request('responsable') === $responsable)>{{ $responsable }}</option>@endforeach</select></div>
                         <button type="submit" class="exec-filter-button">Aplicar filtros</button>
                     @endif
                 </form>
             </div>
+            @if ($seguimiento)
+            <div class="tracking-results" aria-label="Seguimiento de indicadores">
+                @forelse ($rows as $row)
+                    @php
+                        $estadoClase = match ($row['estado_actualizacion']) {
+                            'Desactualizado' => 'urgent',
+                            'Vence hoy' => 'warning',
+                            'Actualizado', 'Dentro del plazo' => 'good',
+                            default => 'unknown',
+                        };
+                    @endphp
+                    <article class="tracking-result tracking-result--{{ $estadoClase }}">
+                        <div class="tracking-result__main">
+                            <span class="tracking-badge tracking-badge--{{ $estadoClase }}">{{ $row['estado_actualizacion'] }}</span>
+                            <h3><a href="{{ route('panel-indicadores.show', ['indicador' => $row['id'], 'plan_id' => $plan->id]) }}">{{ $row['nombre'] }}</a></h3>
+                            <p>{{ $row['institucion'] }} <span aria-hidden="true">·</span> {{ $row['usuario'] }}</p>
+                        </div>
+                        <dl class="tracking-result__details">
+                            <div><dt>Último dato · {{ $row['periodicidad'] ?: 'Sin periodicidad' }}</dt><dd>@if ($row['ultimo_dato'] !== null){{ $row['ultimo_dato'] }} {{ $row['unidad'] }} · {{ $row['ultimo_anio'] }}<small>{{ $row['ultimo_validado'] ? 'Validado' : 'Sin validar' }}</small>@else Sin dato @endif</dd></div>
+                            <div><dt>Próxima actualización</dt><dd>{{ $row['fecha_prevista'] ?? 'Sin fecha' }}<small>{{ $row['fecha_fuente'] ? ($row['fecha_fuente'] === 'anio' ? 'Fecha del dato anual' : 'Fecha del indicador') : 'Sin fecha confiable' }}</small></dd></div>
+                        </dl>
+                        <a class="tracking-result__action" href="{{ route('panel-indicadores.show', ['indicador' => $row['id'], 'plan_id' => $plan->id]) }}" aria-label="Revisar {{ $row['nombre'] }}">Revisar <span aria-hidden="true">→</span></a>
+                    </article>
+                @empty
+                    <div class="exec-empty">No hay indicadores que coincidan con estos filtros.</div>
+                @endforelse
+            </div>
+            @else
             <div class="exec-priority-table-wrap">
                 <table class="exec-table exec-detail-table">
                     <caption class="visually-hidden">Detalle de indicadores filtrados</caption>
@@ -109,6 +141,7 @@
                     </tbody>
                 </table>
             </div>
+            @endif
             @if ($rows->hasPages())
                 <div class="exec-pagination">{{ $rows->links() }}</div>
             @endif
