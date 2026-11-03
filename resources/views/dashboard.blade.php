@@ -257,6 +257,17 @@
             </a>
         </section>
 
+        <section class="exec-section" aria-labelledby="seguimiento-title">
+            <div class="exec-section__heading">
+                <div>
+                    <span class="exec-eyebrow">Fechas previstas y datos disponibles</span>
+                    <h2 id="seguimiento-title">Seguimiento de actualizaciones</h2>
+                    <p>Consulta los plazos, el último dato disponible y la periodicidad de cada indicador.</p>
+                </div>
+                <a class="exec-filter-button" href="{{ route('dashboard.drill-down', array_merge(request()->query(), ['seguimiento' => 1, 'page' => null])) }}">Ver seguimiento</a>
+            </div>
+        </section>
+
         <section class="exec-section" id="prioridades" aria-labelledby="prioridades-title">
             <div class="exec-section__heading">
                 <div>

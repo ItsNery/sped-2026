@@ -17,6 +17,7 @@ use App\Services\PedMetricsService;
 use App\Services\PedTrendService;
 use App\Services\DashboardFilterService;
 use App\Services\ActivePlanResolver;
+use App\Services\IndicadorSeguimientoService;
 
 /**
  * Gestiona las vistas y métricas principales del panel de control.
@@ -32,7 +33,8 @@ class DashboardController extends Controller
         private PedMetricsService $pedMetrics,
         private PedTrendService $pedTrend,
         private DashboardFilterService $dashboardFilters,
-        private ActivePlanResolver $activePlan
+        private ActivePlanResolver $activePlan,
+        private IndicadorSeguimientoService $indicadorSeguimiento
     ) {}
 
     /**
@@ -411,22 +413,15 @@ class DashboardController extends Controller
                 ->filter(fn ($dato) => $dato->valor_dato !== null && trim((string) $dato->valor_dato) !== '');
             $datosDisponibles = $soloValidados ? $datos->where('validado', true) : $datos;
             $ultimoDato = $datosDisponibles->sortByDesc('anio')->first();
-            $proximaActualizacion = null;
-
-            if ($indicador->proxima_actualizacion) {
-                try {
-                    $proximaActualizacion = Carbon::parse($indicador->proxima_actualizacion);
-                } catch (\Throwable) {
-                    $proximaActualizacion = null;
-                }
-            }
+            $seguimiento = $this->indicadorSeguimiento->seguimiento($indicador, $soloValidados);
+            $proximaActualizacion = $seguimiento['fecha_proxima_actualizacion'];
 
             $motivo = null;
             $prioridad = null;
             if ($resultado['avance'] !== null && $resultado['avance'] < 71) {
                 $motivo = 'Avance insuficiente';
                 $prioridad = 1;
-            } elseif ($proximaActualizacion?->isPast()) {
+            } elseif ($seguimiento['estado_plazo'] === IndicadorSeguimientoService::ESTADO_VENCIDO) {
                 $motivo = 'Actualización vencida';
                 $prioridad = 2;
             } elseif (!$indicador->indicador_validado) {

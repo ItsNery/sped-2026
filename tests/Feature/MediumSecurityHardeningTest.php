@@ -34,6 +34,13 @@ class MediumSecurityHardeningTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_update_tracking_requires_dashboard_permission(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->get(route('dashboard.drill-down', ['seguimiento' => 1]))
+            ->assertForbidden();
+    }
+
     public function test_users_with_log_permission_can_view_login_attempts(): void
     {
         $user = User::factory()->create();

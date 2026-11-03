@@ -7,7 +7,7 @@ use App\Models\CatPlanEstatalDesarrollo;
 use App\Models\Indicador;
 use App\Services\ActivePlanResolver;
 use App\Services\DashboardFilterService;
-use Carbon\Carbon;
+use App\Services\IndicadorSeguimientoService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -15,7 +15,8 @@ class DashboardDrillDownController extends Controller
 {
     public function __construct(
         private DashboardFilterService $dashboardFilters,
-        private ActivePlanResolver $activePlan
+        private ActivePlanResolver $activePlan,
+        private IndicadorSeguimientoService $indicadorSeguimiento
     ) {}
 
     public function index(Request $request)
@@ -37,6 +38,20 @@ class DashboardDrillDownController extends Controller
         $indicadores = $this->dashboardFilters->filterComputed($indicadores, $filters, $filters['solo_validados']);
         $rows = $indicadores->map(fn($indicador) => $this->row($indicador, $filters['solo_validados']));
 
+        $seguimiento = $request->boolean('seguimiento');
+        $estadosSeguimiento = $rows->countBy('estado_plazo');
+        if ($seguimiento && $request->filled('estado_plazo')) {
+            $rows = $rows->where('estado_plazo', $request->input('estado_plazo'));
+        }
+        if ($seguimiento && $request->filled('periodicidad')) {
+            $rows = $rows->where('periodicidad', $request->input('periodicidad'));
+        }
+        if ($seguimiento && $request->filled('responsable')) {
+            $rows = $rows->where('usuario', $request->input('responsable'));
+        }
+        $periodicidades = $indicadores->pluck('periodicidad')->filter()->unique()->sort()->values();
+        $responsables = $indicadores->pluck('usuario.name')->filter()->unique()->sort()->values();
+
         if ($request->boolean('criticas')) {
             $rows = $rows->filter(fn($row) => $row['prioridad'] !== null && $row['prioridad'] <= 3);
         } elseif ($request->boolean('alertas')) {
@@ -47,6 +62,7 @@ class DashboardDrillDownController extends Controller
             'nombre' => strtolower($row['nombre']),
             'avance' => $row['avance'] ?? PHP_FLOAT_MAX,
             'institucion' => strtolower($row['institucion']),
+            'fecha' => $row['fecha_orden'] ?? '9999-12-31',
             default => $row['prioridad'] . '-' . str_pad((string) ($row['avance'] ?? 999999), 12, '0', STR_PAD_LEFT),
         });
 
@@ -71,6 +87,10 @@ class DashboardDrillDownController extends Controller
             'filters' => $filters,
             'rows' => $paginator,
             'total' => $rows->count(),
+            'seguimiento' => $seguimiento,
+            'estadosSeguimiento' => $estadosSeguimiento,
+            'periodicidades' => $periodicidades,
+            'responsables' => $responsables,
         ]);
     }
 
@@ -91,22 +111,15 @@ class DashboardDrillDownController extends Controller
         $datos = $indicador->datosAnuales->filter(fn($dato) => $dato->valor_dato !== null && trim((string) $dato->valor_dato) !== '');
         $datosDisponibles = $soloValidados ? $datos->where('validado', true) : $datos;
         $ultimoDato = $datosDisponibles->sortByDesc('anio')->first();
-        $proximaActualizacion = null;
-
-        if ($indicador->proxima_actualizacion) {
-            try {
-                $proximaActualizacion = Carbon::parse($indicador->proxima_actualizacion);
-            } catch (\Throwable) {
-                $proximaActualizacion = null;
-            }
-        }
+        $seguimiento = $this->indicadorSeguimiento->seguimiento($indicador, $soloValidados);
+        $proximaActualizacion = $seguimiento['fecha_proxima_actualizacion'];
 
         $motivo = null;
         $prioridad = null;
         if ($resultado['avance'] !== null && $resultado['avance'] < 71) {
             $motivo = 'Avance insuficiente';
             $prioridad = 1;
-        } elseif ($proximaActualizacion?->isPast()) {
+        } elseif ($seguimiento['estado_plazo'] === IndicadorSeguimientoService::ESTADO_VENCIDO) {
             $motivo = 'Actualización vencida';
             $prioridad = 2;
         } elseif (!$indicador->indicador_validado) {
@@ -137,6 +150,15 @@ class DashboardDrillDownController extends Controller
             'motivo' => $motivo ?? 'Sin alerta',
             'anio' => $resultado['anio_ultimo_dato'],
             'prioridad' => $prioridad,
+            'estado_plazo' => $seguimiento['estado_plazo'],
+            'fecha_orden' => $proximaActualizacion?->toDateString(),
+            'fecha_prevista' => $proximaActualizacion?->format('d/m/Y'),
+            'fecha_fuente' => $seguimiento['fecha_proxima_fuente'],
+            'periodicidad' => $seguimiento['periodicidad'],
+            'ultimo_dato' => $seguimiento['ultimo_dato'],
+            'ultimo_anio' => $seguimiento['ultimo_anio'],
+            'ultimo_validado' => $seguimiento['ultimo_dato_validado'],
+            'unidad' => $indicador->unidad_medida,
         ];
     }
 }

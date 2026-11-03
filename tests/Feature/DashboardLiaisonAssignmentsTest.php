@@ -49,7 +49,20 @@ class DashboardLiaisonAssignmentsTest extends TestCase
         $this->actingAs($administrator)
             ->get(route('dashboard'))
             ->assertSeeText('Asignación de enlaces')
-            ->assertSeeText('Ver detalle');
+            ->assertSeeText('Ver detalle')
+            ->assertSeeText('Seguimiento de actualizaciones');
+
+        $this->actingAs($administrator)
+            ->get(route('dashboard.drill-down', ['plan_id' => $plan->id, 'seguimiento' => 1]))
+            ->assertOk()
+            ->assertSeeText('Seguimiento de actualizaciones')
+            ->assertSeeText($indicator->nombre)
+            ->assertSeeText('01/01/2025');
+
+        $this->actingAs($administrator)
+            ->get(route('dashboard.drill-down', ['plan_id' => $plan->id, 'seguimiento' => 1, 'estado_plazo' => 'Sin fecha confiable']))
+            ->assertOk()
+            ->assertDontSeeText($indicator->nombre);
 
         $this->actingAs($administrator)
             ->get(route('dashboard.asignaciones-enlaces', ['plan_id' => $plan->id]))

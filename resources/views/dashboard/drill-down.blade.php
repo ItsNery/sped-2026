@@ -4,7 +4,7 @@
         <div class="exec-header">
             <div>
                 <span class="exec-eyebrow">Drill-down del centro de mando</span>
-                <h2 class="exec-header__title">Indicadores filtrados</h2>
+                <h2 class="exec-header__title">{{ $seguimiento ? 'Seguimiento de actualizaciones' : 'Indicadores filtrados' }}</h2>
             </div>
             <span class="exec-header__plan">{{ $plan->nombre }}</span>
         </div>
@@ -27,17 +27,25 @@
                     @if (request('alertas') && !request('criticas')) <span>Bandeja de atención</span> @endif
                 </div>
             </div>
-            <a class="exec-filter-button" href="{{ route('dashboard') }}">Volver al dashboard</a>
+            <a class="exec-filter-button" href="{{ route('dashboard', request()->except(['seguimiento', 'estado_plazo', 'periodicidad', 'responsable', 'page', 'sort', 'direction'])) }}">Volver al dashboard</a>
         </div>
 
         <section class="exec-section">
             <div class="exec-section__heading">
                 <div>
                     <span class="exec-eyebrow">Detalle operativo</span>
-                    <h2>Indicadores y responsables</h2>
+                    <h2>{{ $seguimiento ? 'Fechas previstas y último dato' : 'Indicadores y responsables' }}</h2>
+                    @if ($seguimiento)
+                        <p>La fecha anual disponible tiene prioridad sobre la fecha del indicador. Una fecha programada no confirma que el dato se haya actualizado.</p>
+                        <div class="exec-filter-chips">
+                            @foreach (['Vencido', 'Vence hoy', 'Próximo', 'Programado', 'Sin fecha confiable'] as $estado)
+                                <span>{{ $estado }}: {{ $estadosSeguimiento->get($estado, 0) }}</span>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
                 <form method="GET" class="exec-drill-controls">
-                    @foreach (request()->except(['buscar', 'sort', 'direction', 'page']) as $key => $value)
+                    @foreach (request()->except(['buscar', 'sort', 'direction', 'page', 'estado_plazo', 'periodicidad', 'responsable']) as $key => $value)
                         @if (is_array($value))
                             @foreach ($value as $item)<input type="hidden" name="{{ $key }}[]" value="{{ $item }}">@endforeach
                         @else
@@ -61,27 +69,41 @@
                             <option value="nombre" @selected(request('sort') === 'nombre')>Indicador</option>
                             <option value="institucion" @selected(request('sort') === 'institucion')>Institución</option>
                             <option value="avance" @selected(request('sort') === 'avance')>Avance</option>
+                            @if ($seguimiento)<option value="fecha" @selected(request('sort') === 'fecha')>Fecha prevista</option>@endif
                         </select>
                     </div>
+                    @if ($seguimiento)
+                        <div><label for="estado-plazo">Estado de plazo</label><select id="estado-plazo" name="estado_plazo"><option value="">Todos</option>@foreach (['Vencido', 'Vence hoy', 'Próximo', 'Programado', 'Sin fecha confiable'] as $estado)<option value="{{ $estado }}" @selected(request('estado_plazo') === $estado)>{{ $estado }}</option>@endforeach</select></div>
+                        <div><label for="periodicidad-seguimiento">Periodicidad</label><select id="periodicidad-seguimiento" name="periodicidad"><option value="">Todas</option>@foreach ($periodicidades as $periodicidad)<option value="{{ $periodicidad }}" @selected(request('periodicidad') === $periodicidad)>{{ $periodicidad }}</option>@endforeach</select></div>
+                        <div><label for="responsable-seguimiento">Responsable</label><select id="responsable-seguimiento" name="responsable"><option value="">Todos</option>@foreach ($responsables as $responsable)<option value="{{ $responsable }}" @selected(request('responsable') === $responsable)>{{ $responsable }}</option>@endforeach</select></div>
+                        <button type="submit" class="exec-filter-button">Aplicar filtros</button>
+                    @endif
                 </form>
             </div>
             <div class="exec-priority-table-wrap">
                 <table class="exec-table exec-detail-table">
                     <caption class="visually-hidden">Detalle de indicadores filtrados</caption>
-                    <thead><tr><th scope="col">Indicador</th><th scope="col">Institución</th><th scope="col">Responsable</th><th scope="col">Eje / programa</th><th scope="col">Estado</th><th scope="col">Avance</th><th scope="col"><span class="visually-hidden">Acción</span></th></tr></thead>
+                    <thead><tr><th scope="col">Indicador</th><th scope="col">Institución</th><th scope="col">Responsable</th>@if ($seguimiento)<th scope="col">Último dato</th><th scope="col">Periodicidad</th><th scope="col">Fecha prevista</th><th scope="col">Plazo</th>@else<th scope="col">Eje / programa</th><th scope="col">Estado</th><th scope="col">Avance</th>@endif<th scope="col"><span class="visually-hidden">Acción</span></th></tr></thead>
                     <tbody>
                         @forelse ($rows as $row)
                             <tr>
                                 <td data-label="Indicador"><a class="exec-table__indicator" href="{{ route('panel-indicadores.show', ['indicador' => $row['id'], 'plan_id' => $plan->id]) }}">{{ Str::limit($row['nombre'], 72) }}</a></td>
                                 <td data-label="Institución">{{ Str::limit($row['institucion'], 30) }}</td>
                                 <td data-label="Responsable">{{ Str::limit($row['usuario'], 26) }}</td>
+                                @if ($seguimiento)
+                                    <td data-label="Último dato">@if ($row['ultimo_dato'] !== null){{ $row['ultimo_dato'] }} {{ $row['unidad'] }} · {{ $row['ultimo_anio'] }}<small class="d-block">{{ $row['ultimo_validado'] ? 'Validado' : 'Sin validar' }}</small>@else Sin dato @endif</td>
+                                    <td data-label="Periodicidad">{{ $row['periodicidad'] ?: 'No especificada' }}</td>
+                                    <td data-label="Fecha prevista">{{ $row['fecha_prevista'] ?? 'Sin fecha' }} @if ($row['fecha_fuente'])<small class="d-block">{{ $row['fecha_fuente'] === 'anio' ? 'Dato anual' : 'Indicador' }}</small>@endif</td>
+                                    <td data-label="Plazo">{{ $row['estado_plazo'] }}</td>
+                                @else
                                 <td data-label="Eje / programa"><small>{{ Str::limit($row['eje'], 24) }}</small><small class="d-block text-muted">{{ Str::limit($row['programa'], 30) }}</small></td>
                                 <td data-label="Estado"><span class="exec-status exec-status--{{ $row['prioridad'] === 1 ? 'red' : ($row['prioridad'] === 2 ? 'sand' : 'green') }}">{{ $row['motivo'] }}</span></td>
                                 <td data-label="Avance" class="exec-table__number">{{ $row['avance'] !== null ? number_format($row['avance'], 1) . '%' : 'N/D' }}</td>
+                                @endif
                                 <td data-label="Acción" class="text-end"><a class="exec-table__action" href="{{ route('panel-indicadores.show', ['indicador' => $row['id'], 'plan_id' => $plan->id]) }}">Abrir <span aria-hidden="true">→</span></a></td>
                             </tr>
                         @empty
-                            <tr><td colspan="7"><div class="exec-empty">No hay indicadores que coincidan con estos filtros.</div></td></tr>
+                            <tr><td colspan="{{ $seguimiento ? 8 : 7 }}"><div class="exec-empty">No hay indicadores que coincidan con estos filtros.</div></td></tr>
                         @endforelse
                     </tbody>
                 </table>
