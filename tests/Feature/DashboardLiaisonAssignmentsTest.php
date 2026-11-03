@@ -15,6 +15,27 @@ class DashboardLiaisonAssignmentsTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_tracking_prioritizes_outdated_indicators_and_shows_active_additional_filters(): void
+    {
+        $this->travelTo(\Carbon\Carbon::parse('2026-06-01'));
+        $plan = CatPlanEstatalDesarrollo::create(['nombre' => 'PED de prueba', 'gobernador' => 'Gobernador']);
+        config()->set('sped.active_plan_id', $plan->id);
+        $eje = CatEje::create(['nombre' => 'Eje de prueba', 'numero' => 1, 'plan_id' => $plan->id]);
+        $institucion = Institucion::create(['nombre' => 'Dependencia', 'titular' => 'Titular']);
+        $eje->indicadores()->create(array_merge($this->indicatorAttributes($institucion), ['nombre' => 'A vigente', 'fecha_actualizacion' => '2027-01-01']));
+        $eje->indicadores()->create(array_merge($this->indicatorAttributes($institucion), ['nombre' => 'Z vencido', 'fecha_actualizacion' => '2025-01-01']));
+        $user = User::factory()->create();
+        $user->assignRole(Role::findOrCreate('Administrador', 'web'));
+
+        $this->actingAs($user)->get(route('dashboard.drill-down', ['plan_id' => $plan->id, 'seguimiento' => 1]))
+            ->assertOk()->assertSeeInOrder(['Z vencido', 'A vigente'])
+            ->assertSeeText('Atención de actualización')->assertSeeText('Más filtros');
+
+        $this->get(route('dashboard.drill-down', ['plan_id' => $plan->id, 'seguimiento' => 1, 'periodicidad' => 'Anual']))
+            ->assertOk()->assertSeeText('(1 activo)')->assertSeeText('Periodicidad: Anual')
+            ->assertSeeText('Limpiar filtros adicionales');
+    }
+
     public function test_administrator_can_see_enlace_assignments_in_the_detail_page(): void
     {
         $plan = CatPlanEstatalDesarrollo::create([

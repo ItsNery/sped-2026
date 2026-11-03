@@ -62,11 +62,19 @@ class DashboardDrillDownController extends Controller
             $rows = $rows->filter(fn($row) => $row['prioridad'] !== null);
         }
 
-        $rows = $rows->sortBy(fn($row) => match ($request->input('sort')) {
+        $sort = $request->input('sort', $seguimiento ? 'actualizacion' : 'prioridad');
+        $rows = $rows->sortBy(fn($row) => match ($sort) {
             'nombre' => strtolower($row['nombre']),
             'avance' => $row['avance'] ?? PHP_FLOAT_MAX,
             'institucion' => strtolower($row['institucion']),
             'fecha' => $row['fecha_orden'] ?? '9999-12-31',
+            'actualizacion' => sprintf('%02d-%s-%s', match ($row['estado_actualizacion']) {
+                'Desactualizado' => 0,
+                'Vence hoy' => 1,
+                'Información insuficiente', 'Dato del año disponible; periodo sin verificar' => 2,
+                'Dentro del plazo' => 3,
+                default => 4,
+            }, $row['fecha_orden'] ?? '9999-12-31', mb_strtolower($row['nombre'])),
             default => $row['prioridad'] . '-' . str_pad((string) ($row['avance'] ?? 999999), 12, '0', STR_PAD_LEFT),
         });
 

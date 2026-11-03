@@ -74,7 +74,8 @@
                     <div class="exec-drill-controls__sort">
                         <label for="drill-down-sort">Ordenar por</label>
                         <select id="drill-down-sort" name="sort" onchange="this.form.submit()">
-                            <option value="prioridad" @selected(request('sort', 'prioridad') === 'prioridad')>Prioridad</option>
+                            @if ($seguimiento)<option value="actualizacion" @selected(request('sort', 'actualizacion') === 'actualizacion')>Atención de actualización</option>@endif
+                            <option value="prioridad" @selected(request('sort', $seguimiento ? 'actualizacion' : 'prioridad') === 'prioridad')>Prioridad general</option>
                             <option value="nombre" @selected(request('sort') === 'nombre')>Indicador</option>
                             <option value="institucion" @selected(request('sort') === 'institucion')>Institución</option>
                             <option value="avance" @selected(request('sort') === 'avance')>Avance</option>
@@ -82,11 +83,25 @@
                         </select>
                     </div>
                     @if ($seguimiento)
-                        <div class="tracking-filter"><label for="estado-plazo">Estado de plazo</label><select id="estado-plazo" name="estado_plazo"><option value="">Todos</option>@foreach (['Vencido', 'Vence hoy', 'Próximo', 'Programado', 'Sin fecha confiable'] as $estado)<option value="{{ $estado }}" @selected(request('estado_plazo') === $estado)>{{ $estado }}</option>@endforeach</select></div>
                         <div class="tracking-filter"><label for="estado-actualizacion">Estado de actualización</label><select id="estado-actualizacion" name="estado_actualizacion"><option value="">Todos</option>@foreach (['Desactualizado', 'Vence hoy', 'Dentro del plazo', 'Actualizado', 'Dato del año disponible; periodo sin verificar', 'Información insuficiente'] as $estado)<option value="{{ $estado }}" @selected(request('estado_actualizacion') === $estado)>{{ $estado }}</option>@endforeach</select></div>
+                        <button type="submit" class="exec-filter-button">Aplicar filtros</button>
+                        @php $filtrosAdicionales = array_filter(request()->only(['estado_plazo', 'periodicidad', 'responsable']), fn ($valor) => filled($valor)); @endphp
+                        <details class="tracking-advanced">
+                            <summary>Más filtros @if (count($filtrosAdicionales))<span>({{ count($filtrosAdicionales) }} {{ count($filtrosAdicionales) === 1 ? 'activo' : 'activos' }})</span>@endif</summary>
+                            <div class="tracking-advanced__fields">
+                        <div class="tracking-filter"><label for="estado-plazo">Estado de plazo</label><select id="estado-plazo" name="estado_plazo"><option value="">Todos</option>@foreach (['Vencido', 'Vence hoy', 'Próximo', 'Programado', 'Sin fecha confiable'] as $estado)<option value="{{ $estado }}" @selected(request('estado_plazo') === $estado)>{{ $estado }}</option>@endforeach</select></div>
                         <div class="tracking-filter"><label for="periodicidad-seguimiento">Periodicidad</label><select id="periodicidad-seguimiento" name="periodicidad"><option value="">Todas</option>@foreach ($periodicidades as $periodicidad)<option value="{{ $periodicidad }}" @selected(request('periodicidad') === $periodicidad)>{{ $periodicidad }}</option>@endforeach</select></div>
                         <div class="tracking-filter"><label for="responsable-seguimiento">Responsable</label><select id="responsable-seguimiento" name="responsable"><option value="">Todos</option>@foreach ($responsables as $responsable)<option value="{{ $responsable }}" @selected(request('responsable') === $responsable)>{{ $responsable }}</option>@endforeach</select></div>
-                        <button type="submit" class="exec-filter-button">Aplicar filtros</button>
+                            </div>
+                        </details>
+                        @if (count($filtrosAdicionales))
+                            <div class="tracking-active-filters" aria-label="Filtros adicionales activos">
+                                @foreach (['estado_plazo' => 'Plazo', 'periodicidad' => 'Periodicidad', 'responsable' => 'Responsable'] as $clave => $etiqueta)
+                                    @if (isset($filtrosAdicionales[$clave]))<span>{{ $etiqueta }}: {{ $filtrosAdicionales[$clave] }}</span>@endif
+                                @endforeach
+                                <a href="{{ request()->fullUrlWithQuery(['estado_plazo' => null, 'periodicidad' => null, 'responsable' => null, 'page' => null]) }}">Limpiar filtros adicionales</a>
+                            </div>
+                        @endif
                     @endif
                 </form>
             </div>
