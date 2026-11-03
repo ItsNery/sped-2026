@@ -2751,6 +2751,22 @@ button.admin-index-table-action:hover {
     font-size: 1.35rem;
 }
 
+.exec-header__context {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .4rem;
+    min-width: 0;
+}
+.exec-header__context > span:not(.exec-header__plan) {
+    padding: .4rem .65rem;
+    border-radius: .5rem;
+    background: #eef4f1;
+    color: #244c42;
+    font-size: .75rem;
+    font-weight: 700;
+}
 .exec-header__plan {
     padding: 0.55rem 0.85rem;
     border: 1px solid #d9c8ae;

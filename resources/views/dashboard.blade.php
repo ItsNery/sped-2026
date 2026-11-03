@@ -6,7 +6,12 @@
                 <span class="exec-eyebrow">Centro de mando</span>
                 <h2 class="exec-header__title">Seguimiento del Plan Estatal de Desarrollo</h2>
             </div>
-            <span class="exec-header__plan">{{ $plan->nombre }}</span>
+            <div class="exec-header__context" aria-label="Filtros de la consulta">
+                <span class="exec-header__plan">{{ $plan->nombre }}</span>
+                <span>Datos: {{ $filters['solo_validados'] ? 'Solo validados' : 'Todos los registrados' }}</span>
+                <span>Desde: {{ $filters['anio_desde'] ?? 'Sin límite' }}</span>
+                <span>Hasta: {{ $filters['anio_hasta'] ?? 'Sin límite' }}</span>
+            </div>
         </div>
     </x-slot>
 

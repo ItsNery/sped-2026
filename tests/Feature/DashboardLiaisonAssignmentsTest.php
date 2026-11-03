@@ -62,6 +62,20 @@ class DashboardLiaisonAssignmentsTest extends TestCase
             ->assertSeeText('indicadores desactualizados')
             ->assertSeeText('Ver indicadores que requieren atención');
 
+        foreach (['dashboard', 'dashboard.drill-down'] as $route) {
+            $this->actingAs($administrator)
+                ->get(route($route, ['plan_id' => $plan->id, 'solo_validados' => 0, 'anio_desde' => 2024, 'anio_hasta' => 2026]))
+                ->assertOk()
+                ->assertSeeText('Datos: Todos los registrados')
+                ->assertSeeText('Desde: 2024')
+                ->assertSeeText('Hasta: 2026');
+        }
+
+        $this->actingAs($administrator)->get(route('dashboard.drill-down', ['plan_id' => $plan->id]))
+            ->assertSeeText('Datos: Solo validados')
+            ->assertSeeText('Desde: Sin límite')
+            ->assertSeeText('Hasta: Sin límite');
+
         $this->actingAs($administrator)
             ->get(route('dashboard.drill-down', ['plan_id' => $plan->id, 'seguimiento' => 1, 'estado_plazo' => 'Sin fecha confiable']))
             ->assertOk()
