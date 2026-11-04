@@ -57,6 +57,8 @@ class AdminNavigationTest extends TestCase
         $dependencyLiaison = User::factory()->create(['id_institucion' => $institution->id]);
         $dependencyLiaison->assignRole(Role::findOrCreate('Enlace dependencia', 'web'));
 
+        Role::findOrCreate('Enlace', 'web');
+
         $this->actingAs($dependencyLiaison);
 
         $navigation = view('layouts.admin-navigation')->render();

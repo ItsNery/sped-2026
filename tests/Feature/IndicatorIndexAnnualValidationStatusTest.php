@@ -84,6 +84,7 @@ class IndicatorIndexAnnualValidationStatusTest extends TestCase
         $liaison = User::factory()->create(['id_institucion' => $indicator->id_institucion]);
         $liaison->assignRole(Role::findOrCreate('Enlace dependencia', 'web'));
         $liaison->givePermissionTo(Permission::findOrCreate('ver-indicador', 'web'));
+        Role::findOrCreate('Enlace', 'web');
 
         $this->actingAs($liaison)
             ->get(route('panel-indicadores.index'))

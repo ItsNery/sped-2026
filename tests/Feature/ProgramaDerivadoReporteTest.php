@@ -84,10 +84,10 @@ class ProgramaDerivadoReporteTest extends TestCase
 
         $this->assertSame(1, substr_count($contenido, 'class="datos-anuales-adicionales"'));
         $this->assertStringContainsString('class="dato-anual-par__anio"', $contenido);
-        $this->assertStringContainsString('>2024</span>', $contenido);
-        $this->assertStringNotContainsString('>2023</span>', $contenido);
-        $this->assertStringNotContainsString('>2025</span>', $contenido);
-        $this->assertStringNotContainsString('>2030</span>', $contenido);
+        $this->assertMatchesRegularExpression('/>\s*2024\s*<\/span>/', $contenido);
+        $this->assertDoesNotMatchRegularExpression('/>\s*2023\s*<\/span>/', $contenido);
+        $this->assertDoesNotMatchRegularExpression('/>\s*2025\s*<\/span>/', $contenido);
+        $this->assertDoesNotMatchRegularExpression('/>\s*2030\s*<\/span>/', $contenido);
     }
 
     public function test_non_administrators_cannot_access_program_reports(): void
